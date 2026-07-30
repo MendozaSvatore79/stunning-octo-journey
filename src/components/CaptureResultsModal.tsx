@@ -141,7 +141,8 @@ export default function CaptureResultsModal({
   const rawDigits = patientPhone.replace(/[^\d]/g, '');
   const cleanPhone = rawDigits.length === 10 ? `52${rawDigits}` : rawDigits;
 
-  const whatsappMsg = `🏥 *LABORATORIO CLÍNICO CENTRAL*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*,\n\nTus resultados del *Folio #${folioNumber}* ya han sido validados clínicamente.\n\n📄 Consulta o descarga tu reporte en PDF de forma pública aquí:\n${verificationUrl}\n\n_Atentamente: Q.F.B. Juan Carlos Mendoza_`;
+  const labName = (order.laboratory?.name || 'LABORATORIO CLÍNICO CENTRAL').toUpperCase();
+  const whatsappMsg = `🏥 *${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*,\n\nTus resultados del *Folio #${folioNumber}* ya han sido validados clínicamente.\n\n📄 Consulta o descarga tu reporte en PDF de forma pública aquí:\n${verificationUrl}\n\n_Atentamente: Q.F.B. Juan Carlos Mendoza_`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(whatsappMsg)}`;
   const mailtoUrl = `mailto:${patientEmail}?subject=Resultados%20de%20Laboratorio%20-%20Folio%20%23${folioNumber}&body=${encodeURIComponent(whatsappMsg)}`;
