@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* ESTILOS DE IMPRESIÓN IMPRESIONANTE CON PORTAL DIRECTO A BODY */
+@media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  /* Ocultar toda la interfaz web, portal React (#root) y modales */
+  #root,
+  dialog,
+  .modal,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Ocultar cualquier elemento hijo directo de body que no sea #printable-pdf-document */
+  body > *:not(#printable-pdf-document) {
+    display: none !important;
+  }
+
+  /* Mostrar exclusivamente #printable-pdf-document a pantalla completa en A4 */
+  #printable-pdf-document {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  #printable-pdf-document * {
+    visibility: visible !important;
+  }
+
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
