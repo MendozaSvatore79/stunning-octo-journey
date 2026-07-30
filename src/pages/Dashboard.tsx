@@ -1,5 +1,5 @@
 // src/pages/Dashboard.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import Sidebar, { type DashboardViewType } from '../components/Sidebar';
 import { useApi } from '../hooks/useApi';
@@ -7,14 +7,18 @@ import type { Laboratory } from '../types/lab';
 import { useUserContext } from '../hooks/useUserContext';
 import AdminDashboardView from '../components/AdminDashboardView';
 import OperatorDashboardView from '../components/OperatorDashboardView';
-import CreateLabModal from '../components/CreateLabModal';
-import OnboardingModal from '../components/OnboardingModal';
-import AddUserForm from '../components/AddUserForm';
-import LabsDirectoryView from '../components/LabsDirectoryView';
-import PatientsView from '../components/PatientsView';
-import WorkOrdersView from '../components/WorkOrdersView';
-import AnalysisCatalogView from '../components/AnalysisCatalogView';
-import QualityControlView from '../components/QualityControlView';
+
+// Carga perezosa (Code Splitting) de vistas pesadas para optimizar el tiempo de carga a nivel inicial
+const CreateLabModal = lazy(() => import('../components/CreateLabModal'));
+const OnboardingModal = lazy(() => import('../components/OnboardingModal'));
+const AddUserForm = lazy(() => import('../components/AddUserForm'));
+const LabsDirectoryView = lazy(() => import('../components/LabsDirectoryView'));
+const PatientsView = lazy(() => import('../components/PatientsView'));
+const WorkOrdersView = lazy(() => import('../components/WorkOrdersView'));
+const AnalysisCatalogView = lazy(() => import('../components/AnalysisCatalogView'));
+const QualityControlView = lazy(() => import('../components/QualityControlView'));
+
+const LABS_CACHE_KEY = 'lab_labs_list_cache';
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -22,17 +26,28 @@ export default function Dashboard() {
   const api = useApi();
 
   const [activeView, setActiveView] = useState<DashboardViewType>('dashboard');
-  const [labs, setLabs] = useState<Laboratory[]>([]);
-  const [isLoadingLabs, setIsLoadingLabs] = useState(true);
+  
+  // Carga optimista inmediata de laboratorios desde sessionStorage
+  const [labs, setLabs] = useState<Laboratory[]>(() => {
+    try {
+      const cached = sessionStorage.getItem(LABS_CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [isLoadingLabs, setIsLoadingLabs] = useState<boolean>(() => labs.length === 0);
   const [isCreateLabOpen, setIsCreateLabOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
-  // Cargar laboratorios
+  // Cargar laboratorios de forma silenciosa e hiper rápida
   const fetchLabs = useCallback(async () => {
-    setIsLoadingLabs(true);
     try {
       const response = await api.get<Laboratory[]>('/lab');
-      setLabs(response.data || []);
+      const data = response.data || [];
+      setLabs(data);
+      sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify(data));
     } catch (error) {
       console.error('Error al cargar la lista de laboratorios:', error);
     } finally {
@@ -71,11 +86,19 @@ export default function Dashboard() {
   };
 
   const handleLabCreated = (newLab: Laboratory) => {
-    setLabs((prev) => [newLab, ...prev]);
+    setLabs((prev) => {
+      const next = [newLab, ...prev];
+      sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   const handleLabDeleted = (deletedId: string) => {
-    setLabs((prev) => prev.filter((lab) => lab.id !== deletedId));
+    setLabs((prev) => {
+      const next = prev.filter((lab) => lab.id !== deletedId);
+      sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   return (
@@ -125,93 +148,92 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Contenido Principal condicional por Vista y Rol */}
+      {/* Contenido Principal condicional por Vista y Rol con React Suspense */}
       <main className="mx-auto max-w-7xl w-full px-4 py-8 lg:px-8">
         {isUserLoading ? (
           <div className="min-h-[400px] flex flex-col items-center justify-center gap-3">
             <span className="loading loading-spinner loading-lg text-primary"></span>
             <p className="text-sm font-semibold text-base-content/70">Cargando tu panel personalizado...</p>
           </div>
-        ) : activeView === 'qc-controls' ? (
-          /* Sub-vista: Controles (Catálogo) */
-          <QualityControlView initialSubView="controls" />
-        ) : activeView === 'qc-results' ? (
-          /* Sub-vista: Resultados a Controles */
-          <QualityControlView initialSubView="results" />
-        ) : activeView === 'qc-levey-jennings' ? (
-          /* Sub-vista: Gráfica de Levey Jennings */
-          <QualityControlView initialSubView="levey-jennings" />
-        ) : activeView === 'analysis-catalog' ? (
-          /* Catálogo de Servicios / Estudios Clínicos */
-          <AnalysisCatalogView />
-        ) : activeView === 'create-order' ? (
-          /* Crear Orden de Trabajo / Ficha de Paciente */
-          <WorkOrdersView initialTab="create" />
-        ) : activeView === 'pending-orders' ? (
-          /* Órdenes Pendientes */
-          <WorkOrdersView initialTab="pending" />
-        ) : activeView === 'completed-orders' ? (
-          /* Órdenes Completadas */
-          <WorkOrdersView initialTab="completed" />
-        ) : activeView === 'patients' ? (
-          /* Directorio de Pacientes */
-          <PatientsView initialTab="directory" />
-        ) : activeView === 'add-patient' ? (
-          /* Registrar Nuevo Paciente */
-          <PatientsView initialTab="register" />
-        ) : activeView === 'patient-history' ? (
-          /* Historial Clínico de Pacientes */
-          <PatientsView initialTab="history" />
-        ) : activeView === 'labs' ? (
-          /* Vista Exclusiva del Directorio de Sedes Clínicas */
-          <LabsDirectoryView
-            labs={labs}
-            isLoadingLabs={isLoadingLabs}
-            onOpenCreateLab={() => setIsCreateLabOpen(true)}
-            onDeleteLabSuccess={handleLabDeleted}
-          />
-        ) : activeView === 'add-user' ? (
-          /* Vista de Agregar Usuario al Laboratorio */
-          <AddUserForm
-            labs={labs}
-            onCancel={() => setActiveView('dashboard')}
-          />
-        ) : isAdmin ? (
-          /* Dashboard Exclusivo para ADMIN */
-          <AdminDashboardView
-            userName={user?.firstName || undefined}
-            labs={labs}
-            isLoadingLabs={isLoadingLabs}
-            onOpenCreateLab={() => setIsCreateLabOpen(true)}
-            onOpenOnboarding={() => setIsOnboardingOpen(true)}
-            onDeleteLabSuccess={handleLabDeleted}
-          />
         ) : (
-          /* Dashboard Operativo para TECH y otros roles */
-          <OperatorDashboardView
-            userName={user?.firstName || undefined}
-            role={role}
-            labs={labs}
-            isLoadingLabs={isLoadingLabs}
-            onOpenCreateLab={() => setIsCreateLabOpen(true)}
-            onOpenOnboarding={() => setIsOnboardingOpen(true)}
-          />
+          <Suspense
+            fallback={
+              <div className="min-h-[350px] flex flex-col items-center justify-center gap-3">
+                <span className="loading loading-spinner loading-md text-primary"></span>
+                <p className="text-xs font-bold text-base-content/60">Cargando vista del sistema...</p>
+              </div>
+            }
+          >
+            {activeView === 'qc-controls' ? (
+              <QualityControlView initialSubView="controls" />
+            ) : activeView === 'qc-results' ? (
+              <QualityControlView initialSubView="results" />
+            ) : activeView === 'qc-levey-jennings' ? (
+              <QualityControlView initialSubView="levey-jennings" />
+            ) : activeView === 'analysis-catalog' ? (
+              <AnalysisCatalogView />
+            ) : activeView === 'create-order' ? (
+              <WorkOrdersView initialTab="create" />
+            ) : activeView === 'pending-orders' ? (
+              <WorkOrdersView initialTab="pending" />
+            ) : activeView === 'completed-orders' ? (
+              <WorkOrdersView initialTab="completed" />
+            ) : activeView === 'patients' ? (
+              <PatientsView initialTab="directory" />
+            ) : activeView === 'add-patient' ? (
+              <PatientsView initialTab="register" />
+            ) : activeView === 'patient-history' ? (
+              <PatientsView initialTab="history" />
+            ) : activeView === 'labs' ? (
+              <LabsDirectoryView
+                labs={labs}
+                isLoadingLabs={isLoadingLabs}
+                onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                onDeleteLabSuccess={handleLabDeleted}
+              />
+            ) : activeView === 'add-user' ? (
+              <AddUserForm labs={labs} onCancel={() => setActiveView('dashboard')} />
+            ) : isAdmin ? (
+              <AdminDashboardView
+                userName={user?.firstName || undefined}
+                labs={labs}
+                isLoadingLabs={isLoadingLabs}
+                onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                onDeleteLabSuccess={handleLabDeleted}
+              />
+            ) : (
+              <OperatorDashboardView
+                userName={user?.firstName || undefined}
+                role={role}
+                labs={labs}
+                isLoadingLabs={isLoadingLabs}
+                onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                onOpenOnboarding={() => setIsOnboardingOpen(true)}
+              />
+            )}
+          </Suspense>
         )}
       </main>
 
-      {/* Modal de Guía de Onboarding */}
-      <OnboardingModal
-        isOpen={isOnboardingOpen}
-        onClose={handleCloseOnboardingOnly}
-        onStartCreateLab={handleFinishOnboarding}
-      />
+      {/* Modales cargados perezosamente */}
+      <Suspense fallback={null}>
+        {isOnboardingOpen && (
+          <OnboardingModal
+            isOpen={isOnboardingOpen}
+            onClose={handleCloseOnboardingOnly}
+            onStartCreateLab={handleFinishOnboarding}
+          />
+        )}
 
-      {/* Modal de Crear Laboratorio */}
-      <CreateLabModal
-        isOpen={isCreateLabOpen}
-        onClose={() => setIsCreateLabOpen(false)}
-        onLabCreated={handleLabCreated}
-      />
+        {isCreateLabOpen && (
+          <CreateLabModal
+            isOpen={isCreateLabOpen}
+            onClose={() => setIsCreateLabOpen(false)}
+            onLabCreated={handleLabCreated}
+          />
+        )}
+      </Suspense>
     </Sidebar>
   );
 }

@@ -22,27 +22,40 @@ export const UserContext = createContext<UserContextType>({
   refreshUserProfile: async () => {},
 });
 
+const CACHE_KEY = 'lab_user_profile_cache';
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const { isSignedIn } = useAuth();
   const api = useApi();
 
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Cargar estado inicial optimista desde sessionStorage para renderizado instantáneo (0ms)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(() => !userProfile);
 
   const fetchUserProfile = useCallback(async () => {
     if (!isSignedIn) {
       setUserProfile(null);
       setIsLoading(false);
+      sessionStorage.removeItem(CACHE_KEY);
       return;
     }
 
-    setIsLoading(true);
     try {
       const response = await api.get<UserProfile>('/users/me');
-      setUserProfile(response.data);
+      if (response.data) {
+        setUserProfile(response.data);
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(response.data));
+      }
     } catch (error) {
       console.error('Error al obtener el perfil de usuario (/users/me):', error);
-      setUserProfile(null);
     } finally {
       setIsLoading(false);
     }
