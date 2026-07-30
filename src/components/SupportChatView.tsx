@@ -49,7 +49,7 @@ export default function SupportChatView() {
   const [chatClient, setChatClient] = useState<StreamChat | null>(null);
   const [activeChannel, setActiveChannel] = useState<StreamChannelType | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string>('soporte-general');
-  const [isInitializing, setIsInitializing] = useState<boolean>(true);
+
 
   // Estado para la Videollamada en Vivo de Stream Video
   const [activeCallRoom, setActiveCallRoom] = useState<{
@@ -102,7 +102,6 @@ export default function SupportChatView() {
     let client: StreamChat | null = null;
 
     const initStreamChat = async () => {
-      setIsInitializing(true);
       try {
         const streamApiKey = import.meta.env.VITE_STREAM_API_KEY || 'b5f4y9r5x6zz';
         client = StreamChat.getInstance(streamApiKey);
@@ -150,8 +149,6 @@ export default function SupportChatView() {
         setActiveChannel(channel);
       } catch (err) {
         console.warn('Iniciando fallback de sincronización directa de mensajes...', err);
-      } finally {
-        setIsInitializing(false);
       }
     };
 
@@ -499,14 +496,9 @@ export default function SupportChatView() {
           </div>
         </div>
 
-        {/* Ventana Principal de Chat Sincronizado */}
+        {/* Ventana Principal de Chat Sincronizado Instantáneo a 0ms */}
         <div className="lg:col-span-8 bg-base-100 rounded-3xl border border-base-200 shadow-sm overflow-hidden flex flex-col">
-          {isInitializing ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
-              <span className="loading loading-spinner loading-lg text-primary"></span>
-              <p className="text-sm font-bold text-base-content/70">Sincronizando con el servidor de Stream Chat SDK...</p>
-            </div>
-          ) : chatClient && activeChannel ? (
+          {chatClient && activeChannel ? (
             <div className="stream-chat-wrapper h-full flex-1">
               <Chat client={chatClient} theme="str-chat__theme-light">
                 <Channel channel={activeChannel}>
