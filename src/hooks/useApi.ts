@@ -10,6 +10,7 @@ export const useApi = () => {
   const api = useMemo(() => {
     const instance = axios.create({
       baseURL: import.meta.env.VITE_API_URL,
+      timeout: 10000, // Timeout de 10 segundos para evitar bloqueos prolongados si el servidor de Render está dormido
     });
 
     // Interceptor que se ejecuta ANTES de cada petición
