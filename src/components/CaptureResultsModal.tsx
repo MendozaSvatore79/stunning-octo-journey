@@ -215,9 +215,6 @@ export default function CaptureResultsModal({
       setSavedOrderData(resData);
       setShowNotificationModal(true);
 
-      // Lanzar envío de WhatsApp en nueva pestaña automáticamente
-      window.open(whatsappUrl, '_blank');
-
       onSuccess();
     } catch (err: any) {
       console.error('Error al capturar resultados:', err);
