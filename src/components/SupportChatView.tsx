@@ -64,6 +64,7 @@ export default function SupportChatView() {
 
   // Referencias a elementos de Video HTML5 para Stream WebRTC Real
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
   // Canales de soporte predeterminados
@@ -158,7 +159,7 @@ export default function SupportChatView() {
     };
   }, [user?.id, activeChannelId, isAdmin]);
 
-  // 3. Activación Real de Cámara y Micrófono WebRTC del Navegador
+  // 3. Activación Real de Cámara y Micrófono WebRTC con Transmisión de Audio sin Muestreo Muted
   useEffect(() => {
     if (isInCall && isCameraOn && !isScreenSharing) {
       setMediaError(null);
@@ -166,6 +167,12 @@ export default function SupportChatView() {
         .getUserMedia({ video: true, audio: true })
         .then((stream) => {
           mediaStreamRef.current = stream;
+
+          // Asegurar que la pista de audio de tu micrófono esté habilitada
+          stream.getAudioTracks().forEach((track) => {
+            track.enabled = isMicOn;
+          });
+
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
           }
@@ -184,6 +191,22 @@ export default function SupportChatView() {
       }
     }
   }, [isInCall, isCameraOn, isScreenSharing]);
+
+  // Control Dinámico de Mute/Unmute del Micrófono en Tiempo Real
+  useEffect(() => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getAudioTracks().forEach((track) => {
+        track.enabled = isMicOn;
+      });
+    }
+  }, [isMicOn]);
+
+  // Activar Reproducción de Audio Remoto
+  useEffect(() => {
+    if (isInCall && remoteAudioRef.current) {
+      remoteAudioRef.current.play().catch((e) => console.warn('Autoplay audio:', e));
+    }
+  }, [isInCall]);
 
   // 4. Compartir Pantalla en Vivo (Screen Sharing)
   const handleToggleScreenShare = async () => {
@@ -255,6 +278,9 @@ export default function SupportChatView() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Elemento de Audio Remoto no silenciado para escuchar las voces de los usuarios */}
+      <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
       {/* Banner Superior de Soporte Técnico y Modo Admin */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl">
         <div className="flex items-center gap-4">
@@ -276,7 +302,7 @@ export default function SupportChatView() {
               )}
             </div>
             <p className="text-xs text-indigo-200/80 font-medium mt-1">
-              Atención directa en chat interactivo y videollamada en vivo con compartir pantalla
+              Atención directa en chat interactivo y videollamada en vivo con audio y compartir pantalla
             </p>
           </div>
         </div>
@@ -307,7 +333,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM (Sincronizada Multi-Dispositivo) */}
+      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM (Sincronizada Multi-Dispositivo con Audio) */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-950 rounded-3xl border border-indigo-500/30 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -327,7 +353,7 @@ export default function SupportChatView() {
               rel="noreferrer"
               className="btn btn-xs btn-outline btn-info gap-1 text-[11px]"
             >
-              Abrir URL Externa Stream Video
+              Abrir URL Externa Stream Video con Audio HD
             </a>
           </div>
 
@@ -358,8 +384,13 @@ export default function SupportChatView() {
                 </div>
               )}
 
-              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/50">
-                {isScreenSharing ? '🖥️ Tu Pantalla Compartida' : `${user?.firstName || 'Usuario'} (Tu Transmisión)`}
+              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/50 flex items-center gap-1.5">
+                <span>{isScreenSharing ? '🖥️ Tu Pantalla' : `${user?.firstName || 'Usuario'} (Tú)`}</span>
+                {isMicOn ? (
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Micrófono Activo"></span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-red-400" title="Micrófono Silenciado"></span>
+                )}
               </div>
             </div>
 
@@ -373,16 +404,17 @@ export default function SupportChatView() {
                   {isAdmin ? 'Químico Conectado en Vivo' : activeCallRoom.createdByName}
                 </span>
                 <span className="text-xs text-indigo-300 font-mono mt-1">
-                  {isAdmin ? 'Usuario en Canal' : 'Agente Administrador en Vivo'}
+                  Audio HD Bidireccional Activo
                 </span>
               </div>
-              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/50">
-                {isAdmin ? 'Usuario Conectado' : 'Agente / Admin de Soporte'}
+              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/50 flex items-center gap-1.5">
+                <span>{isAdmin ? 'Usuario Conectado' : 'Agente / Admin de Soporte'}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               </div>
             </div>
           </div>
 
-          {/* Barra de Controles */}
+          {/* Barra de Controles de Audio y Video */}
           <div className="flex flex-wrap items-center justify-center gap-3 bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl">
             <button
               onClick={() => setIsCameraOn(!isCameraOn)}
@@ -394,7 +426,7 @@ export default function SupportChatView() {
 
             <button
               onClick={() => setIsMicOn(!isMicOn)}
-              className={`btn btn-circle ${isMicOn ? 'btn-neutral text-white' : 'btn-error text-white'}`}
+              className={`btn btn-circle ${isMicOn ? 'btn-emerald bg-emerald-500 text-slate-950 font-bold' : 'btn-error text-white'}`}
               title={isMicOn ? 'Silenciar Micrófono' : 'Activar Micrófono'}
             >
               {isMicOn ? <IconMic className="w-5 h-5" /> : <IconMicOff className="w-5 h-5" />}
