@@ -31,6 +31,18 @@ interface SupportChannelItem {
   userCount?: number;
 }
 
+interface ChatMessageItem {
+  id: string;
+  sender: string;
+  text: string;
+  time: string;
+  isAgent?: boolean;
+  callRoomId?: string;
+}
+
+const STORAGE_MESSAGES_KEY = 'lab_support_shared_messages_v1';
+const STORAGE_ACTIVE_CALL_KEY = 'lab_support_active_call_room_v1';
+
 export default function SupportChatView() {
   const { user } = useUser();
   const { isAdmin, role } = useUserContext();
@@ -44,7 +56,15 @@ export default function SupportChatView() {
     id: string;
     url: string;
     createdByName: string;
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const savedCall = localStorage.getItem(STORAGE_ACTIVE_CALL_KEY);
+      return savedCall ? JSON.parse(savedCall) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [isInCall, setIsInCall] = useState<boolean>(false);
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
   const [isMicOn, setIsMicOn] = useState<boolean>(true);
@@ -77,7 +97,7 @@ export default function SupportChatView() {
     },
   ];
 
-  // 1. Inicialización de Stream Chat Client
+  // 1. Inicialización y Sincronización en Tiempo Real con Stream Chat SDK
   useEffect(() => {
     let client: StreamChat | null = null;
 
@@ -110,10 +130,26 @@ export default function SupportChatView() {
 
         await channel.watch();
 
+        // Escuchar eventos en vivo de mensajes e invitaciones a videollamada
+        channel.on('message.new', (event) => {
+          if (event.message?.text?.includes('🎥 LLAMADA_STREAM_ACTIVA:')) {
+            const roomId = event.message.text.split('🎥 LLAMADA_STREAM_ACTIVA:')[1]?.trim();
+            if (roomId) {
+              const callObj = {
+                id: roomId,
+                url: `https://getstream.io/video/demos/?call_id=${roomId}`,
+                createdByName: event.user?.name || 'Administrador de Soporte',
+              };
+              setActiveCallRoom(callObj);
+              localStorage.setItem(STORAGE_ACTIVE_CALL_KEY, JSON.stringify(callObj));
+            }
+          }
+        });
+
         setChatClient(client);
         setActiveChannel(channel);
       } catch (err) {
-        console.warn('Iniciando fallback interactivo de Stream Chat SDK...', err);
+        console.warn('Iniciando fallback de sincronización directa de mensajes...', err);
       } finally {
         setIsInitializing(false);
       }
@@ -128,7 +164,23 @@ export default function SupportChatView() {
     };
   }, [user?.id, activeChannelId, isAdmin]);
 
-  // 2. Activación Real de Cámara y Micrófono del Navegador para la Videollamada
+  // Escuchar cambios de almacenamiento para sincronizar llamada en vivo entre pestañas/usuarios
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_ACTIVE_CALL_KEY && e.newValue) {
+        try {
+          setActiveCallRoom(JSON.parse(e.newValue));
+        } catch {}
+      } else if (e.key === STORAGE_ACTIVE_CALL_KEY && !e.newValue) {
+        setActiveCallRoom(null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // 2. Activación Real de Cámara y Micrófono del Navegador
   useEffect(() => {
     if (isInCall && isCameraOn && !isScreenSharing) {
       setMediaError(null);
@@ -141,7 +193,7 @@ export default function SupportChatView() {
           }
         })
         .catch((err) => {
-          console.warn('Permiso de cámara/micrófono rechazado o no disponible:', err);
+          console.warn('Permiso de cámara/micrófono rechazado:', err);
           setMediaError('Por favor concede acceso a la cámara y micrófono en la barra de tu navegador.');
         });
     } else if (!isCameraOn || !isInCall) {
@@ -155,7 +207,7 @@ export default function SupportChatView() {
     }
   }, [isInCall, isCameraOn, isScreenSharing]);
 
-  // 3. Función para Compartir Pantalla en Vivo (Screen Sharing)
+  // 3. Compartir Pantalla (Screen Sharing)
   const handleToggleScreenShare = async () => {
     if (!isScreenSharing) {
       try {
@@ -169,7 +221,6 @@ export default function SupportChatView() {
           localVideoRef.current.srcObject = displayStream;
         }
 
-        // Si el usuario detiene la pantalla desde el botón nativo del navegador
         displayStream.getVideoTracks()[0].onended = () => {
           setIsScreenSharing(false);
           if (mediaStreamRef.current && localVideoRef.current) {
@@ -177,7 +228,7 @@ export default function SupportChatView() {
           }
         };
       } catch (err) {
-        console.warn('Compartir pantalla fue cancelado o no soportado:', err);
+        console.warn('Compartir pantalla fue cancelado:', err);
       }
     } else {
       setIsScreenSharing(false);
@@ -187,8 +238,10 @@ export default function SupportChatView() {
     }
   };
 
-  // Generar Videollamada Stream en Vivo (Solo Admin o Usuario Solicitante)
-  const handleGenerateStreamVideoCall = () => {
+  // 🚀 SOLO EL AGENTE ADMINISTRADOR PUEDE INICIAR Y GENERAR LA VIDEOLLAMADA
+  const handleAdminGenerateStreamCall = async () => {
+    if (!isAdmin) return;
+
     const roomId = `call-support-${activeChannelId}-${Date.now().toString().slice(-6)}`;
     const creator = user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Administrador de Soporte';
     const streamVideoUrl = `https://getstream.io/video/demos/?call_id=${roomId}&user_id=${user?.id || 'admin'}`;
@@ -200,7 +253,28 @@ export default function SupportChatView() {
     };
 
     setActiveCallRoom(newCall);
+    localStorage.setItem(STORAGE_ACTIVE_CALL_KEY, JSON.stringify(newCall));
     setIsInCall(true);
+
+    // Enviar notificación a Stream Chat para sincronizar a todos los usuarios en vivo
+    if (activeChannel) {
+      try {
+        await activeChannel.sendMessage({
+          text: `🎥 LLAMADA_STREAM_ACTIVA: ${roomId}`,
+        });
+      } catch (e) {
+        console.warn('Error broadcasting call event:', e);
+      }
+    }
+  };
+
+  const handleEndCall = () => {
+    setIsInCall(false);
+    setIsScreenSharing(false);
+    if (isAdmin) {
+      setActiveCallRoom(null);
+      localStorage.removeItem(STORAGE_ACTIVE_CALL_KEY);
+    }
   };
 
   return (
@@ -231,19 +305,33 @@ export default function SupportChatView() {
           </div>
         </div>
 
-        {/* Botón de Generar Videollamada Stream */}
+        {/* Botón de Acción según Rol (Solo Admin inicia llamadas) */}
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={handleGenerateStreamVideoCall}
-            className="btn btn-accent text-slate-950 font-black rounded-2xl gap-2 shadow-lg hover:scale-105 transition-all text-xs py-2.5 px-4"
-          >
-            <IconVideo className="w-4 h-4 text-slate-950" />
-            {isAdmin ? '🎥 Iniciar Videollamada de Soporte' : '📹 Solicitar Videollamada'}
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={handleAdminGenerateStreamCall}
+              className="btn btn-accent text-slate-950 font-black rounded-2xl gap-2 shadow-lg hover:scale-105 transition-all text-xs py-2.5 px-4"
+            >
+              <IconVideo className="w-4 h-4 text-slate-950" />
+              🎥 Iniciar Videollamada de Soporte
+            </button>
+          ) : activeCallRoom ? (
+            <button
+              onClick={() => setIsInCall(true)}
+              className="btn btn-emerald bg-emerald-500 text-slate-950 font-black rounded-2xl gap-2 shadow-lg hover:scale-105 transition-all text-xs py-2.5 px-4 animate-bounce"
+            >
+              <IconVideo className="w-4 h-4" />
+              📹 Unirse a Videollamada Activa del Agente
+            </button>
+          ) : (
+            <span className="badge badge-ghost text-xs text-indigo-200 py-2 px-3 border border-indigo-500/30">
+              💬 Solicita asistencia en el chat
+            </span>
+          )}
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM CON WEBRTC Y CÁMARA / PANTALLA REAL */}
+      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM (Sincronizada) */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-950 rounded-3xl border border-indigo-500/30 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -253,7 +341,7 @@ export default function SupportChatView() {
                 <h3 className="font-black text-sm text-indigo-300">
                   Videollamada en Vivo de Soporte Stream • Sala #{activeCallRoom.id}
                 </h3>
-                <p className="text-xs text-slate-400">Iniciada por: {activeCallRoom.createdByName}</p>
+                <p className="text-xs text-slate-400">Generada por Agente Admin: {activeCallRoom.createdByName}</p>
               </div>
             </div>
 
@@ -273,9 +361,9 @@ export default function SupportChatView() {
             </div>
           )}
 
-          {/* Grid de Transmisión de Video WebRTC Stream Real */}
+          {/* Grid de Transmisión WebRTC Stream */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[320px]">
-            {/* Pantalla Usuario / Químico (Cámara o Pantalla Compartida Real) */}
+            {/* Pantalla Usuario / Químico */}
             <div className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px]">
               <video
                 ref={localVideoRef}
@@ -295,30 +383,30 @@ export default function SupportChatView() {
               )}
 
               <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/50">
-                {isScreenSharing ? '🖥️ Tu Pantalla Compartida' : `${user?.firstName || 'Usuario'} (Tu Cámara)`}
+                {isScreenSharing ? '🖥️ Tu Pantalla Compartida' : `${user?.firstName || 'Usuario'} (Tu Transmisión)`}
               </div>
             </div>
 
-            {/* Pantalla del Segundo Participante (Agente Administrador o Usuario Clínico) */}
+            {/* Pantalla del Administrador / Agente de Soporte */}
             <div className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px]">
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 p-6 text-center">
                 <div className="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 font-black text-2xl mb-2 shadow-lg">
                   {isAdmin ? 'QU' : 'ADM'}
                 </div>
                 <span className="text-sm font-bold text-slate-200">
-                  {isAdmin ? 'Químico / Técnico de Laboratorio' : (activeCallRoom.createdByName || 'Ing. Soporte Clínico en Vivo')}
+                  {isAdmin ? 'Químico Conectado en Vivo' : activeCallRoom.createdByName}
                 </span>
                 <span className="text-xs text-indigo-300 font-mono mt-1">
-                  {isAdmin ? 'Conectado al Canal de Soporte' : 'Administrador del Sistema en Vivo'}
+                  {isAdmin ? 'Usuario en Canal' : 'Agente Administrador en Vivo'}
                 </span>
               </div>
               <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/50">
-                {isAdmin ? 'Usuario en Línea' : 'Agente / Admin de Soporte'}
+                {isAdmin ? 'Usuario Conectado' : 'Agente / Admin de Soporte'}
               </div>
             </div>
           </div>
 
-          {/* Barra de Controles de la Videollamada */}
+          {/* Barra de Controles */}
           <div className="flex flex-wrap items-center justify-center gap-3 bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl">
             <button
               onClick={() => setIsCameraOn(!isCameraOn)}
@@ -345,10 +433,7 @@ export default function SupportChatView() {
             </button>
 
             <button
-              onClick={() => {
-                setIsInCall(false);
-                setIsScreenSharing(false);
-              }}
+              onClick={handleEndCall}
               className="btn btn-error rounded-2xl gap-2 font-bold text-white px-5 shadow-lg"
             >
               <IconPhoneOff className="w-5 h-5" />
@@ -358,9 +443,9 @@ export default function SupportChatView() {
         </div>
       )}
 
-      {/* Interfaz de Chat con Canales y Stream SDK Component */}
+      {/* Interfaz de Chat Sincronizado */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[580px]">
-        {/* Selector de Canales de Soporte */}
+        {/* Selector de Canales */}
         <div className="lg:col-span-4 bg-base-100 rounded-3xl border border-base-200 shadow-sm p-4 space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
             <h2 className="text-xs font-black uppercase text-base-content/70 tracking-wider px-2 flex items-center justify-between">
@@ -391,7 +476,7 @@ export default function SupportChatView() {
             </div>
           </div>
 
-          {/* Ficha del Administrador o Especialista Asignado */}
+          {/* Ficha de Estado */}
           <div className="bg-base-200/60 p-4 rounded-2xl border border-base-200 space-y-2">
             <div className="flex items-center gap-3">
               <div className="avatar online">
@@ -408,18 +493,18 @@ export default function SupportChatView() {
             </div>
             <p className="text-[11px] text-base-content/60">
               {isAdmin
-                ? 'Como administrador, puedes responder chats de usuarios y crear enlaces de videollamada en directo.'
-                : 'Horario de atención continuado de 8:00 AM a 8:00 PM (Hora Centro).'}
+                ? 'Solo tú como administrador tienes permisos para crear enlaces e iniciar videollamadas de soporte.'
+                : 'Solicita ayuda en el chat. El administrador generará el enlace de videollamada si es necesario.'}
             </p>
           </div>
         </div>
 
-        {/* Ventana Principal de Stream Chat Live */}
+        {/* Ventana Principal de Chat Sincronizado */}
         <div className="lg:col-span-8 bg-base-100 rounded-3xl border border-base-200 shadow-sm overflow-hidden flex flex-col">
           {isInitializing ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-3">
               <span className="loading loading-spinner loading-lg text-primary"></span>
-              <p className="text-sm font-bold text-base-content/70">Conectando con el servidor de Stream Chat SDK...</p>
+              <p className="text-sm font-bold text-base-content/70">Sincronizando con el servidor de Stream Chat SDK...</p>
             </div>
           ) : chatClient && activeChannel ? (
             <div className="stream-chat-wrapper h-full flex-1">
@@ -434,11 +519,11 @@ export default function SupportChatView() {
               </Chat>
             </div>
           ) : (
-            /* Fallback de Chat Interactivo Directo para Admin y Usuarios */
-            <FallbackInteractiveChat
+            <SynchronizedFallbackChat
+              channelId={activeChannelId}
               channelName={channelsList.find((c) => c.id === activeChannelId)?.name || '#Soporte General'}
               isAdmin={isAdmin}
-              onStartVideoCall={handleGenerateStreamVideoCall}
+              onAdminStartVideoCall={handleAdminGenerateStreamCall}
               activeCallRoom={activeCallRoom}
               onJoinCall={() => setIsInCall(true)}
             />
@@ -449,35 +534,60 @@ export default function SupportChatView() {
   );
 }
 
-// Fallback de Chat Interactivo Asistido por Stream (Con Modo Admin y Videollamadas)
-function FallbackInteractiveChat({
+// Componente de Chat Sincronizado en Tiempo Real (Entre Usuario y Administrador)
+function SynchronizedFallbackChat({
+  channelId,
   channelName,
   isAdmin,
-  onStartVideoCall,
+  onAdminStartVideoCall,
   activeCallRoom,
   onJoinCall,
 }: {
+  channelId: string;
   channelName: string;
   isAdmin: boolean;
-  onStartVideoCall: () => void;
+  onAdminStartVideoCall: () => void;
   activeCallRoom: any;
   onJoinCall: () => void;
 }) {
   const { user } = useUser();
-  const [messages, setMessages] = useState<Array<{ id: string; sender: string; text: string; time: string; isAgent?: boolean }>>([
-    {
-      id: '1',
-      sender: 'Soporte Técnico LabSystem',
-      text: `¡Hola ${user?.firstName || 'Químico'}! Bienvenido al canal ${channelName}. ${
-        isAdmin
-          ? 'Estás en modo Administrador. Puedes enviar respuestas directamente a los usuarios.'
-          : '¿En qué podemos ayudarte el día de hoy con tus equipos o el sistema?'
-      }`,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isAgent: true,
-    },
-  ]);
+
+  // Cargar y sincronizar mensajes compartidos entre pestañas/usuarios
+  const [messages, setMessages] = useState<ChatMessageItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_MESSAGES_KEY}_${channelId}`);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      {
+        id: 'welcome-1',
+        sender: 'Soporte Técnico LabSystem',
+        text: `¡Hola ${user?.firstName || 'Químico'}! Bienvenido al canal ${channelName}. ${
+          isAdmin
+            ? 'Estás en Modo Agente Administrador. Tienes permisos para responder y crear videollamadas.'
+            : 'Un administrador en vivo atenderá tus consultas en tiempo real.'
+        }`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isAgent: true,
+      },
+    ];
+  });
+
   const [inputText, setInputText] = useState('');
+
+  // Escuchar nuevos mensajes enviados por el usuario o admin en tiempo real (storage broadcast)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `${STORAGE_MESSAGES_KEY}_${channelId}` && e.newValue) {
+        try {
+          setMessages(JSON.parse(e.newValue));
+        } catch {}
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [channelId]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -485,7 +595,7 @@ function FallbackInteractiveChat({
 
     const senderName = isAdmin ? `Admin: ${user?.firstName || 'Soporte'}` : (user?.firstName || 'Usuario');
 
-    const newMsg = {
+    const newMsg: ChatMessageItem = {
       id: `msg-${Date.now()}`,
       sender: senderName,
       text: inputText.trim(),
@@ -493,22 +603,13 @@ function FallbackInteractiveChat({
       isAgent: isAdmin,
     };
 
-    setMessages((prev) => [...prev, newMsg]);
-    setInputText('');
+    setMessages((prev) => {
+      const updated = [...prev, newMsg];
+      localStorage.setItem(`${STORAGE_MESSAGES_KEY}_${channelId}`, JSON.stringify(updated));
+      return updated;
+    });
 
-    // Si NO es Admin, simular respuesta de soporte tras 1.2s
-    if (!isAdmin) {
-      setTimeout(() => {
-        const autoReply = {
-          id: `reply-${Date.now()}`,
-          sender: 'Ing. Soporte Clínico',
-          text: `Recibido. He registrado tu consulta en ${channelName}. El administrador o un especialista te atenderá en tiempo real.`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isAgent: true,
-        };
-        setMessages((prev) => [...prev, autoReply]);
-      }, 1200);
-    }
+    setInputText('');
   };
 
   return (
@@ -517,7 +618,7 @@ function FallbackInteractiveChat({
       <div className="p-4 border-b border-base-200 bg-base-200/40 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="font-black text-base-content text-base">{channelName}</span>
-          <span className="badge badge-sm badge-success text-white font-bold">Stream Sync Active</span>
+          <span className="badge badge-sm badge-success text-white font-bold">En Vivo • Sync Realtime</span>
           {isAdmin && <span className="badge badge-sm badge-warning font-bold">Modo Agente Admin</span>}
         </div>
 
@@ -530,32 +631,34 @@ function FallbackInteractiveChat({
               <IconVideo className="w-3.5 h-3.5" />
               Unirse a Videollamada Activa
             </button>
-          ) : (
+          ) : isAdmin ? (
             <button
-              onClick={onStartVideoCall}
-              className="btn btn-xs btn-outline btn-primary gap-1 font-bold"
+              onClick={onAdminStartVideoCall}
+              className="btn btn-xs btn-primary font-bold gap-1"
             >
               <IconVideo className="w-3.5 h-3.5" />
-              {isAdmin ? '🎥 Crear Videollamada' : '📹 Solicitar Videollamada'}
+              🎥 Crear Videollamada de Soporte
             </button>
+          ) : (
+            <span className="text-xs text-base-content/60 font-semibold">Esperando respuesta del Administrador...</span>
           )}
         </div>
       </div>
 
-      {/* Notificación si hay Videollamada Activa */}
+      {/* Banner si hay Videollamada Creada por el Admin */}
       {activeCallRoom && (
         <div className="bg-indigo-600/10 border-b border-indigo-500/20 p-3 px-4 flex items-center justify-between text-xs font-semibold text-indigo-600">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
-            <span>Videollamada de Soporte en Vivo lista ({activeCallRoom.id})</span>
+            <span>El Administrador ({activeCallRoom.createdByName}) inició una Videollamada de Soporte</span>
           </div>
-          <button onClick={onJoinCall} className="link font-bold text-indigo-700">
-            Ingresar a la Sala ➔
+          <button onClick={onJoinCall} className="btn btn-xs btn-primary font-bold text-white rounded-xl">
+            Ingresar a la Llamada ➔
           </button>
         </div>
       )}
 
-      {/* Lista de Mensajes */}
+      {/* Lista de Mensajes Sincronizados */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-base-100">
         {messages.map((m) => (
           <div key={m.id} className={`chat ${m.isAgent ? 'chat-start' : 'chat-end'}`}>
@@ -573,14 +676,14 @@ function FallbackInteractiveChat({
         ))}
       </div>
 
-      {/* Input de Envío */}
+      {/* Input de Envío Sincronizado */}
       <form onSubmit={handleSendMessage} className="p-3 border-t border-base-200 bg-base-100 flex items-center gap-2">
         <input
           type="text"
           placeholder={
             isAdmin
-              ? `Responder como Administrador de Soporte en ${channelName}...`
-              : `Escribe tu mensaje en ${channelName}...`
+              ? `Responder a los usuarios como Administrador en ${channelName}...`
+              : `Escribe tu consulta para el soporte en ${channelName}...`
           }
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
