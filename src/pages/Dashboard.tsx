@@ -17,6 +17,7 @@ const PatientsView = lazy(() => import('../components/PatientsView'));
 const WorkOrdersView = lazy(() => import('../components/WorkOrdersView'));
 const AnalysisCatalogView = lazy(() => import('../components/AnalysisCatalogView'));
 const QualityControlView = lazy(() => import('../components/QualityControlView'));
+const SupportChatView = lazy(() => import('../components/SupportChatView'));
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
 
@@ -170,6 +171,9 @@ export default function Dashboard() {
               <QualityControlView initialSubView="results" />
             ) : activeView === 'qc-levey-jennings' ? (
               <QualityControlView initialSubView="levey-jennings" />
+            ) : activeView === 'support' ? (
+              /* Vista de Soporte Técnico en Vivo con GetStream Chat */
+              <SupportChatView />
             ) : activeView === 'analysis-catalog' ? (
               <AnalysisCatalogView />
             ) : activeView === 'create-order' ? (

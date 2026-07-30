@@ -14,6 +14,7 @@ import {
   IconPlus,
   IconCertificate,
   IconChartLine,
+  IconHeadphones,
 } from './icons';
 
 export type DashboardViewType =
@@ -29,7 +30,8 @@ export type DashboardViewType =
   | 'completed-orders'
   | 'qc-controls'
   | 'qc-results'
-  | 'qc-levey-jennings';
+  | 'qc-levey-jennings'
+  | 'support';
 
 interface SidebarProps {
   children: ReactNode;
@@ -221,7 +223,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
               </li>
             )}
 
-            {/* SUBMENÚ DROPDOWN: CONTROL DE CALIDAD (Ajustado estrictamente a la anchura del sidebar) */}
+            {/* SUBMENÚ DROPDOWN: CONTROL DE CALIDAD */}
             {isOperationalUser && (
               <li>
                 <details open={isQCActive}>
@@ -262,6 +264,18 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                 </details>
               </li>
             )}
+
+            {/* OPCIÓN DE MENÚ: SOPORTE TÉCNICO CON GETSTREAM CHAT */}
+            <li>
+              <button
+                onClick={() => handleNav('support')}
+                className={`py-2.5 rounded-xl gap-3 text-base-content/80 ${activeView === 'support' ? 'active font-bold' : ''}`}
+              >
+                <IconHeadphones className="w-5 h-5 text-indigo-500 shrink-0" />
+                <span className="truncate">Soporte Técnico</span>
+                <span className="badge badge-accent badge-xs font-bold font-mono">LIVE</span>
+              </button>
+            </li>
 
             {isOperationalUser && (
               <li>
