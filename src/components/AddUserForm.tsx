@@ -114,7 +114,7 @@ export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserForm
 
       setSuccessMsg('¡Usuario registrado exitosamente en Clerk y en la base de datos!');
       
-      // Limpiar formulario
+      // Limpiar formulariosss
       setFormData({
         email: '',
         password: '',
