@@ -11,6 +11,17 @@ import {
   Thread,
 } from 'stream-chat-react';
 import 'stream-chat-react/dist/css/index.css';
+
+import {
+  StreamVideo,
+  StreamVideoClient,
+  StreamCall,
+  SpeakerLayout,
+  CallControls,
+  type Call,
+} from '@stream-io/video-react-sdk';
+import '@stream-io/video-react-sdk/dist/css/styles.css';
+
 import { useUserContext } from '../hooks/useUserContext';
 import { useApi } from '../hooks/useApi';
 import {
@@ -56,7 +67,10 @@ export default function SupportChatView() {
   const [activeChannel, setActiveChannel] = useState<StreamChannelType | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string>('soporte-general');
 
-  // Estado para la Videollamada en Vivo Sincronizada desde el Backend
+  // Estado de GetStream Video Client y Call Room
+  const [streamVideoClient, setStreamVideoClient] = useState<StreamVideoClient | null>(null);
+  const [streamCall, setStreamCall] = useState<Call | null>(null);
+
   const [activeCallRoom, setActiveCallRoom] = useState<{
     id: string;
     url: string;
@@ -70,7 +84,7 @@ export default function SupportChatView() {
   const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
 
-  // Referencias a elementos de Video HTML5 para Stream WebRTC Real
+  // Referencias a elementos de Video HTML5 para Fallback WebRTC Directo
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -99,7 +113,7 @@ export default function SupportChatView() {
     },
   ];
 
-  // 1. Polling de Sincronización de Llamadas en Vivo entre Múltiples Dispositivos
+  // 1. Sincronizar Llamadas Activas desde Backend
   const fetchActiveCall = useCallback(async () => {
     try {
       const res = await api.get(`/support/call/${activeChannelId}`);
@@ -124,7 +138,51 @@ export default function SupportChatView() {
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Unirse a la Videollamada y Registrar Participante con Nombre Real
+  // 2. Conectar e Inicializar GetStream Video SDK cuando el usuario entra a una llamada
+  useEffect(() => {
+    if (!isInCall || !activeCallRoom) return;
+
+    let vClient: StreamVideoClient | null = null;
+    let callInstance: Call | null = null;
+
+    const setupStreamVideo = async () => {
+      try {
+        const streamApiKey = import.meta.env.VITE_STREAM_API_KEY || 'b5f4y9r5x6zz';
+        const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
+
+        vClient = new StreamVideoClient({
+          apiKey: streamApiKey,
+          user: {
+            id: userId,
+            name: realUserName,
+            image: user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(realUserName)}`,
+          },
+          token: StreamChat.getInstance(streamApiKey).devToken(userId),
+        });
+
+        callInstance = vClient.call('default', activeCallRoom.id);
+        await callInstance.join({ create: true });
+
+        setStreamVideoClient(vClient);
+        setStreamCall(callInstance);
+      } catch (err) {
+        console.warn('GetStream Video SDK usando fallback WebRTC directo:', err);
+      }
+    };
+
+    setupStreamVideo();
+
+    return () => {
+      if (callInstance) {
+        callInstance.leave().catch((e) => console.error('Call leave error:', e));
+      }
+      if (vClient) {
+        vClient.disconnectUser().catch((e) => console.error('Video disconnect error:', e));
+      }
+    };
+  }, [isInCall, activeCallRoom?.id, user?.id, realUserName]);
+
+  // 3. Unirse a la Videollamada y Registrar Participante en Servidor
   const handleJoinCall = async () => {
     setIsInCall(true);
     try {
@@ -140,7 +198,7 @@ export default function SupportChatView() {
     }
   };
 
-  // 3. Inicialización de Stream Chat SDK en Segundo Plano
+  // 4. Conectar Stream Chat SDK
   useEffect(() => {
     let client: StreamChat | null = null;
 
@@ -186,9 +244,9 @@ export default function SupportChatView() {
     };
   }, [user?.id, activeChannelId, isAdmin, realUserName]);
 
-  // 4. Activación Real de Cámara y Micrófono WebRTC con Transmisión de Audio
+  // 5. Captura Directa de Cámara y Micrófono para Fallback
   useEffect(() => {
-    if (isInCall && isCameraOn && !isScreenSharing) {
+    if (isInCall && isCameraOn && !isScreenSharing && !streamCall) {
       setMediaError(null);
       navigator.mediaDevices
         .getUserMedia({ video: true, audio: true })
@@ -216,9 +274,9 @@ export default function SupportChatView() {
         localVideoRef.current.srcObject = null;
       }
     }
-  }, [isInCall, isCameraOn, isScreenSharing]);
+  }, [isInCall, isCameraOn, isScreenSharing, streamCall]);
 
-  // Control Dinámico de Mute/Unmute del Micrófono en Tiempo Real
+  // Control de Micrófono Mute/Unmute
   useEffect(() => {
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getAudioTracks().forEach((track) => {
@@ -227,14 +285,7 @@ export default function SupportChatView() {
     }
   }, [isMicOn]);
 
-  // Activar Reproducción de Audio Remoto
-  useEffect(() => {
-    if (isInCall && remoteAudioRef.current) {
-      remoteAudioRef.current.play().catch((e) => console.warn('Autoplay audio:', e));
-    }
-  }, [isInCall]);
-
-  // 5. Compartir Pantalla en Vivo (Screen Sharing)
+  // Compartir Pantalla
   const handleToggleScreenShare = async () => {
     if (!isScreenSharing) {
       try {
@@ -265,7 +316,7 @@ export default function SupportChatView() {
     }
   };
 
-  // 🚀 SOLO EL AGENTE ADMINISTRADOR PUEDE CREAR Y PUBLICAR LA VIDEOLLAMADA
+  // 🚀 SOLO EL AGENTE ADMINISTRADOR PUEDE CREAR LA VIDEOLLAMADA
   const handleAdminGenerateStreamCall = async () => {
     if (!isAdmin) return;
 
@@ -293,6 +344,7 @@ export default function SupportChatView() {
   const handleEndCall = async () => {
     setIsInCall(false);
     setIsScreenSharing(false);
+    setStreamCall(null);
     if (isAdmin) {
       try {
         await api.delete(`/support/call/${activeChannelId}`);
@@ -303,7 +355,7 @@ export default function SupportChatView() {
     }
   };
 
-  // Obtener los datos reales del segundo participante conectado
+  // Datos reales del otro participante
   const otherParticipant = activeCallRoom?.participants?.find((p) => p.userId !== user?.id);
   const remoteParticipantName = otherParticipant
     ? otherParticipant.name
@@ -317,10 +369,10 @@ export default function SupportChatView() {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
-      {/* Elemento de Audio Remoto no silenciado */}
+      {/* Elemento de Audio Remoto */}
       <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
 
-      {/* Banner Ejecutivo Superior con Gradiente Fino */}
+      {/* Banner Ejecutivo Superior */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-900 to-blue-900 p-6 sm:p-8 text-white shadow-xl border border-indigo-500/20">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -347,7 +399,7 @@ export default function SupportChatView() {
             </div>
           </div>
 
-          {/* Botón de Acción según Rol (Solo Admin inicia llamadas) */}
+          {/* Botón de Acción según Rol */}
           <div className="flex items-center gap-3 shrink-0">
             {isAdmin ? (
               <button
@@ -374,7 +426,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM CON DISEÑO EJECUTIVO */}
+      {/* SALA DE VIDEOLLAMADA CON GETSTREAM VIDEO REACT SDK OFICIAL */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
@@ -382,9 +434,9 @@ export default function SupportChatView() {
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
               <div>
                 <h3 className="font-black text-sm text-indigo-300">
-                  Videollamada en Vivo • Sala #{activeCallRoom.id}
+                  Videollamada en Vivo Stream • Sala #{activeCallRoom.id}
                 </h3>
-                <p className="text-xs text-slate-400">Generada por Agente Admin: {activeCallRoom.createdByName}</p>
+                <p className="text-xs text-slate-400">Agente Creador: {activeCallRoom.createdByName}</p>
               </div>
             </div>
 
@@ -398,103 +450,117 @@ export default function SupportChatView() {
             </a>
           </div>
 
-          {mediaError && (
-            <div className="alert alert-warning text-xs font-bold py-2 rounded-xl">
-              <span>⚠️ {mediaError}</span>
-            </div>
-          )}
-
-          {/* Grid de Transmisión WebRTC Stream con Nombres Reales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[320px]">
-            {/* Pantalla Local del Usuario / Químico Actual */}
-            <div className="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px] shadow-inner">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className={`w-full h-full object-cover rounded-2xl ${
-                  isCameraOn || isScreenSharing ? 'block' : 'hidden'
-                }`}
-              />
-
-              {!isCameraOn && !isScreenSharing && (
-                <div className="flex flex-col items-center gap-2 text-slate-500">
-                  <IconVideoOff className="w-12 h-12 text-slate-600" />
-                  <span className="text-xs font-semibold">Cámara Apagada</span>
+          {/* Componente Oficial de GetStream Video React SDK */}
+          {streamVideoClient && streamCall ? (
+            <StreamVideo client={streamVideoClient}>
+              <StreamCall call={streamCall}>
+                <div className="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                  <SpeakerLayout />
+                  <CallControls onLeave={handleEndCall} />
+                </div>
+              </StreamCall>
+            </StreamVideo>
+          ) : (
+            /* Componente de Respaldo WebRTC con Nombres Reales */
+            <div className="space-y-4">
+              {mediaError && (
+                <div className="alert alert-warning text-xs font-bold py-2 rounded-xl">
+                  <span>⚠️ {mediaError}</span>
                 </div>
               )}
 
-              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/60 flex items-center gap-2 shadow-md">
-                <span>{isScreenSharing ? '🖥️ Tu Pantalla Compartida' : `${realUserName} (Tú)`}</span>
-                {isMicOn ? (
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Micrófono Activo"></span>
-                ) : (
-                  <span className="w-2 h-2 rounded-full bg-red-400" title="Micrófono Silenciado"></span>
-                )}
-              </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[320px]">
+                {/* Pantalla Local */}
+                <div className="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px] shadow-inner">
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`w-full h-full object-cover rounded-2xl ${
+                      isCameraOn || isScreenSharing ? 'block' : 'hidden'
+                    }`}
+                  />
 
-            {/* Pantalla del Participante Remoto */}
-            <div className="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px] shadow-inner">
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950/80 via-slate-950 to-slate-950 p-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 font-black text-2xl mb-2 shadow-lg">
-                  {remoteParticipantName.charAt(0).toUpperCase()}
+                  {!isCameraOn && !isScreenSharing && (
+                    <div className="flex flex-col items-center gap-2 text-slate-500">
+                      <IconVideoOff className="w-12 h-12 text-slate-600" />
+                      <span className="text-xs font-semibold">Cámara Apagada</span>
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/60 flex items-center gap-2 shadow-md">
+                    <span>{isScreenSharing ? '🖥️ Tu Pantalla Compartida' : `${realUserName} (Tú)`}</span>
+                    {isMicOn ? (
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Micrófono Activo"></span>
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-red-400" title="Micrófono Silenciado"></span>
+                    )}
+                  </div>
                 </div>
-                <span className="text-base font-black text-slate-100 block tracking-tight">
-                  {remoteParticipantName}
-                </span>
-                <span className="text-xs text-indigo-300 font-medium mt-1 block">
-                  {remoteParticipantRole}
-                </span>
+
+                {/* Pantalla del Participante Remoto */}
+                <div className="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px] shadow-inner">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950/80 via-slate-950 to-slate-950 p-6 text-center">
+                    <div className="w-20 h-20 rounded-full bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 font-black text-2xl mb-2 shadow-lg">
+                      {remoteParticipantName.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-base font-black text-slate-100 block tracking-tight">
+                      {remoteParticipantName}
+                    </span>
+                    <span className="text-xs text-indigo-300 font-medium mt-1 block">
+                      {remoteParticipantRole}
+                    </span>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/60 flex items-center gap-2 shadow-md">
+                    <span>{otherParticipant ? otherParticipant.name : remoteParticipantRole}</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                  </div>
+                </div>
               </div>
-              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/60 flex items-center gap-2 shadow-md">
-                <span>{otherParticipant ? otherParticipant.name : remoteParticipantRole}</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+
+              {/* Botonera de Controles */}
+              <div className="flex flex-wrap items-center justify-center gap-3 bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl">
+                <button
+                  onClick={() => setIsCameraOn(!isCameraOn)}
+                  className={`btn btn-circle ${isCameraOn ? 'btn-neutral text-white' : 'btn-error text-white'}`}
+                  title={isCameraOn ? 'Apagar Cámara' : 'Encender Cámara'}
+                >
+                  {isCameraOn ? <IconVideo className="w-5 h-5" /> : <IconVideoOff className="w-5 h-5" />}
+                </button>
+
+                <button
+                  onClick={() => setIsMicOn(!isMicOn)}
+                  className={`btn btn-circle ${isMicOn ? 'btn-emerald bg-emerald-500 text-slate-950 font-bold' : 'btn-error text-white'}`}
+                  title={isMicOn ? 'Silenciar Micrófono' : 'Activar Micrófono'}
+                >
+                  {isMicOn ? <IconMic className="w-5 h-5" /> : <IconMicOff className="w-5 h-5" />}
+                </button>
+
+                <button
+                  onClick={handleToggleScreenShare}
+                  className={`btn btn-circle ${isScreenSharing ? 'btn-accent text-slate-950' : 'btn-neutral text-white'}`}
+                  title={isScreenSharing ? 'Detener Compartir Pantalla' : 'Compartir Pantalla'}
+                >
+                  <IconMonitor className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={handleEndCall}
+                  className="btn btn-error rounded-2xl gap-2 font-bold text-white px-6 shadow-lg"
+                >
+                  <IconPhoneOff className="w-5 h-5" />
+                  Finalizar Videollamada
+                </button>
               </div>
             </div>
-          </div>
-
-          {/* Barra Ejcutiva de Controles */}
-          <div className="flex flex-wrap items-center justify-center gap-3 bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl">
-            <button
-              onClick={() => setIsCameraOn(!isCameraOn)}
-              className={`btn btn-circle ${isCameraOn ? 'btn-neutral text-white' : 'btn-error text-white'}`}
-              title={isCameraOn ? 'Apagar Cámara' : 'Encender Cámara'}
-            >
-              {isCameraOn ? <IconVideo className="w-5 h-5" /> : <IconVideoOff className="w-5 h-5" />}
-            </button>
-
-            <button
-              onClick={() => setIsMicOn(!isMicOn)}
-              className={`btn btn-circle ${isMicOn ? 'btn-emerald bg-emerald-500 text-slate-950 font-bold' : 'btn-error text-white'}`}
-              title={isMicOn ? 'Silenciar Micrófono' : 'Activar Micrófono'}
-            >
-              {isMicOn ? <IconMic className="w-5 h-5" /> : <IconMicOff className="w-5 h-5" />}
-            </button>
-
-            <button
-              onClick={handleToggleScreenShare}
-              className={`btn btn-circle ${isScreenSharing ? 'btn-accent text-slate-950' : 'btn-neutral text-white'}`}
-              title={isScreenSharing ? 'Detener Compartir Pantalla' : 'Compartir Pantalla'}
-            >
-              <IconMonitor className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={handleEndCall}
-              className="btn btn-error rounded-2xl gap-2 font-bold text-white px-6 shadow-lg"
-            >
-              <IconPhoneOff className="w-5 h-5" />
-              Finalizar Videollamada
-            </button>
-          </div>
+          )}
         </div>
       )}
 
-      {/* Interfaz de Chat con Estilo Claro y Ejecutivo */}
+      {/* Interfaz de Chat Claro y Ejecutivo */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
-        {/* Selector de Canales de Atención Fino */}
+        {/* Selector de Canales */}
         <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 space-y-4 flex flex-col justify-between">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -559,7 +625,7 @@ export default function SupportChatView() {
           </div>
         </div>
 
-        {/* Ventana Principal de Chat Fino y Claro */}
+        {/* Ventana Principal de Chat */}
         <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
           {chatClient && activeChannel ? (
             <div className="stream-chat-wrapper h-full flex-1">
@@ -590,7 +656,7 @@ export default function SupportChatView() {
   );
 }
 
-// Componente de Chat Ejecutivo Fino en Colores Claros
+// Componente de Chat Ejecutivo Sincronizado
 function ExecutiveSynchronizedChat({
   channelId,
   channelName,
