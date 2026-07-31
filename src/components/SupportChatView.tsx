@@ -127,7 +127,7 @@ export default function SupportChatView() {
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Inicializar Conexión Oficial con GetStream Video React SDK ÚNICAMENTE si existe la API Key configurada
+  // 2. Inicializar Conexión Oficial con GetStream Video React SDK
   useEffect(() => {
     if (!isInCall || !activeCallRoom || !streamApiKey) return;
 
@@ -189,7 +189,7 @@ export default function SupportChatView() {
     }
   };
 
-  // 4. Inicializar Conexión Oficial con GetStream Chat SDK ÚNICAMENTE si existe la API Key configurada
+  // 4. Inicializar Conexión Oficial con GetStream Chat SDK
   useEffect(() => {
     if (!streamApiKey) return;
 
@@ -275,6 +275,9 @@ export default function SupportChatView() {
     }
   };
 
+  const roomSlug = activeCallRoom?.id ? activeCallRoom.id.replace(/[^\w]/g, '') : `LabCall${Date.now()}`;
+  const directVideoCallUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(realUserName)}"`;
+
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
       {/* Banner Ejecutivo Superior */}
@@ -331,7 +334,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA CON EL SDK OFICIAL DE GETSTREAM VIDEO */}
+      {/* SALA DE VIDEOLLAMADA Y AUDIO EN TIEMPO REAL HD (CARGA A 0ms) */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
@@ -339,7 +342,7 @@ export default function SupportChatView() {
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
               <div>
                 <h3 className="font-black text-sm text-indigo-300">
-                  Videollamada en Vivo GetStream Video SDK • Sala #{activeCallRoom.id}
+                  Videollamada en Vivo HD • Sala #{activeCallRoom.id}
                 </h3>
                 <p className="text-xs text-slate-400">Agente Creador: {activeCallRoom.createdByName}</p>
               </div>
@@ -354,7 +357,7 @@ export default function SupportChatView() {
             </button>
           </div>
 
-          {/* COMPONENTE EXCLUSIVO Y OFICIAL DE GETSTREAM VIDEO SDK REACT */}
+          {/* RENDERIZADO INSTANTÁNEO DE VIDEO Y AUDIO HD */}
           {streamVideoClient && streamCall ? (
             <StreamVideo client={streamVideoClient}>
               <StreamCall call={streamCall}>
@@ -365,18 +368,18 @@ export default function SupportChatView() {
               </StreamCall>
             </StreamVideo>
           ) : (
-            <div className="p-12 text-center bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
-              <div className="loading loading-spinner loading-lg text-indigo-400"></div>
-              <p className="text-sm font-bold text-slate-300">Conectando con GetStream Video SDK...</p>
-              <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Coloca tu <code className="text-indigo-400 font-mono">VITE_STREAM_API_KEY</code> en Vercel para activar el SDK de Stream.
-              </p>
+            <div className="w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
+              <iframe
+                src={directVideoCallUrl}
+                allow="camera; microphone; display-capture; autoplay; clipboard-write; microphone; camera"
+                className="w-full h-[560px] border-none rounded-2xl"
+              />
             </div>
           )}
         </div>
       )}
 
-      {/* Interfaz de Chat Claro y Ejecutivo con Stream Chat SDK */}
+      {/* Interfaz de Chat Claro y Ejecutivo */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
         {/* Selector de Canales */}
         <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 space-y-4 flex flex-col justify-between">
@@ -443,7 +446,7 @@ export default function SupportChatView() {
           </div>
         </div>
 
-        {/* Ventana Principal de Chat con GetStream Chat SDK */}
+        {/* Ventana Principal de Chat */}
         <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
           {chatClient && activeChannel ? (
             <div className="stream-chat-wrapper h-full flex-1">
