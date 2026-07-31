@@ -1,3 +1,4 @@
+// src/context/MaintenanceContext.tsx
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useApi } from '../hooks/useApi';
 
@@ -33,9 +34,6 @@ const DEFAULT_MAINTENANCE_CONFIG: MaintenanceConfig = {
   },
 };
 
-const MAINTENANCE_STORAGE_KEY = 'lab_system_maintenance_config_v1';
-const VIP_PASS_STORAGE_KEY = 'lab_system_vip_maintenance_pass_v1';
-
 interface MaintenanceContextType {
   config: MaintenanceConfig;
   isVipPassed: boolean;
@@ -54,42 +52,35 @@ const MaintenanceContext = createContext<MaintenanceContextType | undefined>(und
 export function MaintenanceProvider({ children }: { children: ReactNode }) {
   const api = useApi();
 
-  const [config, setConfig] = useState<MaintenanceConfig>(() => {
-    try {
-      const saved = localStorage.getItem(MAINTENANCE_STORAGE_KEY);
-      return saved ? { ...DEFAULT_MAINTENANCE_CONFIG, ...JSON.parse(saved) } : DEFAULT_MAINTENANCE_CONFIG;
-    } catch {
-      return DEFAULT_MAINTENANCE_CONFIG;
-    }
-  });
-
-  const [isVipPassed, setIsVipPassed] = useState<boolean>(() => {
-    try {
-      const savedPass = localStorage.getItem(VIP_PASS_STORAGE_KEY);
-      return savedPass === (config.vipAccessKey || 'SECURE_VIP_PASS_2026');
-    } catch {
-      return false;
-    }
-  });
-
+  const [config, setConfig] = useState<MaintenanceConfig>(DEFAULT_MAINTENANCE_CONFIG);
+  const [isVipPassed, setIsVipPassed] = useState<boolean>(false);
   const [isPreviewingMaintenance, setIsPreviewingMaintenance] = useState<boolean>(false);
 
-  // 1. Sincronización en tiempo real desde el Backend NestJS
+  // Limpiar cualquier cache antigua almacenada en localStorage/sessionStorage/cookies que pueda bloquear el estado real
+  useEffect(() => {
+    try {
+      localStorage.removeItem('lab_system_maintenance_config_v1');
+      localStorage.removeItem('lab_system_vip_maintenance_pass_v1');
+      sessionStorage.removeItem('lab_system_maintenance_config_v1');
+      sessionStorage.removeItem('lab_system_vip_maintenance_pass_v1');
+    } catch {}
+  }, []);
+
+  // 1. Sincronización en TIEMPO REAL desde el Backend NestJS y la BD PostgreSQL (Sin cache local)
   const fetchBackendMaintenanceConfig = useCallback(async () => {
     try {
       const res = await api.get<MaintenanceConfig>('/support/maintenance');
       if (res.data) {
         setConfig(res.data);
-        localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(res.data));
       }
     } catch (err) {
-      console.warn('Backend maintenance sync fallback to local:', err);
+      console.warn('Fallback de mantenimiento:', err);
     }
   }, [api]);
 
   useEffect(() => {
     fetchBackendMaintenanceConfig();
-    const interval = setInterval(fetchBackendMaintenanceConfig, 1500);
+    const interval = setInterval(fetchBackendMaintenanceConfig, 1000); // Polling activo de 1s
     return () => clearInterval(interval);
   }, [fetchBackendMaintenanceConfig]);
 
@@ -98,9 +89,6 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     const params = new URLSearchParams(window.location.search);
     const passFromUrl = params.get('vip_pass') || params.get('maintenance_pass') || params.get('key');
     if (passFromUrl && passFromUrl === config.vipAccessKey) {
-      try {
-        localStorage.setItem(VIP_PASS_STORAGE_KEY, passFromUrl);
-      } catch {}
       setIsVipPassed(true);
     }
   }, [config.vipAccessKey]);
@@ -115,18 +103,24 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
       },
     };
 
+    // Actualización inmediata en estado local
     setConfig(nextConfig);
-    localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(nextConfig));
 
+    // Enviar directamente a la Base de Datos PostgreSQL
     try {
       await api.post('/support/maintenance', nextConfig);
+      await fetchBackendMaintenanceConfig();
     } catch (err) {
-      console.warn('Error guardando mantenimieto en servidor:', err);
+      console.warn('Error guardando mantenimiento en servidor:', err);
     }
   };
 
   const toggleGlobalMaintenance = async (enabled: boolean) => {
     await updateConfig({ globalMaintenance: enabled });
+    if (!enabled) {
+      setIsVipPassed(false);
+      setIsPreviewingMaintenance(false);
+    }
   };
 
   const toggleModuleMaintenance = async (moduleKey: keyof MaintenanceModules, enabled: boolean) => {
@@ -139,9 +133,6 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
 
   const validateVipKey = (enteredKey: string): boolean => {
     if (enteredKey.trim() === config.vipAccessKey) {
-      try {
-        localStorage.setItem(VIP_PASS_STORAGE_KEY, enteredKey.trim());
-      } catch {}
       setIsVipPassed(true);
       setIsPreviewingMaintenance(false);
       return true;
@@ -150,9 +141,6 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
   };
 
   const clearVipPass = () => {
-    try {
-      localStorage.removeItem(VIP_PASS_STORAGE_KEY);
-    } catch {}
     setIsVipPassed(false);
   };
 
