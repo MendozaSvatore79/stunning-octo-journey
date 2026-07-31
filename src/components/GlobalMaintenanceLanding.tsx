@@ -21,13 +21,11 @@ export default function GlobalMaintenanceLanding() {
       setErrorMsg('Clave de Acceso VIP no válida o expirada.');
     } else {
       setErrorMsg('');
-      window.location.reload();
     }
   };
 
   const handleAdminBypassToDashboard = () => {
     validateVipKey(config.vipAccessKey);
-    window.location.reload();
   };
 
   return (

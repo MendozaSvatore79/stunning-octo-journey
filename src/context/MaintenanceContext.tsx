@@ -34,6 +34,8 @@ const DEFAULT_MAINTENANCE_CONFIG: MaintenanceConfig = {
   },
 };
 
+const SESSION_VIP_KEY = 'lab_active_vip_pass_session_v2';
+
 interface MaintenanceContextType {
   config: MaintenanceConfig;
   isVipPassed: boolean;
@@ -53,20 +55,20 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
   const api = useApi();
 
   const [config, setConfig] = useState<MaintenanceConfig>(DEFAULT_MAINTENANCE_CONFIG);
-  const [isVipPassed, setIsVipPassed] = useState<boolean>(false);
+
+  // Mantener la autorizacion VIP durante la sesion activa del navegador sin interferir con la BD PostgreSQL
+  const [isVipPassed, setIsVipPassed] = useState<boolean>(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_VIP_KEY);
+      return Boolean(saved);
+    } catch {
+      return false;
+    }
+  });
+
   const [isPreviewingMaintenance, setIsPreviewingMaintenance] = useState<boolean>(false);
 
-  // Limpiar cualquier cache antigua almacenada en localStorage/sessionStorage/cookies que pueda bloquear el estado real
-  useEffect(() => {
-    try {
-      localStorage.removeItem('lab_system_maintenance_config_v1');
-      localStorage.removeItem('lab_system_vip_maintenance_pass_v1');
-      sessionStorage.removeItem('lab_system_maintenance_config_v1');
-      sessionStorage.removeItem('lab_system_vip_maintenance_pass_v1');
-    } catch {}
-  }, []);
-
-  // 1. Sincronización en TIEMPO REAL desde el Backend NestJS y la BD PostgreSQL (Sin cache local)
+  // 1. Sincronización en TIEMPO REAL desde el Backend NestJS y la BD PostgreSQL
   const fetchBackendMaintenanceConfig = useCallback(async () => {
     try {
       const res = await api.get<MaintenanceConfig>('/support/maintenance');
@@ -89,6 +91,9 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     const params = new URLSearchParams(window.location.search);
     const passFromUrl = params.get('vip_pass') || params.get('maintenance_pass') || params.get('key');
     if (passFromUrl && passFromUrl === config.vipAccessKey) {
+      try {
+        sessionStorage.setItem(SESSION_VIP_KEY, passFromUrl);
+      } catch {}
       setIsVipPassed(true);
     }
   }, [config.vipAccessKey]);
@@ -115,10 +120,17 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const clearVipPass = () => {
+    try {
+      sessionStorage.removeItem(SESSION_VIP_KEY);
+    } catch {}
+    setIsVipPassed(false);
+  };
+
   const toggleGlobalMaintenance = async (enabled: boolean) => {
     await updateConfig({ globalMaintenance: enabled });
     if (!enabled) {
-      setIsVipPassed(false);
+      clearVipPass();
       setIsPreviewingMaintenance(false);
     }
   };
@@ -133,15 +145,14 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
 
   const validateVipKey = (enteredKey: string): boolean => {
     if (enteredKey.trim() === config.vipAccessKey) {
+      try {
+        sessionStorage.setItem(SESSION_VIP_KEY, enteredKey.trim());
+      } catch {}
       setIsVipPassed(true);
       setIsPreviewingMaintenance(false);
       return true;
     }
     return false;
-  };
-
-  const clearVipPass = () => {
-    setIsVipPassed(false);
   };
 
   const getVipUrl = () => {
