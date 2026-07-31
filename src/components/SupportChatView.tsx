@@ -145,7 +145,6 @@ export default function SupportChatView() {
     const initGetStreamWithBackendToken = async () => {
       try {
         const rawUserId = user?.id || `user_${Date.now()}`;
-        // Solicitar token JWT oficial generado en el backend NestJS con STREAM_API_SECRET
         const tokenRes = await api.post('/support/video-token', { userId: rawUserId });
 
         if (tokenRes.data && tokenRes.data.token) {
@@ -170,7 +169,7 @@ export default function SupportChatView() {
           setStreamCall(callInstance);
         }
       } catch (err) {
-        console.warn('Backend Token no disponible, conectando sala sincronizada...', err);
+        console.error('Error conectando GetStream Video Client:', err);
       }
     };
 
@@ -288,10 +287,7 @@ export default function SupportChatView() {
     }
   };
 
-  // URL interna del proyecto para compartir e ingresar directamente a la videollamada
-  const roomSlug = activeCallRoom?.id ? activeCallRoom.id.replace(/[^\w]/g, '') : `LabCall${Date.now()}`;
-  const internalProjectCallUrl = `${window.location.origin}${window.location.pathname}?tab=support&channelId=${activeChannelId}&callId=${activeCallRoom?.id || roomSlug}`;
-  const directVideoFrameUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(realUserName)}"`;
+  const internalProjectCallUrl = `${window.location.origin}${window.location.pathname}?tab=support&channelId=${activeChannelId}&callId=${activeCallRoom?.id}`;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -312,7 +308,7 @@ export default function SupportChatView() {
                   </span>
                 ) : (
                   <span className="badge bg-white/20 border border-white/30 text-white font-bold text-[11px] uppercase tracking-wider px-3 py-2 rounded-xl backdrop-blur-md">
-                    Stream Chat & Video SDK + Backend API
+                    GetStream Video React SDK
                   </span>
                 )}
               </div>
@@ -349,7 +345,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA INTEGRADAS EN EL PROYECTO */}
+      {/* SALA DE VIDEOLLAMADA 100% EXCLUSIVA DE GETSTREAM VIDEO SDK */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
@@ -357,7 +353,7 @@ export default function SupportChatView() {
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
               <div>
                 <h3 className="font-black text-sm text-indigo-300">
-                  Videollamada en Vivo de Soporte • Sala #{activeCallRoom.id}
+                  Videollamada en Vivo GetStream Video SDK • Sala #{activeCallRoom.id}
                 </h3>
                 <p className="text-xs text-slate-400">Agente Creador: {activeCallRoom.createdByName}</p>
               </div>
@@ -367,7 +363,7 @@ export default function SupportChatView() {
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(internalProjectCallUrl);
-                  alert('¡Enlace de videollamada copiado al portapapeles!');
+                  alert('¡Enlace de videollamada de tu proyecto copiado!');
                 }}
                 className="btn btn-xs btn-outline btn-indigo gap-1 text-[11px] rounded-xl text-indigo-200 border-indigo-500/40"
               >
@@ -383,7 +379,7 @@ export default function SupportChatView() {
             </div>
           </div>
 
-          {/* STREAM VIDEO SDK O FRAME DE VIDEO HD INTEGRADO */}
+          {/* COMPONENTE EXCLUSIVO Y NATIVO DE GETSTREAM VIDEO SDK REACT */}
           {streamVideoClient && streamCall ? (
             <StreamVideo client={streamVideoClient}>
               <StreamCall call={streamCall}>
@@ -394,12 +390,12 @@ export default function SupportChatView() {
               </StreamCall>
             </StreamVideo>
           ) : (
-            <div className="w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
-              <iframe
-                src={directVideoFrameUrl}
-                allow="camera; microphone; display-capture; autoplay; clipboard-write; microphone; camera"
-                className="w-full h-[560px] border-none rounded-2xl"
-              />
+            <div className="p-12 text-center bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+              <div className="loading loading-spinner loading-lg text-indigo-400"></div>
+              <p className="text-sm font-bold text-slate-300">Conectando a la Sala de GetStream Video SDK...</p>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Obteniendo token de acceso seguro desde el servidor NestJS...
+              </p>
             </div>
           )}
         </div>
