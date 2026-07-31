@@ -40,6 +40,8 @@ const VIP_PASS_STORAGE_KEY = 'lab_system_vip_maintenance_pass_v1';
 interface MaintenanceContextType {
   config: MaintenanceConfig;
   isVipPassed: boolean;
+  isPreviewingMaintenance: boolean;
+  setIsPreviewingMaintenance: (preview: boolean) => void;
   updateConfig: (newConfig: Partial<MaintenanceConfig>) => void;
   toggleGlobalMaintenance: (enabled: boolean) => void;
   toggleModuleMaintenance: (moduleKey: keyof MaintenanceModules, enabled: boolean) => void;
@@ -70,6 +72,8 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
       return false;
     }
   });
+
+  const [isPreviewingMaintenance, setIsPreviewingMaintenance] = useState<boolean>(false);
 
   // Guardar cambios en localStorage
   useEffect(() => {
@@ -139,13 +143,15 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     return `${baseUrl}/dashboard?vip_pass=${encodeURIComponent(config.vipAccessKey)}`;
   };
 
-  const effectiveIsVipPassed = isAdmin || isVipPassed;
+  const effectiveIsVipPassed = (isAdmin && !isPreviewingMaintenance) || isVipPassed;
 
   return (
     <MaintenanceContext.Provider
       value={{
         config,
         isVipPassed: effectiveIsVipPassed,
+        isPreviewingMaintenance,
+        setIsPreviewingMaintenance,
         updateConfig,
         toggleGlobalMaintenance,
         toggleModuleMaintenance,

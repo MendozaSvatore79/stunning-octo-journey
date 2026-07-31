@@ -1,10 +1,13 @@
 // src/components/GlobalMaintenanceLanding.tsx
 import { useState } from 'react';
 import { useMaintenance } from '../context/MaintenanceContext';
+import { useUserContext } from '../hooks/useUserContext';
 import { IconShield, IconSettings, IconHeadphones } from './icons';
 
 export default function GlobalMaintenanceLanding() {
-  const { config, validateVipKey } = useMaintenance();
+  const { config, validateVipKey, setIsPreviewingMaintenance, toggleGlobalMaintenance } = useMaintenance();
+  const { isAdmin } = useUserContext();
+
   const [vipInput, setVipInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showVipInput, setShowVipInput] = useState(false);
@@ -24,6 +27,31 @@ export default function GlobalMaintenanceLanding() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative overflow-hidden">
+      {/* BARRA SUPERIOR DE ADMINISTRADOR SI ESTÁ PREVISUALIZANDO */}
+      {isAdmin && (
+        <div className="bg-amber-500 text-slate-950 px-4 py-2.5 text-xs font-black flex flex-wrap items-center justify-between gap-3 shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-950 animate-ping"></span>
+            <span>👑 MODO PREVISUALIZACIÓN DE ADMINISTRADOR: Estás viendo la página de mantenimiento que ven los visitantes públicos.</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => toggleGlobalMaintenance(false)}
+              className="btn btn-xs bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg border-none"
+            >
+              Turn OFF / Apagar Mantenimiento
+            </button>
+            <button
+              onClick={() => setIsPreviewingMaintenance(false)}
+              className="btn btn-xs bg-white hover:bg-slate-100 text-slate-950 font-black rounded-lg border-none shadow-sm"
+            >
+              Volver al Dashboard ➔
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Fondos Decorativos con Gradiente sutil */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>

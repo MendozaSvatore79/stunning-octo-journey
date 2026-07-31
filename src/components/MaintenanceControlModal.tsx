@@ -18,7 +18,14 @@ interface MaintenanceControlModalProps {
 }
 
 export default function MaintenanceControlModal({ isOpen, onClose }: MaintenanceControlModalProps) {
-  const { config, updateConfig, toggleGlobalMaintenance, toggleModuleMaintenance, getVipUrl } = useMaintenance();
+  const {
+    config,
+    updateConfig,
+    toggleGlobalMaintenance,
+    toggleModuleMaintenance,
+    getVipUrl,
+    setIsPreviewingMaintenance,
+  } = useMaintenance();
 
   const [vipKeyInput, setVipKeyInput] = useState(config.vipAccessKey);
   const [estimatedInput, setEstimatedInput] = useState(config.estimatedTime);
@@ -41,6 +48,11 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);
+  };
+
+  const handlePreviewMaintenanceLanding = () => {
+    setIsPreviewingMaintenance(true);
+    onClose();
   };
 
   const moduleItems: { key: keyof MaintenanceModules; label: string; icon: any; color: string }[] = [
@@ -77,26 +89,40 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
 
         {/* Cuerpo del Modal */}
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-          {/* MANTENIMIENTO GLOBAL CONTROL SWITCH */}
-          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-black text-slate-900 text-sm">🚨 Mantenimiento Global (Todo el Sistema)</span>
-                {config.globalMaintenance && (
-                  <span className="badge badge-error text-[10px] font-bold text-white uppercase px-2 py-0.5">ACTIVO</span>
-                )}
+          {/* MANTENIMIENTO GLOBAL CONTROL SWITCH & BOTÓN PREVISUALIZAR */}
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-slate-900 text-sm">🚨 Mantenimiento Global (Todo el Sistema)</span>
+                  {config.globalMaintenance && (
+                    <span className="badge badge-error text-[10px] font-bold text-white uppercase px-2 py-0.5 animate-pulse">ACTIVO</span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500">
+                  Bloquea el acceso público a todo el sistema. Solo los Administradores o personas con la Clave VIP podrán acceder.
+                </p>
               </div>
-              <p className="text-xs text-slate-500">
-                Bloquea el acceso público a todo el sistema. Solo los Administradores o personas con la Clave VIP podrán acceder.
-              </p>
+
+              <input
+                type="checkbox"
+                className="toggle toggle-error toggle-lg"
+                checked={config.globalMaintenance}
+                onChange={(e) => toggleGlobalMaintenance(e.target.checked)}
+              />
             </div>
 
-            <input
-              type="checkbox"
-              className="toggle toggle-error toggle-lg"
-              checked={config.globalMaintenance}
-              onChange={(e) => toggleGlobalMaintenance(e.target.checked)}
-            />
+            <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
+              <span className="text-xs text-slate-600 font-medium">
+                ¿Quieres probar cómo la ven los usuarios públicos?
+              </span>
+              <button
+                onClick={handlePreviewMaintenanceLanding}
+                className="btn btn-xs bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl gap-1"
+              >
+                👁️ Ver Página de Mantenimiento
+              </button>
+            </div>
           </div>
 
           {/* CLAVE VIP Y ENLACE SEGURO */}
