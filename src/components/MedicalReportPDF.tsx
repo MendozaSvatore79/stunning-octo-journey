@@ -179,7 +179,14 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
       <div className="flex items-start justify-between border-b-2 border-slate-900 pb-1.5">
         <div className="flex items-center gap-2.5">
           {lab?.logo ? (
-            <img src={lab.logo} alt={lab.name} className="w-11 h-11 object-contain rounded-xl" />
+            <img
+              src={lab.logo}
+              alt={lab.name}
+              className="w-11 h-11 object-contain rounded-xl"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
           ) : (
             <div className="w-11 h-11 bg-gradient-to-tr from-blue-700 to-indigo-800 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-sm shrink-0">
               {lab?.name?.[0] || 'L'}

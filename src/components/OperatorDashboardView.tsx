@@ -239,7 +239,14 @@ export default function OperatorDashboardView({
               >
                 <div className="flex items-center gap-3">
                   {lab.logo ? (
-                    <img src={lab.logo} alt={lab.name} className="w-11 h-11 rounded-xl object-cover border border-base-200 shrink-0" />
+                    <img
+                      src={lab.logo}
+                      alt={lab.name}
+                      className="w-11 h-11 rounded-xl object-cover border border-base-200 shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
                   ) : (
                     <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl shrink-0">
                       {lab.name.charAt(0).toUpperCase()}
