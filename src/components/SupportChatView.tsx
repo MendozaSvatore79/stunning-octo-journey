@@ -82,24 +82,24 @@ export default function SupportChatView() {
     {
       id: 'soporte-general',
       name: '#Soporte General',
-      desc: 'Asistencia operativa y dudas de uso en tiempo real',
+      desc: 'Asistencia operativa y consultas del sistema en tiempo real',
       userCount: 4,
     },
     {
       id: 'consultas-tecnicas',
       name: '#Consultas Técnicas',
-      desc: 'Asesoría para calibración de equipos y reactivos',
+      desc: 'Asesoría para calibración de equipos analíticos y reactivos',
       userCount: 2,
     },
     {
       id: 'facturacion-licencias',
       name: '#Facturación y Licencias',
-      desc: 'Gestión de planes, sedes y suscripción del sistema',
+      desc: 'Gestión de planes, módulos y suscripción del sistema',
       userCount: 1,
     },
   ];
 
-  // 1. Polling de Sincronización de Llamadas en Vivo entre Múltiples Dispositivos (Laptop <-> Celular)
+  // 1. Polling de Sincronización de Llamadas en Vivo entre Múltiples Dispositivos
   const fetchActiveCall = useCallback(async () => {
     try {
       const res = await api.get(`/support/call/${activeChannelId}`);
@@ -316,71 +316,73 @@ export default function SupportChatView() {
     : (isAdmin ? 'Esperando Conexión' : 'Agente / Administrador de Soporte');
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
       {/* Elemento de Audio Remoto no silenciado */}
       <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
 
-      {/* Banner Superior de Soporte Técnico y Modo Admin */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
-            <IconHeadphones className="w-8 h-8 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black tracking-tight">Centro de Soporte Técnico y Videollamadas</h1>
-              {isAdmin ? (
-                <span className="badge badge-warning gap-1 font-extrabold text-xs uppercase px-2.5 py-2">
-                  <IconShield className="w-3.5 h-3.5" />
-                  Modo Agente Administrador
-                </span>
-              ) : (
-                <span className="badge badge-accent text-slate-950 font-bold text-xs uppercase tracking-wider">
-                  Stream Chat & Video SDK
-                </span>
-              )}
+      {/* Banner Ejecutivo Superior con Gradiente Fino */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-900 to-blue-900 p-6 sm:p-8 text-white shadow-xl border border-indigo-500/20">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg shrink-0">
+              <IconHeadphones className="w-7 h-7 text-indigo-200 animate-pulse" />
             </div>
-            <p className="text-xs text-indigo-200/80 font-medium mt-1">
-              Atención directa en chat interactivo y videollamada en vivo con audio y compartir pantalla
-            </p>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Centro de Soporte Técnico</h1>
+                {isAdmin ? (
+                  <span className="badge badge-warning gap-1 font-extrabold text-[11px] uppercase tracking-wider px-3 py-2 rounded-xl shadow-xs">
+                    <IconShield className="w-3.5 h-3.5" />
+                    Panel Agente Administrador
+                  </span>
+                ) : (
+                  <span className="badge bg-white/20 border border-white/30 text-white font-bold text-[11px] uppercase tracking-wider px-3 py-2 rounded-xl backdrop-blur-md">
+                    Stream Chat & Video SDK
+                  </span>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm text-indigo-100/90 font-medium mt-1">
+                Atención interactiva en tiempo real asistida por ingenieros y especialistas de laboratorio
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Botón de Acción según Rol (Solo Admin inicia llamadas) */}
-        <div className="flex flex-wrap items-center gap-3">
-          {isAdmin ? (
-            <button
-              onClick={handleAdminGenerateStreamCall}
-              className="btn btn-accent text-slate-950 font-black rounded-2xl gap-2 shadow-lg hover:scale-105 transition-all text-xs py-2.5 px-4"
-            >
-              <IconVideo className="w-4 h-4 text-slate-950" />
-              🎥 Iniciar Videollamada de Soporte
-            </button>
-          ) : activeCallRoom ? (
-            <button
-              onClick={handleJoinCall}
-              className="btn btn-emerald bg-emerald-500 text-slate-950 font-black rounded-2xl gap-2 shadow-lg hover:scale-105 transition-all text-xs py-2.5 px-4 animate-bounce"
-            >
-              <IconVideo className="w-4 h-4" />
-              📹 Unirse a Videollamada Activa ({activeCallRoom.createdByName})
-            </button>
-          ) : (
-            <span className="badge badge-ghost text-xs text-indigo-200 py-2 px-3 border border-indigo-500/30">
-              💬 Escribe en el chat para atención
-            </span>
-          )}
+          {/* Botón de Acción según Rol (Solo Admin inicia llamadas) */}
+          <div className="flex items-center gap-3 shrink-0">
+            {isAdmin ? (
+              <button
+                onClick={handleAdminGenerateStreamCall}
+                className="btn bg-white hover:bg-slate-100 text-indigo-950 font-black rounded-2xl gap-2 shadow-xl hover:scale-105 transition-all text-xs py-3 px-5 border-none"
+              >
+                <IconVideo className="w-4 h-4 text-indigo-600" />
+                🎥 Iniciar Videollamada de Soporte
+              </button>
+            ) : activeCallRoom ? (
+              <button
+                onClick={handleJoinCall}
+                className="btn bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl gap-2 shadow-xl hover:scale-105 transition-all text-xs py-3 px-5 border-none animate-bounce"
+              >
+                <IconVideo className="w-4 h-4" />
+                📹 Unirse a Videollamada ({activeCallRoom.createdByName})
+              </button>
+            ) : (
+              <span className="bg-white/10 backdrop-blur-md text-xs font-semibold text-white py-2.5 px-4 rounded-2xl border border-white/20 shadow-xs">
+                💬 Escribe en el chat para atención en vivo
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM CON NOMBRES REALES Y MULTI-DISPOSITIVO */}
+      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM CON DISEÑO EJECUTIVO */}
       {isInCall && activeCallRoom && (
-        <div className="bg-slate-950 rounded-3xl border border-indigo-500/30 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
             <div className="flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>
+              <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
               <div>
                 <h3 className="font-black text-sm text-indigo-300">
-                  Videollamada en Vivo de Soporte Stream • Sala #{activeCallRoom.id}
+                  Videollamada en Vivo • Sala #{activeCallRoom.id}
                 </h3>
                 <p className="text-xs text-slate-400">Generada por Agente Admin: {activeCallRoom.createdByName}</p>
               </div>
@@ -390,7 +392,7 @@ export default function SupportChatView() {
               href={activeCallRoom.url}
               target="_blank"
               rel="noreferrer"
-              className="btn btn-xs btn-outline btn-info gap-1 text-[11px]"
+              className="btn btn-xs btn-outline btn-info gap-1 text-[11px] rounded-xl"
             >
               Abrir URL Externa Stream Video HD
             </a>
@@ -405,7 +407,7 @@ export default function SupportChatView() {
           {/* Grid de Transmisión WebRTC Stream con Nombres Reales */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[320px]">
             {/* Pantalla Local del Usuario / Químico Actual */}
-            <div className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px]">
+            <div className="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px] shadow-inner">
               <video
                 ref={localVideoRef}
                 autoPlay
@@ -423,7 +425,7 @@ export default function SupportChatView() {
                 </div>
               )}
 
-              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/50 flex items-center gap-2">
+              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/60 flex items-center gap-2 shadow-md">
                 <span>{isScreenSharing ? '🖥️ Tu Pantalla Compartida' : `${realUserName} (Tú)`}</span>
                 {isMicOn ? (
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Micrófono Activo"></span>
@@ -433,28 +435,28 @@ export default function SupportChatView() {
               </div>
             </div>
 
-            {/* Pantalla del Participante Remoto con NOMBRE REAL DINÁMICO */}
-            <div className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px]">
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 p-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 font-black text-2xl mb-2 shadow-lg">
+            {/* Pantalla del Participante Remoto */}
+            <div className="relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px] shadow-inner">
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950/80 via-slate-950 to-slate-950 p-6 text-center">
+                <div className="w-20 h-20 rounded-full bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 font-black text-2xl mb-2 shadow-lg">
                   {remoteParticipantName.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-base font-black text-slate-100 block">
+                <span className="text-base font-black text-slate-100 block tracking-tight">
                   {remoteParticipantName}
                 </span>
-                <span className="text-xs text-indigo-300 font-mono mt-1 block">
+                <span className="text-xs text-indigo-300 font-medium mt-1 block">
                   {remoteParticipantRole}
                 </span>
               </div>
-              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/50 flex items-center gap-2">
+              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/60 flex items-center gap-2 shadow-md">
                 <span>{otherParticipant ? otherParticipant.name : remoteParticipantRole}</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               </div>
             </div>
           </div>
 
-          {/* Barra de Controles de Audio y Video */}
-          <div className="flex flex-wrap items-center justify-center gap-3 bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl">
+          {/* Barra Ejcutiva de Controles */}
+          <div className="flex flex-wrap items-center justify-center gap-3 bg-slate-950/90 p-3.5 rounded-2xl border border-slate-800 shadow-xl">
             <button
               onClick={() => setIsCameraOn(!isCameraOn)}
               className={`btn btn-circle ${isCameraOn ? 'btn-neutral text-white' : 'btn-error text-white'}`}
@@ -481,7 +483,7 @@ export default function SupportChatView() {
 
             <button
               onClick={handleEndCall}
-              className="btn btn-error rounded-2xl gap-2 font-bold text-white px-5 shadow-lg"
+              className="btn btn-error rounded-2xl gap-2 font-bold text-white px-6 shadow-lg"
             >
               <IconPhoneOff className="w-5 h-5" />
               Finalizar Videollamada
@@ -490,64 +492,75 @@ export default function SupportChatView() {
         </div>
       )}
 
-      {/* Interfaz de Chat Sincronizado Multi-Dispositivo */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[580px]">
-        {/* Selector de Canales */}
-        <div className="lg:col-span-4 bg-base-100 rounded-3xl border border-base-200 shadow-sm p-4 space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <h2 className="text-xs font-black uppercase text-base-content/70 tracking-wider px-2 flex items-center justify-between">
-              <span>Canales de Atención</span>
-              {isAdmin && <span className="badge badge-warning text-[10px]">Agente Admin</span>}
-            </h2>
+      {/* Interfaz de Chat con Estilo Claro y Ejecutivo */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
+        {/* Selector de Canales de Atención Fino */}
+        <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-xs font-black uppercase text-slate-500 tracking-wider">
+                Canales de Atención
+              </h2>
+              {isAdmin && (
+                <span className="badge badge-warning text-[10px] font-bold px-2 py-1.5 rounded-lg">
+                  Agente Admin
+                </span>
+              )}
+            </div>
 
-            <div className="space-y-1">
-              {channelsList.map((ch) => (
-                <button
-                  key={ch.id}
-                  onClick={() => setActiveChannelId(ch.id)}
-                  className={`w-full text-left p-3.5 rounded-2xl transition-all border flex flex-col gap-1 ${
-                    activeChannelId === ch.id
-                      ? 'bg-primary/10 border-primary/30 text-primary font-bold shadow-xs'
-                      : 'border-transparent text-base-content/80 hover:bg-base-200/60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-black tracking-tight">{ch.name}</span>
-                    <span className="badge badge-xs badge-success text-white">{ch.userCount} en línea</span>
-                  </div>
-                  <span className="text-xs font-normal text-base-content/60 leading-tight">
-                    {ch.desc}
-                  </span>
-                </button>
-              ))}
+            <div className="space-y-2">
+              {channelsList.map((ch) => {
+                const isSelected = activeChannelId === ch.id;
+                return (
+                  <button
+                    key={ch.id}
+                    onClick={() => setActiveChannelId(ch.id)}
+                    className={`w-full text-left p-4 rounded-2xl transition-all border flex flex-col gap-1.5 ${
+                      isSelected
+                        ? 'bg-indigo-50/80 border-indigo-200 text-indigo-950 font-bold shadow-xs'
+                        : 'border-slate-100 bg-slate-50/50 text-slate-700 hover:bg-slate-100/80 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-black tracking-tight">{ch.name}</span>
+                      <span className="badge badge-xs bg-emerald-500 text-white font-bold border-none px-2 py-1">
+                        {ch.userCount} en línea
+                      </span>
+                    </div>
+                    <span className="text-xs font-normal text-slate-500 leading-snug">
+                      {ch.desc}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Ficha de Estado */}
-          <div className="bg-base-200/60 p-4 rounded-2xl border border-base-200 space-y-2">
+          {/* Ficha Ejecutiva del Estado */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/70 space-y-2">
             <div className="flex items-center gap-3">
               <div className="avatar online">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white font-black flex items-center justify-center text-sm shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white font-black flex items-center justify-center text-sm shadow-md shadow-indigo-500/20">
                   {isAdmin ? 'ADM' : 'ST'}
                 </div>
               </div>
               <div>
-                <span className="text-xs font-black text-base-content block">
+                <span className="text-xs font-black text-slate-800 block">
                   {isAdmin ? 'Panel del Administrador de Soporte' : 'Ing. Soporte Clínico'}
                 </span>
-                <span className="text-[11px] text-emerald-600 font-bold block">En Línea • Canal Activo</span>
+                <span className="text-[11px] text-emerald-600 font-bold block">En Línea • Atención Continuada</span>
               </div>
             </div>
-            <p className="text-[11px] text-base-content/60">
+            <p className="text-[11px] text-slate-500 leading-tight">
               {isAdmin
-                ? 'Solo tú como administrador tienes permisos para crear enlaces e iniciar videollamadas de soporte.'
+                ? 'Como administrador, puedes responder chats de usuarios y crear enlaces e iniciar videollamadas de soporte.'
                 : 'Solicita ayuda en el chat. El administrador generará el enlace de videollamada si es necesario.'}
             </p>
           </div>
         </div>
 
-        {/* Ventana Principal de Chat Sincronizado */}
-        <div className="lg:col-span-8 bg-base-100 rounded-3xl border border-base-200 shadow-sm overflow-hidden flex flex-col">
+        {/* Ventana Principal de Chat Fino y Claro */}
+        <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
           {chatClient && activeChannel ? (
             <div className="stream-chat-wrapper h-full flex-1">
               <Chat client={chatClient} theme="str-chat__theme-light">
@@ -561,7 +574,7 @@ export default function SupportChatView() {
               </Chat>
             </div>
           ) : (
-            <SynchronizedMultiDeviceChat
+            <ExecutiveSynchronizedChat
               channelId={activeChannelId}
               channelName={channelsList.find((c) => c.id === activeChannelId)?.name || '#Soporte General'}
               isAdmin={isAdmin}
@@ -577,8 +590,8 @@ export default function SupportChatView() {
   );
 }
 
-// Componente de Chat Sincronizado en Tiempo Real Servidor (Laptop <-> Celular)
-function SynchronizedMultiDeviceChat({
+// Componente de Chat Ejecutivo Fino en Colores Claros
+function ExecutiveSynchronizedChat({
   channelId,
   channelName,
   isAdmin,
@@ -600,7 +613,7 @@ function SynchronizedMultiDeviceChat({
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [inputText, setInputText] = useState('');
 
-  // Polling de mensajes en tiempo real desde el Servidor (Laptop <-> Celular)
+  // Polling de mensajes en tiempo real desde el Servidor
   const fetchBackendMessages = useCallback(async () => {
     try {
       const res = await api.get<ChatMessageItem[]>(`/support/messages/${channelId}`);
@@ -642,68 +655,74 @@ function SynchronizedMultiDeviceChat({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[500px]">
-      {/* Header del Chat */}
-      <div className="p-4 border-b border-base-200 bg-base-200/40 flex flex-wrap items-center justify-between gap-3">
+    <div className="flex flex-col h-full min-h-[520px]">
+      {/* Header del Chat Claro */}
+      <div className="p-4 px-6 border-b border-slate-100 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="font-black text-base-content text-base">{channelName}</span>
-          <span className="badge badge-sm badge-success text-white font-bold">En Vivo • Sync Servidor</span>
-          {isAdmin && <span className="badge badge-sm badge-warning font-bold">Modo Agente Admin</span>}
+          <span className="font-black text-slate-800 text-base tracking-tight">{channelName}</span>
+          <span className="badge badge-sm bg-emerald-50 text-emerald-700 border-emerald-200 font-bold">
+            En Vivo • Sync Servidor
+          </span>
+          {isAdmin && <span className="badge badge-sm bg-amber-50 text-amber-700 border-amber-200 font-bold">Modo Agente Admin</span>}
         </div>
 
         <div className="flex items-center gap-2">
           {activeCallRoom ? (
             <button
               onClick={onJoinCall}
-              className="btn btn-xs btn-accent text-slate-950 font-bold gap-1 animate-pulse"
+              className="btn btn-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 border-none font-bold gap-1 animate-pulse rounded-xl"
             >
               <IconVideo className="w-3.5 h-3.5" />
-              Unirse a Videollamada Activa ({activeCallRoom.createdByName})
+              Unirse a Videollamada Activa
             </button>
           ) : isAdmin ? (
             <button
               onClick={onAdminStartVideoCall}
-              className="btn btn-xs btn-primary font-bold gap-1"
+              className="btn btn-xs btn-primary font-bold gap-1 rounded-xl shadow-xs"
             >
               <IconVideo className="w-3.5 h-3.5" />
-              🎥 Crear Videollamada de Soporte
+              🎥 Crear Videollamada
             </button>
           ) : (
-            <span className="text-xs text-base-content/60 font-semibold">Atención en línea del Administrador</span>
+            <span className="text-xs text-slate-500 font-medium">Atención en línea del Administrador</span>
           )}
         </div>
       </div>
 
-      {/* Alerta de Videollamada Iniciada por el Admin */}
+      {/* Alerta Ejecutiva si hay Videollamada Activa */}
       {activeCallRoom && (
-        <div className="bg-indigo-600/10 border-b border-indigo-500/20 p-3 px-4 flex items-center justify-between text-xs font-semibold text-indigo-600">
+        <div className="bg-indigo-50 border-b border-indigo-100 p-3 px-6 flex items-center justify-between text-xs font-semibold text-indigo-900">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-ping"></span>
             <span>El Administrador ({activeCallRoom.createdByName}) inició una Videollamada de Soporte</span>
           </div>
-          <button onClick={onJoinCall} className="btn btn-xs btn-primary font-bold text-white rounded-xl">
+          <button onClick={onJoinCall} className="btn btn-xs btn-primary font-bold text-white rounded-xl shadow-xs">
             Ingresar a la Llamada ➔
           </button>
         </div>
       )}
 
-      {/* Lista de Mensajes Sincronizados entre Dispositivos */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-base-100">
+      {/* Lista de Mensajes Claro y Fino */}
+      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/30">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center p-6 text-center text-base-content/50 space-y-1">
-            <IconHeadphones className="w-8 h-8 text-primary/40" />
-            <p className="text-xs font-bold">Sin mensajes aún en {channelName}</p>
-            <p className="text-[11px]">Escribe un mensaje para iniciar la conversación en tiempo real.</p>
+          <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-400 space-y-2">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 mb-1">
+              <IconHeadphones className="w-6 h-6" />
+            </div>
+            <p className="text-xs font-bold text-slate-600">Sin mensajes aún en {channelName}</p>
+            <p className="text-xs text-slate-400 max-w-xs">Escribe una consulta para comunicarte directamente con el soporte técnico.</p>
           </div>
         ) : (
           messages.map((m) => (
             <div key={m.id} className={`chat ${m.isAgent ? 'chat-start' : 'chat-end'}`}>
-              <div className="chat-header text-xs text-base-content/60 mb-1">
-                {m.sender} <time className="text-[10px] opacity-70 ml-1">{m.time}</time>
+              <div className="chat-header text-[11px] text-slate-400 mb-1 font-semibold">
+                {m.sender} <time className="text-[10px] opacity-70 ml-1 font-mono">{m.time}</time>
               </div>
               <div
-                className={`chat-bubble text-sm font-medium ${
-                  m.isAgent ? 'chat-bubble-primary text-white shadow-sm' : 'bg-base-200 text-base-content'
+                className={`chat-bubble text-sm font-medium rounded-2xl px-4 py-2.5 ${
+                  m.isAgent
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                    : 'bg-white text-slate-800 border border-slate-200/80 shadow-xs'
                 }`}
               >
                 {m.text}
@@ -713,8 +732,8 @@ function SynchronizedMultiDeviceChat({
         )}
       </div>
 
-      {/* Input de Envío Sincronizado */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t border-base-200 bg-base-100 flex items-center gap-2">
+      {/* Input de Envío Sincronizado Fino */}
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-white flex items-center gap-3">
         <input
           type="text"
           placeholder={
@@ -724,9 +743,9 @@ function SynchronizedMultiDeviceChat({
           }
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          className="input input-bordered w-full rounded-2xl text-sm focus:input-primary"
+          className="input input-bordered w-full rounded-2xl text-sm border-slate-200 focus:border-indigo-500 bg-slate-50/50"
         />
-        <button type="submit" className="btn btn-primary text-white font-bold rounded-2xl gap-2 shadow-md shrink-0">
+        <button type="submit" className="btn btn-primary text-white font-bold rounded-2xl gap-2 shadow-md shadow-primary/20 shrink-0 px-5">
           <IconSend className="w-4 h-4" />
           {isAdmin ? 'Responder' : 'Enviar'}
         </button>
