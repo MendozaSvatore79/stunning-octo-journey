@@ -90,6 +90,7 @@ export default function SupportChatView() {
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
   const realUserName = user?.fullName || `${user?.firstName || 'Usuario'} ${user?.lastName || ''}`.trim() || 'Usuario Clínico';
+  const customStreamApiKey = import.meta.env.VITE_STREAM_API_KEY;
 
   // Canales de soporte predeterminados
   const channelsList: SupportChannelItem[] = [
@@ -138,26 +139,25 @@ export default function SupportChatView() {
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Conectar e Inicializar GetStream Video SDK cuando el usuario entra a una llamada
+  // 2. Conectar e Inicializar GetStream Video SDK de forma segura sin 401 Unauthorized
   useEffect(() => {
-    if (!isInCall || !activeCallRoom) return;
+    if (!isInCall || !activeCallRoom || !customStreamApiKey) return;
 
     let vClient: StreamVideoClient | null = null;
     let callInstance: Call | null = null;
 
     const setupStreamVideo = async () => {
       try {
-        const streamApiKey = import.meta.env.VITE_STREAM_API_KEY || 'b5f4y9r5x6zz';
         const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
 
         vClient = new StreamVideoClient({
-          apiKey: streamApiKey,
+          apiKey: customStreamApiKey,
           user: {
             id: userId,
             name: realUserName,
             image: user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(realUserName)}`,
           },
-          token: StreamChat.getInstance(streamApiKey).devToken(userId),
+          token: StreamChat.getInstance(customStreamApiKey).devToken(userId),
         });
 
         callInstance = vClient.call('default', activeCallRoom.id);
@@ -166,7 +166,9 @@ export default function SupportChatView() {
         setStreamVideoClient(vClient);
         setStreamCall(callInstance);
       } catch (err) {
-        console.warn('GetStream Video SDK usando fallback WebRTC directo:', err);
+        console.warn('Stream Video API Key requiere autenticación en producción, usando modo sincronizado...', err);
+        setStreamVideoClient(null);
+        setStreamCall(null);
       }
     };
 
@@ -174,13 +176,13 @@ export default function SupportChatView() {
 
     return () => {
       if (callInstance) {
-        callInstance.leave().catch((e) => console.error('Call leave error:', e));
+        callInstance.leave().catch((e) => console.warn('Call leave error:', e));
       }
       if (vClient) {
-        vClient.disconnectUser().catch((e) => console.error('Video disconnect error:', e));
+        vClient.disconnectUser().catch((e) => console.warn('Video disconnect error:', e));
       }
     };
-  }, [isInCall, activeCallRoom?.id, user?.id, realUserName]);
+  }, [isInCall, activeCallRoom?.id, user?.id, realUserName, customStreamApiKey]);
 
   // 3. Unirse a la Videollamada y Registrar Participante en Servidor
   const handleJoinCall = async () => {
@@ -198,14 +200,15 @@ export default function SupportChatView() {
     }
   };
 
-  // 4. Conectar Stream Chat SDK
+  // 4. Conectar Stream Chat SDK de forma segura
   useEffect(() => {
+    if (!customStreamApiKey) return;
+
     let client: StreamChat | null = null;
 
     const initStreamChat = async () => {
       try {
-        const streamApiKey = import.meta.env.VITE_STREAM_API_KEY || 'b5f4y9r5x6zz';
-        client = StreamChat.getInstance(streamApiKey);
+        client = StreamChat.getInstance(customStreamApiKey);
 
         const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
         const userName = realUserName;
@@ -231,7 +234,8 @@ export default function SupportChatView() {
         setChatClient(client);
         setActiveChannel(channel);
       } catch (err) {
-        console.warn('Stream Chat conectado en modo sincronizado...', err);
+        console.warn('Stream Chat API Key en modo local sincronizado...', err);
+        setChatClient(null);
       }
     };
 
@@ -239,12 +243,12 @@ export default function SupportChatView() {
 
     return () => {
       if (client) {
-        client.disconnectUser().catch((e) => console.error('Disconnect error:', e));
+        client.disconnectUser().catch((e) => console.warn('Disconnect error:', e));
       }
     };
-  }, [user?.id, activeChannelId, isAdmin, realUserName]);
+  }, [user?.id, activeChannelId, isAdmin, realUserName, customStreamApiKey]);
 
-  // 5. Captura Directa de Cámara y Micrófono para Fallback
+  // 5. Captura Directa de Cámara y Micrófono WebRTC Real
   useEffect(() => {
     if (isInCall && isCameraOn && !isScreenSharing && !streamCall) {
       setMediaError(null);
@@ -426,7 +430,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA CON GETSTREAM VIDEO REACT SDK OFICIAL */}
+      {/* SALA DE VIDEOLLAMADA */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
@@ -799,7 +803,7 @@ function ExecutiveSynchronizedChat({
       </div>
 
       {/* Input de Envío Sincronizado Fino */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-100 bg-white flex items-center gap-3">
+      <form onSubmit={handleSendMessage} className="p-3.5 border-t border-slate-100 bg-white flex items-center gap-3">
         <input
           type="text"
           placeholder={
