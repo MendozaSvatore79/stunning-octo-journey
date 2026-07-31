@@ -12,16 +12,6 @@ import {
 } from 'stream-chat-react';
 import 'stream-chat-react/dist/css/index.css';
 
-import {
-  StreamVideo,
-  StreamVideoClient,
-  StreamCall,
-  SpeakerLayout,
-  CallControls,
-  type Call,
-} from '@stream-io/video-react-sdk';
-import '@stream-io/video-react-sdk/dist/css/styles.css';
-
 import { useUserContext } from '../hooks/useUserContext';
 import { useApi } from '../hooks/useApi';
 import {
@@ -62,10 +52,6 @@ export default function SupportChatView() {
   const [chatClient, setChatClient] = useState<StreamChat | null>(null);
   const [activeChannel, setActiveChannel] = useState<StreamChannelType | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string>('soporte-general');
-
-  // Estado de GetStream Video Client y Call Room
-  const [streamVideoClient, setStreamVideoClient] = useState<StreamVideoClient | null>(null);
-  const [streamCall, setStreamCall] = useState<Call | null>(null);
 
   const [activeCallRoom, setActiveCallRoom] = useState<{
     id: string;
@@ -126,52 +112,7 @@ export default function SupportChatView() {
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Conectar e Inicializar GetStream Video SDK de forma segura
-  useEffect(() => {
-    if (!isInCall || !activeCallRoom || !customStreamApiKey) return;
-
-    let vClient: StreamVideoClient | null = null;
-    let callInstance: Call | null = null;
-
-    const setupStreamVideo = async () => {
-      try {
-        const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
-
-        vClient = new StreamVideoClient({
-          apiKey: customStreamApiKey,
-          user: {
-            id: userId,
-            name: realUserName,
-            image: user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(realUserName)}`,
-          },
-          token: StreamChat.getInstance(customStreamApiKey).devToken(userId),
-        });
-
-        callInstance = vClient.call('default', activeCallRoom.id);
-        await callInstance.join({ create: true });
-
-        setStreamVideoClient(vClient);
-        setStreamCall(callInstance);
-      } catch (err) {
-        console.warn('Stream Video API Key requiere autenticación en producción, usando modo videoconferencia HD...', err);
-        setStreamVideoClient(null);
-        setStreamCall(null);
-      }
-    };
-
-    setupStreamVideo();
-
-    return () => {
-      if (callInstance) {
-        callInstance.leave().catch((e) => console.warn('Call leave error:', e));
-      }
-      if (vClient) {
-        vClient.disconnectUser().catch((e) => console.warn('Video disconnect error:', e));
-      }
-    };
-  }, [isInCall, activeCallRoom?.id, user?.id, realUserName, customStreamApiKey]);
-
-  // 3. Unirse a la Videollamada y Registrar Participante en Servidor
+  // 2. Unirse a la Videollamada y Registrar Participante en Servidor
   const handleJoinCall = async () => {
     setIsInCall(true);
     try {
@@ -187,7 +128,7 @@ export default function SupportChatView() {
     }
   };
 
-  // 4. Conectar Stream Chat SDK de forma segura
+  // 3. Conectar Stream Chat SDK de forma segura
   useEffect(() => {
     if (!customStreamApiKey) return;
 
@@ -262,7 +203,6 @@ export default function SupportChatView() {
 
   const handleEndCall = async () => {
     setIsInCall(false);
-    setStreamCall(null);
     if (isAdmin) {
       try {
         await api.delete(`/support/call/${activeChannelId}`);
@@ -272,6 +212,10 @@ export default function SupportChatView() {
       }
     }
   };
+
+  // Nombre limpio de sala WebRTC para evitar lobby/membersOnly
+  const roomSlug = activeCallRoom?.id ? activeCallRoom.id.replace(/[^\w]/g, '') : `LabCall${Date.now()}`;
+  const videoCallUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(realUserName)}"`;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -292,7 +236,7 @@ export default function SupportChatView() {
                   </span>
                 ) : (
                   <span className="badge bg-white/20 border border-white/30 text-white font-bold text-[11px] uppercase tracking-wider px-3 py-2 rounded-xl backdrop-blur-md">
-                    Stream Chat & Video SDK
+                    Stream Chat & Video WebRTC
                   </span>
                 )}
               </div>
@@ -329,7 +273,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA Y AUDIO EN TIEMPO REAL HD MULTI-DISPOSITIVO */}
+      {/* SALA DE VIDEOLLAMADA Y AUDIO EN TIEMPO REAL HD DIRECTA */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
@@ -337,15 +281,15 @@ export default function SupportChatView() {
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
               <div>
                 <h3 className="font-black text-sm text-indigo-300">
-                  Videollamada en Vivo HD • Sala #{activeCallRoom.id}
+                  Videollamada en Vivo HD • Sala #{roomSlug}
                 </h3>
-                <p className="text-xs text-slate-400">Generada por Agente Admin: {activeCallRoom.createdByName}</p>
+                <p className="text-xs text-slate-400">Agente Admin: {activeCallRoom.createdByName}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <a
-                href={`https://meet.jit.si/LabSystemSupport_${activeCallRoom.id}`}
+                href={videoCallUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-xs btn-outline btn-info gap-1 text-[11px] rounded-xl"
@@ -362,26 +306,14 @@ export default function SupportChatView() {
             </div>
           </div>
 
-          {/* Componente Oficial de GetStream Video React SDK o Sala HD Transmitida */}
-          {streamVideoClient && streamCall ? (
-            <StreamVideo client={streamVideoClient}>
-              <StreamCall call={streamCall}>
-                <div className="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                  <SpeakerLayout />
-                  <CallControls onLeave={handleEndCall} />
-                </div>
-              </StreamCall>
-            </StreamVideo>
-          ) : (
-            /* SALA DE VIDEO Y AUDIO WEBRTC MULTI-DISPOSITIVO EN VIVO */
-            <div className="w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
-              <iframe
-                src={`https://meet.jit.si/LabSystemSupport_${activeCallRoom.id}#userInfo.displayName="${encodeURIComponent(realUserName)}"`}
-                allow="camera; microphone; display-capture; autoplay; clipboard-write; microphone; camera"
-                className="w-full h-[540px] border-none rounded-2xl"
-              />
-            </div>
-          )}
+          {/* SALA DE VIDEO Y AUDIO WEBRTC MULTI-DISPOSITIVO EN VIVO (CONEXIÓN DIRECTA 0ms) */}
+          <div className="w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
+            <iframe
+              src={videoCallUrl}
+              allow="camera; microphone; display-capture; autoplay; clipboard-write; microphone; camera"
+              className="w-full h-[560px] border-none rounded-2xl"
+            />
+          </div>
         </div>
       )}
 
