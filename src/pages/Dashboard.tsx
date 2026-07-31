@@ -5,10 +5,12 @@ import Sidebar, { type DashboardViewType } from '../components/Sidebar';
 import { useApi } from '../hooks/useApi';
 import type { Laboratory } from '../types/lab';
 import { useUserContext } from '../hooks/useUserContext';
+import { useMaintenance } from '../context/MaintenanceContext';
 import AdminDashboardView from '../components/AdminDashboardView';
 import OperatorDashboardView from '../components/OperatorDashboardView';
+import ModuleMaintenanceView from '../components/ModuleMaintenanceView';
 
-// Carga perezosa (Code Splitting) de vistas pesadas para optimizar el tiempo de carga a nivel inicial
+// Carga perezosa (Code Splitting) de vistas pesadas
 const CreateLabModal = lazy(() => import('../components/CreateLabModal'));
 const OnboardingModal = lazy(() => import('../components/OnboardingModal'));
 const AddUserForm = lazy(() => import('../components/AddUserForm'));
@@ -18,12 +20,14 @@ const WorkOrdersView = lazy(() => import('../components/WorkOrdersView'));
 const AnalysisCatalogView = lazy(() => import('../components/AnalysisCatalogView'));
 const QualityControlView = lazy(() => import('../components/QualityControlView'));
 const SupportChatView = lazy(() => import('../components/SupportChatView'));
+const MaintenanceControlModal = lazy(() => import('../components/MaintenanceControlModal'));
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
 
 export default function Dashboard() {
   const { user } = useUser();
   const { isAdmin, role, isLoading: isUserLoading } = useUserContext();
+  const { config, isVipPassed } = useMaintenance();
   const api = useApi();
 
   const [activeView, setActiveView] = useState<DashboardViewType>('dashboard');
@@ -41,6 +45,7 @@ export default function Dashboard() {
   const [isLoadingLabs, setIsLoadingLabs] = useState<boolean>(() => labs.length === 0);
   const [isCreateLabOpen, setIsCreateLabOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isMaintenanceControlOpen, setIsMaintenanceControlOpen] = useState(false);
 
   // Cargar laboratorios de forma silenciosa e hiper rápida
   const fetchLabs = useCallback(async () => {
@@ -102,6 +107,14 @@ export default function Dashboard() {
     });
   };
 
+  // Verificadores de Mantenimiento por Módulo
+  const isPatientsDisabled = config.modules.patients && !isVipPassed;
+  const isCatalogDisabled = config.modules.catalog && !isVipPassed;
+  const isWorkOrdersDisabled = config.modules.workOrders && !isVipPassed;
+  const isQCDisabled = config.modules.qualityControl && !isVipPassed;
+  const isLabsDisabled = config.modules.labsDirectory && !isVipPassed;
+  const isSupportDisabled = config.modules.supportChat && !isVipPassed;
+
   return (
     <Sidebar activeView={activeView} onSelectView={setActiveView}>
       {/* Navbar Superior */}
@@ -118,12 +131,34 @@ export default function Dashboard() {
           <a className="btn btn-ghost text-xl font-black text-primary normal-case lg:hidden">
             LabSystem
           </a>
+
           <span className="hidden sm:inline-flex badge badge-outline text-xs font-semibold">
             Rol: {role || 'Cargando...'}
           </span>
+
+          {isVipPassed && !isAdmin && (
+            <span className="badge badge-accent text-xs font-extrabold gap-1 px-3 py-2 rounded-xl">
+              ✨ Acceso VIP de Mantenimiento
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Botón exclusivo de Administrador para Control de Mantenimiento */}
+          {isAdmin && (
+            <button
+              onClick={() => setIsMaintenanceControlOpen(true)}
+              className={`btn btn-sm text-xs font-black rounded-xl gap-1.5 border-none shadow-sm ${
+                config.globalMaintenance
+                  ? 'bg-rose-600 text-white hover:bg-rose-700 animate-pulse'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
+              title="Gestor de Mantenimiento y Acceso VIP"
+            >
+              🛠️ <span className="hidden sm:inline">Mantenimiento</span>
+            </button>
+          )}
+
           <button
             onClick={() => setIsOnboardingOpen(true)}
             className="btn btn-sm btn-ghost gap-1.5 text-xs text-base-content/70 hover:text-primary rounded-xl"
@@ -132,7 +167,7 @@ export default function Dashboard() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="hidden md:inline">Guía de Inicio</span>
+            <span className="hidden md:inline">Guía</span>
           </button>
 
           <UserButton
@@ -149,7 +184,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Contenido Principal condicional por Vista y Rol con React Suspense */}
+      {/* Contenido Principal condicional por Vista, Rol y Mantenimiento con React Suspense */}
       <main className="mx-auto max-w-7xl w-full px-4 py-8 lg:px-8">
         {isUserLoading ? (
           <div className="min-h-[400px] flex flex-col items-center justify-center gap-3">
@@ -165,36 +200,71 @@ export default function Dashboard() {
               </div>
             }
           >
-            {activeView === 'qc-controls' ? (
-              <QualityControlView initialSubView="controls" />
-            ) : activeView === 'qc-results' ? (
-              <QualityControlView initialSubView="results" />
-            ) : activeView === 'qc-levey-jennings' ? (
-              <QualityControlView initialSubView="levey-jennings" />
+            {activeView === 'qc-controls' || activeView === 'qc-results' || activeView === 'qc-levey-jennings' ? (
+              isQCDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Control de Calidad" moduleKeyName="qualityControl" />
+              ) : (
+                <QualityControlView
+                  initialSubView={
+                    activeView === 'qc-results'
+                      ? 'results'
+                      : activeView === 'qc-levey-jennings'
+                      ? 'levey-jennings'
+                      : 'controls'
+                  }
+                />
+              )
             ) : activeView === 'support' ? (
-              /* Vista de Soporte Técnico en Vivo con GetStream Chat */
-              <SupportChatView />
+              isSupportDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Soporte Técnico Live" moduleKeyName="supportChat" />
+              ) : (
+                <SupportChatView />
+              )
             ) : activeView === 'analysis-catalog' ? (
-              <AnalysisCatalogView />
-            ) : activeView === 'create-order' ? (
-              <WorkOrdersView initialTab="create" />
-            ) : activeView === 'pending-orders' ? (
-              <WorkOrdersView initialTab="pending" />
-            ) : activeView === 'completed-orders' ? (
-              <WorkOrdersView initialTab="completed" />
-            ) : activeView === 'patients' ? (
-              <PatientsView initialTab="directory" />
-            ) : activeView === 'add-patient' ? (
-              <PatientsView initialTab="register" />
-            ) : activeView === 'patient-history' ? (
-              <PatientsView initialTab="history" />
+              isCatalogDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Catálogo de Servicios" moduleKeyName="catalog" />
+              ) : (
+                <AnalysisCatalogView />
+              )
+            ) : activeView === 'create-order' || activeView === 'pending-orders' || activeView === 'completed-orders' ? (
+              isWorkOrdersDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Órdenes de Trabajo" moduleKeyName="workOrders" />
+              ) : (
+                <WorkOrdersView
+                  initialTab={
+                    activeView === 'pending-orders'
+                      ? 'pending'
+                      : activeView === 'completed-orders'
+                      ? 'completed'
+                      : 'create'
+                  }
+                />
+              )
+            ) : activeView === 'patients' || activeView === 'add-patient' || activeView === 'patient-history' ? (
+              isPatientsDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Pacientes y Expedientes" moduleKeyName="patients" />
+              ) : (
+                <PatientsView
+                  initialTab={
+                    activeView === 'add-patient'
+                      ? 'register'
+                      : activeView === 'patient-history'
+                      ? 'history'
+                      : 'directory'
+                  }
+                />
+              )
             ) : activeView === 'labs' ? (
-              <LabsDirectoryView
-                labs={labs}
-                isLoadingLabs={isLoadingLabs}
-                onOpenCreateLab={() => setIsCreateLabOpen(true)}
-                onDeleteLabSuccess={handleLabDeleted}
-              />
+              isLabsDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Directorio de Sedes" moduleKeyName="labsDirectory" />
+              ) : (
+                <LabsDirectoryView
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                />
+              )
             ) : activeView === 'add-user' ? (
               <AddUserForm labs={labs} onCancel={() => setActiveView('dashboard')} />
             ) : isAdmin ? (
@@ -235,6 +305,13 @@ export default function Dashboard() {
             isOpen={isCreateLabOpen}
             onClose={() => setIsCreateLabOpen(false)}
             onLabCreated={handleLabCreated}
+          />
+        )}
+
+        {isMaintenanceControlOpen && (
+          <MaintenanceControlModal
+            isOpen={isMaintenanceControlOpen}
+            onClose={() => setIsMaintenanceControlOpen(false)}
           />
         )}
       </Suspense>
