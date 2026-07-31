@@ -40,6 +40,13 @@ interface ChatMessageItem {
   isAgent?: boolean;
 }
 
+interface SupportParticipant {
+  userId: string;
+  name: string;
+  isAgent: boolean;
+  joinedAt: number;
+}
+
 export default function SupportChatView() {
   const { user } = useUser();
   const { isAdmin, role } = useUserContext();
@@ -54,6 +61,7 @@ export default function SupportChatView() {
     id: string;
     url: string;
     createdByName: string;
+    participants?: SupportParticipant[];
   } | null>(null);
 
   const [isInCall, setIsInCall] = useState<boolean>(false);
@@ -66,6 +74,8 @@ export default function SupportChatView() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  const realUserName = user?.fullName || `${user?.firstName || 'Usuario'} ${user?.lastName || ''}`.trim() || 'Usuario Clínico';
 
   // Canales de soporte predeterminados
   const channelsList: SupportChannelItem[] = [
@@ -98,6 +108,7 @@ export default function SupportChatView() {
           id: res.data.callId,
           url: res.data.url,
           createdByName: res.data.createdByName,
+          participants: res.data.participants || [],
         });
       } else {
         setActiveCallRoom(null);
@@ -109,11 +120,27 @@ export default function SupportChatView() {
 
   useEffect(() => {
     fetchActiveCall();
-    const interval = setInterval(fetchActiveCall, 2000);
+    const interval = setInterval(fetchActiveCall, 1500);
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Inicialización de Stream Chat SDK en Segundo Plano
+  // 2. Unirse a la Videollamada y Registrar Participante con Nombre Real
+  const handleJoinCall = async () => {
+    setIsInCall(true);
+    try {
+      await api.post('/support/call/join', {
+        channelId: activeChannelId,
+        userId: user?.id || `usr-${Date.now()}`,
+        name: realUserName,
+        isAgent: isAdmin,
+      });
+      fetchActiveCall();
+    } catch (err) {
+      console.warn('Error registrando participante en llamada:', err);
+    }
+  };
+
+  // 3. Inicialización de Stream Chat SDK en Segundo Plano
   useEffect(() => {
     let client: StreamChat | null = null;
 
@@ -123,7 +150,7 @@ export default function SupportChatView() {
         client = StreamChat.getInstance(streamApiKey);
 
         const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
-        const userName = user?.fullName || `${user?.firstName || 'Usuario'} ${user?.lastName || ''}`.trim() || 'Usuario Clínico';
+        const userName = realUserName;
         const userImage = user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(userName)}`;
 
         await client.connectUser(
@@ -157,9 +184,9 @@ export default function SupportChatView() {
         client.disconnectUser().catch((e) => console.error('Disconnect error:', e));
       }
     };
-  }, [user?.id, activeChannelId, isAdmin]);
+  }, [user?.id, activeChannelId, isAdmin, realUserName]);
 
-  // 3. Activación Real de Cámara y Micrófono WebRTC con Transmisión de Audio sin Muestreo Muted
+  // 4. Activación Real de Cámara y Micrófono WebRTC con Transmisión de Audio
   useEffect(() => {
     if (isInCall && isCameraOn && !isScreenSharing) {
       setMediaError(null);
@@ -168,7 +195,6 @@ export default function SupportChatView() {
         .then((stream) => {
           mediaStreamRef.current = stream;
 
-          // Asegurar que la pista de audio de tu micrófono esté habilitada
           stream.getAudioTracks().forEach((track) => {
             track.enabled = isMicOn;
           });
@@ -208,7 +234,7 @@ export default function SupportChatView() {
     }
   }, [isInCall]);
 
-  // 4. Compartir Pantalla en Vivo (Screen Sharing)
+  // 5. Compartir Pantalla en Vivo (Screen Sharing)
   const handleToggleScreenShare = async () => {
     if (!isScreenSharing) {
       try {
@@ -244,10 +270,10 @@ export default function SupportChatView() {
     if (!isAdmin) return;
 
     try {
-      const creatorName = user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Administrador de Soporte';
       const res = await api.post('/support/call', {
         channelId: activeChannelId,
-        createdByName: creatorName,
+        createdByName: realUserName,
+        userId: user?.id,
       });
 
       if (res.data) {
@@ -255,6 +281,7 @@ export default function SupportChatView() {
           id: res.data.callId,
           url: res.data.url,
           createdByName: res.data.createdByName,
+          participants: res.data.participants || [],
         });
         setIsInCall(true);
       }
@@ -276,9 +303,21 @@ export default function SupportChatView() {
     }
   };
 
+  // Obtener los datos reales del segundo participante conectado
+  const otherParticipant = activeCallRoom?.participants?.find((p) => p.userId !== user?.id);
+  const remoteParticipantName = otherParticipant
+    ? otherParticipant.name
+    : isAdmin
+    ? 'Esperando Usuario de Laboratorio...'
+    : activeCallRoom?.createdByName || 'Ing. Soporte Clínico en Vivo';
+
+  const remoteParticipantRole = otherParticipant
+    ? (otherParticipant.isAgent ? 'Agente Administrador en Vivo' : 'Usuario / Técnico de Laboratorio')
+    : (isAdmin ? 'Esperando Conexión' : 'Agente / Administrador de Soporte');
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Elemento de Audio Remoto no silenciado para escuchar las voces de los usuarios */}
+      {/* Elemento de Audio Remoto no silenciado */}
       <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
 
       {/* Banner Superior de Soporte Técnico y Modo Admin */}
@@ -319,11 +358,11 @@ export default function SupportChatView() {
             </button>
           ) : activeCallRoom ? (
             <button
-              onClick={() => setIsInCall(true)}
+              onClick={handleJoinCall}
               className="btn btn-emerald bg-emerald-500 text-slate-950 font-black rounded-2xl gap-2 shadow-lg hover:scale-105 transition-all text-xs py-2.5 px-4 animate-bounce"
             >
               <IconVideo className="w-4 h-4" />
-              📹 Unirse a Videollamada Activa del Agente
+              📹 Unirse a Videollamada Activa ({activeCallRoom.createdByName})
             </button>
           ) : (
             <span className="badge badge-ghost text-xs text-indigo-200 py-2 px-3 border border-indigo-500/30">
@@ -333,7 +372,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM (Sincronizada Multi-Dispositivo con Audio) */}
+      {/* SALA DE VIDEOLLAMADA EN VIVO STREAM CON NOMBRES REALES Y MULTI-DISPOSITIVO */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-950 rounded-3xl border border-indigo-500/30 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -353,7 +392,7 @@ export default function SupportChatView() {
               rel="noreferrer"
               className="btn btn-xs btn-outline btn-info gap-1 text-[11px]"
             >
-              Abrir URL Externa Stream Video con Audio HD
+              Abrir URL Externa Stream Video HD
             </a>
           </div>
 
@@ -363,9 +402,9 @@ export default function SupportChatView() {
             </div>
           )}
 
-          {/* Grid de Transmisión WebRTC Stream */}
+          {/* Grid de Transmisión WebRTC Stream con Nombres Reales */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[320px]">
-            {/* Pantalla Usuario / Químico */}
+            {/* Pantalla Local del Usuario / Químico Actual */}
             <div className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px]">
               <video
                 ref={localVideoRef}
@@ -384,8 +423,8 @@ export default function SupportChatView() {
                 </div>
               )}
 
-              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/50 flex items-center gap-1.5">
-                <span>{isScreenSharing ? '🖥️ Tu Pantalla' : `${user?.firstName || 'Usuario'} (Tú)`}</span>
+              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-200 border border-slate-700/50 flex items-center gap-2">
+                <span>{isScreenSharing ? '🖥️ Tu Pantalla Compartida' : `${realUserName} (Tú)`}</span>
                 {isMicOn ? (
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Micrófono Activo"></span>
                 ) : (
@@ -394,22 +433,22 @@ export default function SupportChatView() {
               </div>
             </div>
 
-            {/* Pantalla del Administrador / Agente de Soporte */}
+            {/* Pantalla del Participante Remoto con NOMBRE REAL DINÁMICO */}
             <div className="relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center min-h-[260px]">
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 p-6 text-center">
                 <div className="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 font-black text-2xl mb-2 shadow-lg">
-                  {isAdmin ? 'QU' : 'ADM'}
+                  {remoteParticipantName.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-sm font-bold text-slate-200">
-                  {isAdmin ? 'Químico Conectado en Vivo' : activeCallRoom.createdByName}
+                <span className="text-base font-black text-slate-100 block">
+                  {remoteParticipantName}
                 </span>
-                <span className="text-xs text-indigo-300 font-mono mt-1">
-                  Audio HD Bidireccional Activo
+                <span className="text-xs text-indigo-300 font-mono mt-1 block">
+                  {remoteParticipantRole}
                 </span>
               </div>
-              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/50 flex items-center gap-1.5">
-                <span>{isAdmin ? 'Usuario Conectado' : 'Agente / Admin de Soporte'}</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-[11px] font-bold text-emerald-400 border border-slate-700/50 flex items-center gap-2">
+                <span>{otherParticipant ? otherParticipant.name : remoteParticipantRole}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               </div>
             </div>
           </div>
@@ -528,7 +567,8 @@ export default function SupportChatView() {
               isAdmin={isAdmin}
               onAdminStartVideoCall={handleAdminGenerateStreamCall}
               activeCallRoom={activeCallRoom}
-              onJoinCall={() => setIsInCall(true)}
+              onJoinCall={handleJoinCall}
+              realUserName={realUserName}
             />
           )}
         </div>
@@ -545,6 +585,7 @@ function SynchronizedMultiDeviceChat({
   onAdminStartVideoCall,
   activeCallRoom,
   onJoinCall,
+  realUserName,
 }: {
   channelId: string;
   channelName: string;
@@ -552,8 +593,8 @@ function SynchronizedMultiDeviceChat({
   onAdminStartVideoCall: () => void;
   activeCallRoom: any;
   onJoinCall: () => void;
+  realUserName: string;
 }) {
-  const { user } = useUser();
   const api = useApi();
 
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
@@ -584,7 +625,7 @@ function SynchronizedMultiDeviceChat({
     const textToSend = inputText.trim();
     setInputText('');
 
-    const senderName = isAdmin ? `Admin: ${user?.firstName || 'Soporte'}` : (user?.firstName || 'Usuario');
+    const senderName = isAdmin ? `Admin: ${realUserName}` : realUserName;
 
     try {
       await api.post('/support/messages', {
@@ -617,7 +658,7 @@ function SynchronizedMultiDeviceChat({
               className="btn btn-xs btn-accent text-slate-950 font-bold gap-1 animate-pulse"
             >
               <IconVideo className="w-3.5 h-3.5" />
-              Unirse a Videollamada Activa
+              Unirse a Videollamada Activa ({activeCallRoom.createdByName})
             </button>
           ) : isAdmin ? (
             <button
@@ -678,8 +719,8 @@ function SynchronizedMultiDeviceChat({
           type="text"
           placeholder={
             isAdmin
-              ? `Responder a los usuarios como Administrador en ${channelName}...`
-              : `Escribe tu consulta para el soporte en ${channelName}...`
+              ? `Responder como ${realUserName} en ${channelName}...`
+              : `Escribe tu consulta como ${realUserName} en ${channelName}...`
           }
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
