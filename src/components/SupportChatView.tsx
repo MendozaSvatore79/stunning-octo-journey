@@ -64,7 +64,7 @@ export default function SupportChatView() {
   const [activeChannel, setActiveChannel] = useState<StreamChannelType | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string>('soporte-general');
 
-  // Estado de GetStream Video SDK Oficial
+  // Estado de GetStream Video SDK Oficial asistido por Backend Token
   const [streamVideoClient, setStreamVideoClient] = useState<StreamVideoClient | null>(null);
   const [streamCall, setStreamCall] = useState<Call | null>(null);
 
@@ -78,7 +78,6 @@ export default function SupportChatView() {
   const [isInCall, setIsInCall] = useState<boolean>(false);
 
   const realUserName = user?.fullName || `${user?.firstName || 'Usuario'} ${user?.lastName || ''}`.trim() || 'Usuario Clínico';
-  const streamApiKey = import.meta.env.VITE_STREAM_API_KEY;
 
   // Canales de soporte predeterminados
   const channelsList: SupportChannelItem[] = [
@@ -127,41 +126,55 @@ export default function SupportChatView() {
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Inicializar Conexión Oficial con GetStream Video React SDK
+  // Detectar si la URL contiene parámetros de unirse a llamada activa del proyecto
   useEffect(() => {
-    if (!isInCall || !activeCallRoom || !streamApiKey) return;
+    const params = new URLSearchParams(window.location.search);
+    const callIdFromUrl = params.get('callId');
+    if (callIdFromUrl && activeCallRoom && activeCallRoom.id === callIdFromUrl) {
+      setIsInCall(true);
+    }
+  }, [activeCallRoom]);
+
+  // 2. Inicializar GetStream Video SDK usando Token JWT generado por NestJS Backend
+  useEffect(() => {
+    if (!isInCall || !activeCallRoom) return;
 
     let vClient: StreamVideoClient | null = null;
     let callInstance: Call | null = null;
 
-    const initGetStreamVideoSDK = async () => {
+    const initGetStreamWithBackendToken = async () => {
       try {
-        const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
-        const videoUser: StreamVideoUser = {
-          id: userId,
-          name: realUserName,
-          image: user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(realUserName)}`,
-        };
+        const rawUserId = user?.id || `user_${Date.now()}`;
+        // Solicitar token JWT oficial generado en el backend NestJS con STREAM_API_SECRET
+        const tokenRes = await api.post('/support/video-token', { userId: rawUserId });
 
-        const chatInstance = StreamChat.getInstance(streamApiKey);
+        if (tokenRes.data && tokenRes.data.token) {
+          const { token, apiKey, userId: cleanUserId } = tokenRes.data;
 
-        vClient = new StreamVideoClient({
-          apiKey: streamApiKey,
-          user: videoUser,
-          tokenProvider: async () => chatInstance.devToken(userId),
-        });
+          const videoUser: StreamVideoUser = {
+            id: cleanUserId,
+            name: realUserName,
+            image: user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(realUserName)}`,
+          };
 
-        callInstance = vClient.call('default', activeCallRoom.id);
-        await callInstance.join({ create: true });
+          vClient = new StreamVideoClient({
+            apiKey: apiKey,
+            user: videoUser,
+            token: token,
+          });
 
-        setStreamVideoClient(vClient);
-        setStreamCall(callInstance);
+          callInstance = vClient.call('default', activeCallRoom.id);
+          await callInstance.join({ create: true });
+
+          setStreamVideoClient(vClient);
+          setStreamCall(callInstance);
+        }
       } catch (err) {
-        console.warn('Error conectando GetStream Video Client:', err);
+        console.warn('Backend Token no disponible, conectando sala sincronizada...', err);
       }
     };
 
-    initGetStreamVideoSDK();
+    initGetStreamWithBackendToken();
 
     return () => {
       if (callInstance) {
@@ -171,7 +184,7 @@ export default function SupportChatView() {
         vClient.disconnectUser().catch((e) => console.warn('Video disconnect error:', e));
       }
     };
-  }, [isInCall, activeCallRoom?.id, user?.id, realUserName, streamApiKey]);
+  }, [isInCall, activeCallRoom?.id, user?.id, realUserName, api]);
 
   // 3. Unirse a la Videollamada y Registrar Participante en Servidor
   const handleJoinCall = async () => {
@@ -189,53 +202,53 @@ export default function SupportChatView() {
     }
   };
 
-  // 4. Inicializar Conexión Oficial con GetStream Chat SDK
+  // 4. Inicializar Conexión Oficial con GetStream Chat SDK mediante Token de Backend
   useEffect(() => {
-    if (!streamApiKey) return;
-
     let client: StreamChat | null = null;
 
-    const initStreamChatSDK = async () => {
+    const initStreamChatWithBackendToken = async () => {
       try {
-        client = StreamChat.getInstance(streamApiKey);
+        const rawUserId = user?.id || `user_${Date.now()}`;
+        const tokenRes = await api.post('/support/video-token', { userId: rawUserId });
 
-        const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
-        const userName = realUserName;
-        const userImage = user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(userName)}`;
+        if (tokenRes.data && tokenRes.data.token) {
+          const { token, apiKey, userId: cleanUserId } = tokenRes.data;
+          client = StreamChat.getInstance(apiKey);
 
-        await client.connectUser(
-          {
-            id: userId,
-            name: userName,
-            image: userImage,
-            role: isAdmin ? 'admin' : role || 'user',
-          },
-          client.devToken(userId)
-        );
+          await client.connectUser(
+            {
+              id: cleanUserId,
+              name: realUserName,
+              image: user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(realUserName)}`,
+              role: isAdmin ? 'admin' : role || 'user',
+            },
+            token
+          );
 
-        const channel = client.channel('messaging', activeChannelId, {
-          name: channelsList.find((c) => c.id === activeChannelId)?.name || 'Soporte Técnico',
-          members: [userId],
-        } as any);
+          const channel = client.channel('messaging', activeChannelId, {
+            name: channelsList.find((c) => c.id === activeChannelId)?.name || 'Soporte Técnico',
+            members: [cleanUserId],
+          } as any);
 
-        await channel.watch();
+          await channel.watch();
 
-        setChatClient(client);
-        setActiveChannel(channel);
+          setChatClient(client);
+          setActiveChannel(channel);
+        }
       } catch (err) {
-        console.warn('Stream Chat conectando en modo sincronizado...', err);
+        console.warn('Stream Chat backend token en modo local...', err);
         setChatClient(null);
       }
     };
 
-    initStreamChatSDK();
+    initStreamChatWithBackendToken();
 
     return () => {
       if (client) {
         client.disconnectUser().catch((e) => console.warn('Disconnect error:', e));
       }
     };
-  }, [user?.id, activeChannelId, isAdmin, realUserName, streamApiKey]);
+  }, [user?.id, activeChannelId, isAdmin, realUserName, role, api]);
 
   // 🚀 SOLO EL AGENTE ADMINISTRADOR PUEDE CREAR LA VIDEOLLAMADA
   const handleAdminGenerateStreamCall = async () => {
@@ -275,8 +288,10 @@ export default function SupportChatView() {
     }
   };
 
+  // URL interna del proyecto para compartir e ingresar directamente a la videollamada
   const roomSlug = activeCallRoom?.id ? activeCallRoom.id.replace(/[^\w]/g, '') : `LabCall${Date.now()}`;
-  const directVideoCallUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(realUserName)}"`;
+  const internalProjectCallUrl = `${window.location.origin}${window.location.pathname}?tab=support&channelId=${activeChannelId}&callId=${activeCallRoom?.id || roomSlug}`;
+  const directVideoFrameUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(realUserName)}"`;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -297,7 +312,7 @@ export default function SupportChatView() {
                   </span>
                 ) : (
                   <span className="badge bg-white/20 border border-white/30 text-white font-bold text-[11px] uppercase tracking-wider px-3 py-2 rounded-xl backdrop-blur-md">
-                    Stream Chat & Video SDK
+                    Stream Chat & Video SDK + Backend API
                   </span>
                 )}
               </div>
@@ -334,7 +349,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA Y AUDIO EN TIEMPO REAL HD (CARGA A 0ms) */}
+      {/* SALA DE VIDEOLLAMADA INTEGRADAS EN EL PROYECTO */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
@@ -342,22 +357,33 @@ export default function SupportChatView() {
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
               <div>
                 <h3 className="font-black text-sm text-indigo-300">
-                  Videollamada en Vivo HD • Sala #{activeCallRoom.id}
+                  Videollamada en Vivo de Soporte • Sala #{activeCallRoom.id}
                 </h3>
                 <p className="text-xs text-slate-400">Agente Creador: {activeCallRoom.createdByName}</p>
               </div>
             </div>
 
-            <button
-              onClick={handleEndCall}
-              className="btn btn-xs btn-error font-bold text-white rounded-xl gap-1"
-            >
-              <IconPhoneOff className="w-3.5 h-3.5" />
-              Finalizar Llamada
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(internalProjectCallUrl);
+                  alert('¡Enlace de videollamada copiado al portapapeles!');
+                }}
+                className="btn btn-xs btn-outline btn-indigo gap-1 text-[11px] rounded-xl text-indigo-200 border-indigo-500/40"
+              >
+                📋 Copiar URL del Proyecto
+              </button>
+              <button
+                onClick={handleEndCall}
+                className="btn btn-xs btn-error font-bold text-white rounded-xl gap-1"
+              >
+                <IconPhoneOff className="w-3.5 h-3.5" />
+                Finalizar Llamada
+              </button>
+            </div>
           </div>
 
-          {/* RENDERIZADO INSTANTÁNEO DE VIDEO Y AUDIO HD */}
+          {/* STREAM VIDEO SDK O FRAME DE VIDEO HD INTEGRADO */}
           {streamVideoClient && streamCall ? (
             <StreamVideo client={streamVideoClient}>
               <StreamCall call={streamCall}>
@@ -370,7 +396,7 @@ export default function SupportChatView() {
           ) : (
             <div className="w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
               <iframe
-                src={directVideoCallUrl}
+                src={directVideoFrameUrl}
                 allow="camera; microphone; display-capture; autoplay; clipboard-write; microphone; camera"
                 className="w-full h-[560px] border-none rounded-2xl"
               />
@@ -379,7 +405,7 @@ export default function SupportChatView() {
         </div>
       )}
 
-      {/* Interfaz de Chat Claro y Ejecutivo */}
+      {/* Interfaz de Chat Claro y Ejecutivo con Stream Chat SDK */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
         {/* Selector de Canales */}
         <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 space-y-4 flex flex-col justify-between">
@@ -446,7 +472,7 @@ export default function SupportChatView() {
           </div>
         </div>
 
-        {/* Ventana Principal de Chat */}
+        {/* Ventana Principal de Chat con GetStream Chat SDK */}
         <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
           {chatClient && activeChannel ? (
             <div className="stream-chat-wrapper h-full flex-1">
