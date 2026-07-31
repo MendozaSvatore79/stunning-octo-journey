@@ -204,6 +204,9 @@ export default function LabsDirectoryView({
                               src={lab.logo}
                               alt={lab.name}
                               className="w-10 h-10 rounded-xl object-cover border border-base-200"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-lg">
