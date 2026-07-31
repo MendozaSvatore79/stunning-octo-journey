@@ -150,6 +150,11 @@ export default function SupportChatView() {
         if (tokenRes.data && tokenRes.data.token) {
           const { token, apiKey, userId: cleanUserId } = tokenRes.data;
 
+          if (!apiKey || !apiKey.trim()) {
+            console.info('Stream API Key no configurada. Agrega VITE_STREAM_API_KEY en Vercel para activar GetStream.');
+            return;
+          }
+
           const videoUser: StreamVideoUser = {
             id: cleanUserId,
             name: realUserName,
@@ -212,6 +217,12 @@ export default function SupportChatView() {
 
         if (tokenRes.data && tokenRes.data.token) {
           const { token, apiKey, userId: cleanUserId } = tokenRes.data;
+
+          if (!apiKey || !apiKey.trim()) {
+            setChatClient(null);
+            return;
+          }
+
           client = StreamChat.getInstance(apiKey);
 
           await client.connectUser(
