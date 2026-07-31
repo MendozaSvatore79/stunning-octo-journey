@@ -130,7 +130,9 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
 
   const toggleGlobalMaintenance = async (enabled: boolean) => {
     await updateConfig({ globalMaintenance: enabled });
-    if (!enabled) {
+    if (enabled) {
+      setIsPreviewingMaintenance(true);
+    } else {
       setIsPreviewingMaintenance(false);
     }
   };
@@ -149,6 +151,7 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(VIP_PASS_STORAGE_KEY, enteredKey.trim());
       } catch {}
       setIsVipPassed(true);
+      setIsPreviewingMaintenance(false);
       return true;
     }
     return false;

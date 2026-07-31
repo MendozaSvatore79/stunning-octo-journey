@@ -13,7 +13,7 @@ import GlobalMaintenanceLanding from './components/GlobalMaintenanceLanding.tsx'
 function AppContent() {
   const clerk = useClerk();
   const { isSignedIn, isLoaded } = useAuth();
-  const { config, isVipPassed } = useMaintenance();
+  const { config, isVipPassed, isPreviewingMaintenance } = useMaintenance();
   
   // Inicializar estado persistente para mantener el overlay activo incluso durante recargas o redirecciones
   const [isSigningOut, setIsSigningOut] = useState(() => {
@@ -34,7 +34,7 @@ function AppContent() {
     }
   }, [isSigningOut]);
 
-  // Interceptar clerk.signOut a nivel global con retraso de 2.5 segundos
+  // Intercepta clerk.signOut a nivel global con retraso de 2.5 segundos
   useEffect(() => {
     if (!clerk) return;
     const originalSignOut = clerk.signOut.bind(clerk);
@@ -65,8 +65,8 @@ function AppContent() {
     }
   }, [isSignedIn, isLoaded, isSigningOut]);
 
-  // SI EL PROYECTO ESTÁ EN MANTENIMIENTO GLOBAL Y EL USUARIO NO ES ADMIN NI TIENE PASE VIP
-  if (config.globalMaintenance && !isVipPassed) {
+  // SI EL PROYECTO ESTÁ EN MANTENIMIENTO GLOBAL O EN PREVISUALIZACIÓN Y EL USUARIO NO TIENE PASE VIP
+  if ((config.globalMaintenance || isPreviewingMaintenance) && !isVipPassed) {
     return <GlobalMaintenanceLanding />;
   }
 
