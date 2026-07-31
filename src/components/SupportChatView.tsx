@@ -78,7 +78,7 @@ export default function SupportChatView() {
   const [isInCall, setIsInCall] = useState<boolean>(false);
 
   const realUserName = user?.fullName || `${user?.firstName || 'Usuario'} ${user?.lastName || ''}`.trim() || 'Usuario Clínico';
-  const streamApiKey = import.meta.env.VITE_STREAM_API_KEY || 'b5f4y9r5x6zz';
+  const streamApiKey = import.meta.env.VITE_STREAM_API_KEY;
 
   // Canales de soporte predeterminados
   const channelsList: SupportChannelItem[] = [
@@ -127,9 +127,9 @@ export default function SupportChatView() {
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Inicializar Conexión Oficial con GetStream Video React SDK
+  // 2. Inicializar Conexión Oficial con GetStream Video React SDK ÚNICAMENTE si existe la API Key configurada
   useEffect(() => {
-    if (!isInCall || !activeCallRoom) return;
+    if (!isInCall || !activeCallRoom || !streamApiKey) return;
 
     let vClient: StreamVideoClient | null = null;
     let callInstance: Call | null = null;
@@ -151,7 +151,6 @@ export default function SupportChatView() {
           tokenProvider: async () => chatInstance.devToken(userId),
         });
 
-        // Conectar a la sala oficial de Stream Video
         callInstance = vClient.call('default', activeCallRoom.id);
         await callInstance.join({ create: true });
 
@@ -190,8 +189,10 @@ export default function SupportChatView() {
     }
   };
 
-  // 4. Inicializar Conexión Oficial con GetStream Chat SDK
+  // 4. Inicializar Conexión Oficial con GetStream Chat SDK ÚNICAMENTE si existe la API Key configurada
   useEffect(() => {
+    if (!streamApiKey) return;
+
     let client: StreamChat | null = null;
 
     const initStreamChatSDK = async () => {
@@ -366,9 +367,9 @@ export default function SupportChatView() {
           ) : (
             <div className="p-12 text-center bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
               <div className="loading loading-spinner loading-lg text-indigo-400"></div>
-              <p className="text-sm font-bold text-slate-300">Conectando con los Servidores de GetStream Video SDK...</p>
+              <p className="text-sm font-bold text-slate-300">Conectando con GetStream Video SDK...</p>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                Asegúrate de haber configurado tu <code className="text-indigo-400 font-mono">VITE_STREAM_API_KEY</code> en Vercel.
+                Coloca tu <code className="text-indigo-400 font-mono">VITE_STREAM_API_KEY</code> en Vercel para activar el SDK de Stream.
               </p>
             </div>
           )}
