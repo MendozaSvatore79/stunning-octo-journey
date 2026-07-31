@@ -12,6 +12,17 @@ import {
 } from 'stream-chat-react';
 import 'stream-chat-react/dist/css/index.css';
 
+import {
+  StreamVideo,
+  StreamVideoClient,
+  StreamCall,
+  SpeakerLayout,
+  CallControls,
+  type Call,
+  type User as StreamVideoUser,
+} from '@stream-io/video-react-sdk';
+import '@stream-io/video-react-sdk/dist/css/styles.css';
+
 import { useUserContext } from '../hooks/useUserContext';
 import { useApi } from '../hooks/useApi';
 import {
@@ -53,6 +64,10 @@ export default function SupportChatView() {
   const [activeChannel, setActiveChannel] = useState<StreamChannelType | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string>('soporte-general');
 
+  // Estado de GetStream Video SDK Oficial
+  const [streamVideoClient, setStreamVideoClient] = useState<StreamVideoClient | null>(null);
+  const [streamCall, setStreamCall] = useState<Call | null>(null);
+
   const [activeCallRoom, setActiveCallRoom] = useState<{
     id: string;
     url: string;
@@ -63,7 +78,7 @@ export default function SupportChatView() {
   const [isInCall, setIsInCall] = useState<boolean>(false);
 
   const realUserName = user?.fullName || `${user?.firstName || 'Usuario'} ${user?.lastName || ''}`.trim() || 'Usuario Clínico';
-  const customStreamApiKey = import.meta.env.VITE_STREAM_API_KEY;
+  const streamApiKey = import.meta.env.VITE_STREAM_API_KEY || 'b5f4y9r5x6zz';
 
   // Canales de soporte predeterminados
   const channelsList: SupportChannelItem[] = [
@@ -112,7 +127,54 @@ export default function SupportChatView() {
     return () => clearInterval(interval);
   }, [fetchActiveCall]);
 
-  // 2. Unirse a la Videollamada y Registrar Participante en Servidor
+  // 2. Inicializar Conexión Oficial con GetStream Video React SDK
+  useEffect(() => {
+    if (!isInCall || !activeCallRoom) return;
+
+    let vClient: StreamVideoClient | null = null;
+    let callInstance: Call | null = null;
+
+    const initGetStreamVideoSDK = async () => {
+      try {
+        const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
+        const videoUser: StreamVideoUser = {
+          id: userId,
+          name: realUserName,
+          image: user?.imageUrl || `https://getstream.io/random_png/?name=${encodeURIComponent(realUserName)}`,
+        };
+
+        const chatInstance = StreamChat.getInstance(streamApiKey);
+
+        vClient = new StreamVideoClient({
+          apiKey: streamApiKey,
+          user: videoUser,
+          tokenProvider: async () => chatInstance.devToken(userId),
+        });
+
+        // Conectar a la sala oficial de Stream Video
+        callInstance = vClient.call('default', activeCallRoom.id);
+        await callInstance.join({ create: true });
+
+        setStreamVideoClient(vClient);
+        setStreamCall(callInstance);
+      } catch (err) {
+        console.warn('Error conectando GetStream Video Client:', err);
+      }
+    };
+
+    initGetStreamVideoSDK();
+
+    return () => {
+      if (callInstance) {
+        callInstance.leave().catch((e) => console.warn('Call leave error:', e));
+      }
+      if (vClient) {
+        vClient.disconnectUser().catch((e) => console.warn('Video disconnect error:', e));
+      }
+    };
+  }, [isInCall, activeCallRoom?.id, user?.id, realUserName, streamApiKey]);
+
+  // 3. Unirse a la Videollamada y Registrar Participante en Servidor
   const handleJoinCall = async () => {
     setIsInCall(true);
     try {
@@ -128,15 +190,13 @@ export default function SupportChatView() {
     }
   };
 
-  // 3. Conectar Stream Chat SDK de forma segura
+  // 4. Inicializar Conexión Oficial con GetStream Chat SDK
   useEffect(() => {
-    if (!customStreamApiKey) return;
-
     let client: StreamChat | null = null;
 
-    const initStreamChat = async () => {
+    const initStreamChatSDK = async () => {
       try {
-        client = StreamChat.getInstance(customStreamApiKey);
+        client = StreamChat.getInstance(streamApiKey);
 
         const userId = user?.id ? user.id.replace(/[^\w]/g, '_') : `user_${Date.now()}`;
         const userName = realUserName;
@@ -162,19 +222,19 @@ export default function SupportChatView() {
         setChatClient(client);
         setActiveChannel(channel);
       } catch (err) {
-        console.warn('Stream Chat API Key en modo local sincronizado...', err);
+        console.warn('Stream Chat conectando en modo sincronizado...', err);
         setChatClient(null);
       }
     };
 
-    initStreamChat();
+    initStreamChatSDK();
 
     return () => {
       if (client) {
         client.disconnectUser().catch((e) => console.warn('Disconnect error:', e));
       }
     };
-  }, [user?.id, activeChannelId, isAdmin, realUserName, customStreamApiKey]);
+  }, [user?.id, activeChannelId, isAdmin, realUserName, streamApiKey]);
 
   // 🚀 SOLO EL AGENTE ADMINISTRADOR PUEDE CREAR LA VIDEOLLAMADA
   const handleAdminGenerateStreamCall = async () => {
@@ -203,6 +263,7 @@ export default function SupportChatView() {
 
   const handleEndCall = async () => {
     setIsInCall(false);
+    setStreamCall(null);
     if (isAdmin) {
       try {
         await api.delete(`/support/call/${activeChannelId}`);
@@ -212,10 +273,6 @@ export default function SupportChatView() {
       }
     }
   };
-
-  // Nombre limpio de sala WebRTC para evitar lobby/membersOnly
-  const roomSlug = activeCallRoom?.id ? activeCallRoom.id.replace(/[^\w]/g, '') : `LabCall${Date.now()}`;
-  const videoCallUrl = `https://meet.jit.si/${roomSlug}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&userInfo.displayName="${encodeURIComponent(realUserName)}"`;
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -236,7 +293,7 @@ export default function SupportChatView() {
                   </span>
                 ) : (
                   <span className="badge bg-white/20 border border-white/30 text-white font-bold text-[11px] uppercase tracking-wider px-3 py-2 rounded-xl backdrop-blur-md">
-                    Stream Chat & Video WebRTC
+                    Stream Chat & Video SDK
                   </span>
                 )}
               </div>
@@ -273,7 +330,7 @@ export default function SupportChatView() {
         </div>
       </div>
 
-      {/* SALA DE VIDEOLLAMADA Y AUDIO EN TIEMPO REAL HD DIRECTA */}
+      {/* SALA DE VIDEOLLAMADA CON EL SDK OFICIAL DE GETSTREAM VIDEO */}
       {isInCall && activeCallRoom && (
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 text-white shadow-2xl space-y-4 animate-scale-in">
           <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-4 gap-3">
@@ -281,43 +338,44 @@ export default function SupportChatView() {
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
               <div>
                 <h3 className="font-black text-sm text-indigo-300">
-                  Videollamada en Vivo HD • Sala #{roomSlug}
+                  Videollamada en Vivo GetStream Video SDK • Sala #{activeCallRoom.id}
                 </h3>
-                <p className="text-xs text-slate-400">Agente Admin: {activeCallRoom.createdByName}</p>
+                <p className="text-xs text-slate-400">Agente Creador: {activeCallRoom.createdByName}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <a
-                href={videoCallUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-xs btn-outline btn-info gap-1 text-[11px] rounded-xl"
-              >
-                Abrir en Pestaña Externa ➔
-              </a>
-              <button
-                onClick={handleEndCall}
-                className="btn btn-xs btn-error font-bold text-white rounded-xl gap-1"
-              >
-                <IconPhoneOff className="w-3.5 h-3.5" />
-                Finalizar Llamada
-              </button>
-            </div>
+            <button
+              onClick={handleEndCall}
+              className="btn btn-xs btn-error font-bold text-white rounded-xl gap-1"
+            >
+              <IconPhoneOff className="w-3.5 h-3.5" />
+              Finalizar Llamada
+            </button>
           </div>
 
-          {/* SALA DE VIDEO Y AUDIO WEBRTC MULTI-DISPOSITIVO EN VIVO (CONEXIÓN DIRECTA 0ms) */}
-          <div className="w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
-            <iframe
-              src={videoCallUrl}
-              allow="camera; microphone; display-capture; autoplay; clipboard-write; microphone; camera"
-              className="w-full h-[560px] border-none rounded-2xl"
-            />
-          </div>
+          {/* COMPONENTE EXCLUSIVO Y OFICIAL DE GETSTREAM VIDEO SDK REACT */}
+          {streamVideoClient && streamCall ? (
+            <StreamVideo client={streamVideoClient}>
+              <StreamCall call={streamCall}>
+                <div className="space-y-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 shadow-inner">
+                  <SpeakerLayout />
+                  <CallControls onLeave={handleEndCall} />
+                </div>
+              </StreamCall>
+            </StreamVideo>
+          ) : (
+            <div className="p-12 text-center bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+              <div className="loading loading-spinner loading-lg text-indigo-400"></div>
+              <p className="text-sm font-bold text-slate-300">Conectando con los Servidores de GetStream Video SDK...</p>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Asegúrate de haber configurado tu <code className="text-indigo-400 font-mono">VITE_STREAM_API_KEY</code> en Vercel.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Interfaz de Chat Claro y Ejecutivo */}
+      {/* Interfaz de Chat Claro y Ejecutivo con Stream Chat SDK */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
         {/* Selector de Canales */}
         <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 space-y-4 flex flex-col justify-between">
@@ -384,7 +442,7 @@ export default function SupportChatView() {
           </div>
         </div>
 
-        {/* Ventana Principal de Chat */}
+        {/* Ventana Principal de Chat con GetStream Chat SDK */}
         <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
           {chatClient && activeChannel ? (
             <div className="stream-chat-wrapper h-full flex-1">
