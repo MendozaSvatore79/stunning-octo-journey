@@ -5,7 +5,7 @@ import { useUserContext } from '../hooks/useUserContext';
 import { IconShield, IconSettings, IconHeadphones } from './icons';
 
 export default function GlobalMaintenanceLanding() {
-  const { config, validateVipKey, setIsPreviewingMaintenance, toggleGlobalMaintenance } = useMaintenance();
+  const { config, validateVipKey, toggleGlobalMaintenance } = useMaintenance();
   const { isAdmin } = useUserContext();
 
   const [vipInput, setVipInput] = useState('');
@@ -25,28 +25,33 @@ export default function GlobalMaintenanceLanding() {
     }
   };
 
+  const handleAdminBypassToDashboard = () => {
+    validateVipKey(config.vipAccessKey);
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative overflow-hidden">
-      {/* BARRA SUPERIOR DE ADMINISTRADOR SI ESTÁ PREVISUALIZANDO */}
+      {/* BARRA SUPERIOR DE CONTROL PARA ADMINISTRADORES */}
       {isAdmin && (
-        <div className="bg-amber-500 text-slate-950 px-4 py-2.5 text-xs font-black flex flex-wrap items-center justify-between gap-3 shadow-lg z-50">
+        <div className="bg-amber-500 text-slate-950 px-4 py-3 text-xs font-black flex flex-wrap items-center justify-between gap-3 shadow-xl z-50">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-950 animate-ping"></span>
-            <span>👑 MODO PREVISUALIZACIÓN DE ADMINISTRADOR: Estás viendo la página de mantenimiento que ven los visitantes públicos.</span>
+            <span className="w-3 h-3 rounded-full bg-slate-950 animate-ping"></span>
+            <span>👑 PANEL DE ADMINISTRADOR: El Modo Mantenimiento está ACTIVADO para todo el público.</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => toggleGlobalMaintenance(false)}
-              className="btn btn-xs bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg border-none"
+              className="btn btn-xs bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl border-none shadow-md px-3"
             >
-              Turn OFF / Apagar Mantenimiento
+              🟢 DESACTIVAR MANTENIMIENTO GLOBAL
             </button>
             <button
-              onClick={() => setIsPreviewingMaintenance(false)}
-              className="btn btn-xs bg-white hover:bg-slate-100 text-slate-950 font-black rounded-lg border-none shadow-sm"
+              onClick={handleAdminBypassToDashboard}
+              className="btn btn-xs bg-slate-950 hover:bg-slate-800 text-white font-black rounded-xl border-none shadow-md px-3"
             >
-              Volver al Dashboard ➔
+              🔓 Entrar al Dashboard como Admin ➔
             </button>
           </div>
         </div>

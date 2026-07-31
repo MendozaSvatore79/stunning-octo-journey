@@ -1,6 +1,4 @@
-// src/context/MaintenanceContext.tsx
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { useUserContext } from '../hooks/useUserContext';
 import { useApi } from '../hooks/useApi';
 
 export interface MaintenanceModules {
@@ -54,7 +52,6 @@ interface MaintenanceContextType {
 const MaintenanceContext = createContext<MaintenanceContextType | undefined>(undefined);
 
 export function MaintenanceProvider({ children }: { children: ReactNode }) {
-  const { isAdmin } = useUserContext();
   const api = useApi();
 
   const [config, setConfig] = useState<MaintenanceConfig>(() => {
@@ -92,7 +89,7 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchBackendMaintenanceConfig();
-    const interval = setInterval(fetchBackendMaintenanceConfig, 2000);
+    const interval = setInterval(fetchBackendMaintenanceConfig, 1500);
     return () => clearInterval(interval);
   }, [fetchBackendMaintenanceConfig]);
 
@@ -130,11 +127,6 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
 
   const toggleGlobalMaintenance = async (enabled: boolean) => {
     await updateConfig({ globalMaintenance: enabled });
-    if (enabled) {
-      setIsPreviewingMaintenance(true);
-    } else {
-      setIsPreviewingMaintenance(false);
-    }
   };
 
   const toggleModuleMaintenance = async (moduleKey: keyof MaintenanceModules, enabled: boolean) => {
@@ -169,13 +161,11 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     return `${baseUrl}/dashboard?vip_pass=${encodeURIComponent(config.vipAccessKey)}`;
   };
 
-  const effectiveIsVipPassed = (isAdmin && !isPreviewingMaintenance) || isVipPassed;
-
   return (
     <MaintenanceContext.Provider
       value={{
         config,
-        isVipPassed: effectiveIsVipPassed,
+        isVipPassed,
         isPreviewingMaintenance,
         setIsPreviewingMaintenance,
         updateConfig,
