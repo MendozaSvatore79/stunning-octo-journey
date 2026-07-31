@@ -1,6 +1,7 @@
 // src/context/MaintenanceContext.tsx
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useUserContext } from '../hooks/useUserContext';
+import { useApi } from '../hooks/useApi';
 
 export interface MaintenanceModules {
   patients: boolean;
@@ -42,9 +43,9 @@ interface MaintenanceContextType {
   isVipPassed: boolean;
   isPreviewingMaintenance: boolean;
   setIsPreviewingMaintenance: (preview: boolean) => void;
-  updateConfig: (newConfig: Partial<MaintenanceConfig>) => void;
-  toggleGlobalMaintenance: (enabled: boolean) => void;
-  toggleModuleMaintenance: (moduleKey: keyof MaintenanceModules, enabled: boolean) => void;
+  updateConfig: (newConfig: Partial<MaintenanceConfig>) => Promise<void>;
+  toggleGlobalMaintenance: (enabled: boolean) => Promise<void>;
+  toggleModuleMaintenance: (moduleKey: keyof MaintenanceModules, enabled: boolean) => Promise<void>;
   validateVipKey: (enteredKey: string) => boolean;
   clearVipPass: () => void;
   getVipUrl: () => string;
@@ -54,6 +55,7 @@ const MaintenanceContext = createContext<MaintenanceContextType | undefined>(und
 
 export function MaintenanceProvider({ children }: { children: ReactNode }) {
   const { isAdmin } = useUserContext();
+  const api = useApi();
 
   const [config, setConfig] = useState<MaintenanceConfig>(() => {
     try {
@@ -75,14 +77,24 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
 
   const [isPreviewingMaintenance, setIsPreviewingMaintenance] = useState<boolean>(false);
 
-  // Guardar cambios en localStorage
-  useEffect(() => {
+  // 1. Sincronización en tiempo real desde el Backend NestJS
+  const fetchBackendMaintenanceConfig = useCallback(async () => {
     try {
-      localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(config));
+      const res = await api.get<MaintenanceConfig>('/support/maintenance');
+      if (res.data) {
+        setConfig(res.data);
+        localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(res.data));
+      }
     } catch (err) {
-      console.warn('Error guardando configuracion de mantenimiento:', err);
+      console.warn('Backend maintenance sync fallback to local:', err);
     }
-  }, [config]);
+  }, [api]);
+
+  useEffect(() => {
+    fetchBackendMaintenanceConfig();
+    const interval = setInterval(fetchBackendMaintenanceConfig, 2000);
+    return () => clearInterval(interval);
+  }, [fetchBackendMaintenanceConfig]);
 
   // Verificar parametros VIP en la URL (?vip_pass=SECURE_VIP_PASS_2026 o ?maintenance_pass=...)
   useEffect(() => {
@@ -96,28 +108,39 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     }
   }, [config.vipAccessKey]);
 
-  const updateConfig = (newConfig: Partial<MaintenanceConfig>) => {
-    setConfig((prev) => {
-      const updated = { ...prev, ...newConfig };
-      if (newConfig.modules) {
-        updated.modules = { ...prev.modules, ...newConfig.modules };
-      }
-      return updated;
-    });
-  };
-
-  const toggleGlobalMaintenance = (enabled: boolean) => {
-    updateConfig({ globalMaintenance: enabled });
-  };
-
-  const toggleModuleMaintenance = (moduleKey: keyof MaintenanceModules, enabled: boolean) => {
-    setConfig((prev) => ({
-      ...prev,
+  const updateConfig = async (newConfig: Partial<MaintenanceConfig>) => {
+    const nextConfig = {
+      ...config,
+      ...newConfig,
       modules: {
-        ...prev.modules,
-        [moduleKey]: enabled,
+        ...config.modules,
+        ...(newConfig.modules || {}),
       },
-    }));
+    };
+
+    setConfig(nextConfig);
+    localStorage.setItem(MAINTENANCE_STORAGE_KEY, JSON.stringify(nextConfig));
+
+    try {
+      await api.post('/support/maintenance', nextConfig);
+    } catch (err) {
+      console.warn('Error guardando mantenimieto en servidor:', err);
+    }
+  };
+
+  const toggleGlobalMaintenance = async (enabled: boolean) => {
+    await updateConfig({ globalMaintenance: enabled });
+    if (!enabled) {
+      setIsPreviewingMaintenance(false);
+    }
+  };
+
+  const toggleModuleMaintenance = async (moduleKey: keyof MaintenanceModules, enabled: boolean) => {
+    const updatedModules = {
+      ...config.modules,
+      [moduleKey]: enabled,
+    };
+    await updateConfig({ modules: updatedModules });
   };
 
   const validateVipKey = (enteredKey: string): boolean => {
