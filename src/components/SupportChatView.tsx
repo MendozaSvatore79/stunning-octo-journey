@@ -72,7 +72,7 @@ export interface SupportTicket {
 // =========================================================================
 // MOTOR CLÍNICO DE IA EN FRONTEND (GARANTÍA 100% OPERATIVA INMEDIATA)
 // =========================================================================
-export function runClinicalAIDiagnosis(subject: string, description: string, _category?: TicketCategory) {
+function runClinicalAIDiagnosis(subject: string, description: string, _category?: TicketCategory) {
   const text = `${subject} ${description}`.toLowerCase();
   let likelyCause = 'Inconsistencia operativa o descalibración analítica en proceso.';
   let suggestedAction = 'Verificar parámetros de calibración, reactivo y conectividad antes de reintentar.';
@@ -142,40 +142,40 @@ export function runClinicalAIDiagnosis(subject: string, description: string, _ca
   };
 }
 
-export function runClinicalAIChatReply(queryText: string, senderName: string): string {
+function runClinicalAIChatReply(queryText: string, senderName: string): string {
   const query = (queryText || '').toLowerCase();
 
-  if (query.includes('calibr') || query.includes('levey') || query.includes('westgard') || query.includes('control de calidad')) {
-    return `🔬 **Asistente Clínico IA (Calidad & Calibración):**\n\n` +
-      `Para resolver anomalías en el Control de Calidad:\n` +
+  if (query.includes('calibr') || query.includes('levey') || query.includes('westgard') || query.includes('control de calidad') || query.includes('iso')) {
+    return `🔬 **Synova • Control de Calidad & Normativa:**\n\n` +
+      `Para resolver anomalías en el Control de Calidad o lineamientos ISO 15189:\n` +
       `1. Verifica si la corrida infringió una regla de Westgard (1_3s o 2_2s suelen indicar error aleatorio o sistemático en reactivo).\n` +
       `2. Revisa la fecha de reconstitución y temperatura de almacenamiento del lote de control (2°C a 8°C).\n` +
       `3. Realiza un blanco de reactivo en tu analizador y registra la nueva corrida en el módulo de *Control de Calidad*.\n\n` +
-      `Si el sesgo persiste, te sugerimos abrir un ticket de soporte técnico en la pestaña superior.`;
-  } else if (query.includes('fotomet') || query.includes('analizador') || query.includes('equipo') || query.includes('hematolog') || query.includes('alarma')) {
-    return `⚙️ **Asistente Clínico IA (Soporte de Equipos):**\n\n` +
+      `Si el sesgo analítico persiste, te recomendamos radicar un **Ticket de Soporte** para escalarlo con el especialista.`;
+  } else if (query.includes('fotomet') || query.includes('analizador') || query.includes('equipo') || query.includes('hematolog') || query.includes('alarma') || query.includes('falla')) {
+    return `⚙️ **Synova • Soporte de Equipos y Analizadores:**\n\n` +
       `Recomendaciones para resolución de alertas de equipo:\n` +
-      `• **Paso 1:** Ejecuta el ciclo de lavado diario y cebado (*prime*) de líneas fluídicas para descartar burbujas o microcoágulos.\n` +
-      `• **Paso 2:** Comprueba los niveles de desecho y envases de reactivo diluyente / lisante.\n` +
+      `• **Paso 1:** Ejecuta el ciclo de lavado diario y cebado (*prime*) de líneas fluídicas para descartar microcoágulos o burbujas.\n` +
+      `• **Paso 2:** Comprueba los niveles de desecho y reactivos diluyente / lisante.\n` +
       `• **Paso 3:** Reinicia la interfaz de comunicación HL7 / ASTM con el puerto serial o TCP/IP.\n\n` +
       `¿Deseas que aperturemos un Ticket de Mantenimiento con prioridad Alta para tu sede?`;
   } else if (query.includes('orden') || query.includes('paciente') || query.includes('imprim') || query.includes('pdf') || query.includes('resultado')) {
-    return `📋 **Asistente Clínico IA (Órdenes y Resultados):**\n\n` +
+    return `📋 **Synova • Órdenes y Resultados:**\n\n` +
       `Para emitir o corregir órdenes de trabajo:\n` +
       `• En el módulo de *Órdenes de Trabajo*, busca la orden por folio o apellido del paciente.\n` +
       `• Para validar valores fuera de rango de referencia, pulsa en *Capturar Resultados*, verifica las unidades y haz clic en *Validar y Completar*.\n` +
       `• Los comprobantes térmicos y resultados PDF membretados se pueden reimprimir en cualquier momento desde la barra superior de acciones.`;
   } else if (query.includes('factur') || query.includes('licencia') || query.includes('pago') || query.includes('plan')) {
-    return `💳 **Asistente Clínico IA (Facturación):**\n\n` +
+    return `💳 **Synova • Facturación y Licenciamiento:**\n\n` +
       `Tu suscripción de laboratorio se encuentra sincronizada con soporte continuo. Si requieres añadir cupo para más sedes, emitir una factura fiscal o solicitar cotización de reactivos integrados, puedes radicar un Ticket seleccionando la categoría *Facturación y Licencias*.`;
   } else if (query.includes('hola') || query.includes('buenos') || query.includes('buenas') || query.includes('ayuda')) {
-    return `👋 ¡Hola ${senderName || ''}! Soy el **Asistente Clínico Inteligente de LabSystem**.\n\n` +
-      `Estoy aquí para apoyarte de inmediato con consultas técnicas de analizadores, control de calidad ISO 15189, registro de órdenes y expedientes.\n\n` +
-      `¿En qué proceso o equipo requieres asistencia en este momento? También puedes crear un **Ticket de Soporte** si requieres seguimiento especializado.`;
+    return `👋 ¡Hola ${senderName || ''}! Soy **Synova**, tu asistente clínica inteligente.\n\n` +
+      `Estoy aquí para orientarte con analizadores automatizados, reglas de Westgard, órdenes de laboratorio y expedientes de pacientes.\n\n` +
+      `¿En qué proceso o equipo requieres asistencia en este momento?`;
   } else {
-    return `🤖 **Asistente Clínico IA:**\n\n` +
+    return `✨ **Synova • Asistente Clínico:**\n\n` +
       `He recibido tu consulta: "${queryText}".\n\n` +
-      `Para brindarte la mejor asistencia, un especialista revisará tu caso. Si el equipo se encuentra fuera de servicio o se trata de una urgencia analítica, te recomendamos crear un **Ticket de Soporte** en la pestaña de Tickets para asignar prioridad inmediata.`;
+      `Para brindarte la mejor asistencia técnica, nuestro equipo de soporte clínico revisará tu caso. Si se trata de un analizador detenido o una urgencia analítica, te recomendamos crear un **Ticket de Soporte** en la pestaña superior para asignarle atención prioritaria inmediata.`;
   }
 }
 
@@ -573,20 +573,20 @@ export default function SupportChatView() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <IconSparkles className="w-4 h-4 text-primary animate-pulse" />
-                    <span className="text-xs font-bold text-primary">Respuestas IA Automáticas</span>
+                    <span className="text-xs font-bold text-primary">Synova • Asistente Virtual</span>
                   </div>
                   <input
                     type="checkbox"
                     checked={aiAutoReplyEnabled}
                     onChange={(e) => setAiAutoReplyEnabled(e.target.checked)}
                     className="toggle toggle-primary toggle-sm"
-                    title="Activar o desactivar respuestas automáticas del bot IA en el chat"
+                    title="Activar o pausar respuestas automáticas de Synova"
                   />
                 </div>
                 <p className="text-[11px] text-base-content/60 leading-tight">
                   {aiAutoReplyEnabled
-                    ? 'Activado: El asistente clínico IA analiza tu mensaje y emite sugerencias operativas instantáneas.'
-                    : 'Pausado: Solo el personal de soporte técnico humano responderá tus mensajes.'}
+                    ? 'Activada: Synova responde tus dudas analíticas y operativas en tiempo real.'
+                    : 'Pausada: Solo los ingenieros y agentes humanos responderán tus mensajes.'}
                 </p>
               </div>
 
@@ -1097,16 +1097,66 @@ function AIChatSynchronizedWindow({
   aiAutoReplyEnabled: boolean;
 }) {
   const api = useApi();
-  const [messages, setMessages] = useState<ChatMessageItem[]>([]);
+  const [messages, setMessages] = useState<ChatMessageItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(`lab_chat_msgs_${channelId}`);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
   const [inputText, setInputText] = useState('');
   const [isAITyping, setIsAITyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Recargar mensajes locales al cambiar de canal y limpiar duplicados existentes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`lab_chat_msgs_${channelId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const unique: ChatMessageItem[] = [];
+          for (const msg of parsed) {
+            const isDup = unique.some(
+              (u) =>
+                u.id === msg.id ||
+                (u.sender.toLowerCase().trim() === msg.sender.toLowerCase().trim() &&
+                  u.text.trim() === msg.text.trim())
+            );
+            if (!isDup) unique.push(msg);
+          }
+          setMessages(unique);
+          localStorage.setItem(`lab_chat_msgs_${channelId}`, JSON.stringify(unique));
+          return;
+        }
+      }
+      setMessages([]);
+    } catch {}
+  }, [channelId]);
 
   const fetchBackendMessages = useCallback(async () => {
     try {
       const res = await api.get(`/support/messages/${channelId}`);
       if (Array.isArray(res.data) && res.data.length > 0) {
-        setMessages(res.data);
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          // Filtro estricto anti-duplicados por ID y por contenido idéntico
+          const toAdd = res.data.filter((incoming: any) => {
+            if (existingIds.has(incoming.id)) return false;
+            const isDuplicate = prev.some(
+              (m) =>
+                m.sender.toLowerCase().trim() === incoming.sender.toLowerCase().trim() &&
+                m.text.trim() === incoming.text.trim()
+            );
+            return !isDuplicate;
+          });
+          if (toAdd.length === 0) return prev;
+          const merged = [...prev, ...toAdd];
+          try {
+            localStorage.setItem(`lab_chat_msgs_${channelId}`, JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
       }
     } catch (err) {
       console.warn('Sincronización de mensajes local activa:', err);
@@ -1115,7 +1165,7 @@ function AIChatSynchronizedWindow({
 
   useEffect(() => {
     fetchBackendMessages();
-    const interval = setInterval(fetchBackendMessages, 2500);
+    const interval = setInterval(fetchBackendMessages, 3000);
     return () => clearInterval(interval);
   }, [fetchBackendMessages]);
 
@@ -1131,7 +1181,7 @@ function AIChatSynchronizedWindow({
     setInputText('');
 
     const userMessage: ChatMessageItem = {
-      id: `usr-${Date.now()}`,
+      id: `usr-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       channelId,
       sender: realUserName,
       text: textToSend,
@@ -1139,46 +1189,73 @@ function AIChatSynchronizedWindow({
       isAgent: isAdmin,
     };
 
-    // 1. Mostrar de inmediato el mensaje del usuario
-    setMessages((prev) => [...prev, userMessage]);
+    // 1. Mostrar de inmediato el mensaje del usuario y persistir en localStorage
+    setMessages((prev) => {
+      const updated = [...prev, userMessage];
+      try {
+        localStorage.setItem(`lab_chat_msgs_${channelId}`, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
 
-    // 2. Notificar al backend
+    // 2. Notificar al backend en segundo plano con ID persistente
     try {
       await api.post('/support/messages', {
+        id: userMessage.id,
         channelId,
         sender: realUserName,
         text: textToSend,
         isAgent: isAdmin,
+        time: userMessage.time,
       });
     } catch {}
 
-    // 3. Respuesta automática con IA si está habilitado
+    // 3. Respuesta automática con Synova (IA) si está habilitado
     if (aiAutoReplyEnabled) {
       setIsAITyping(true);
       setTimeout(async () => {
         const aiReplyContent = runClinicalAIChatReply(textToSend, realUserName);
         const aiMessage: ChatMessageItem = {
-          id: `ai-${Date.now()}`,
+          id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           channelId,
-          sender: '🤖 Asistente Clínico IA',
+          sender: '✨ Synova • Asistente Clínico IA',
           text: aiReplyContent,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isAgent: true,
           isAI: true,
         };
 
-        setMessages((prev) => [...prev, aiMessage]);
+        setMessages((prev) => {
+          const updated = [...prev, aiMessage];
+          try {
+            localStorage.setItem(`lab_chat_msgs_${channelId}`, JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
         setIsAITyping(false);
 
-        // Sincronizar en servidor
+        // Guardar la respuesta exacta en Neon DB con su ID persistente para evitar duplicados
         try {
-          await api.post('/support/ai-reply', {
+          await api.post('/support/messages', {
+            id: aiMessage.id,
             channelId,
-            text: textToSend,
-            sender: realUserName,
+            sender: aiMessage.sender,
+            text: aiMessage.text,
+            isAgent: true,
+            isAI: true,
+            time: aiMessage.time,
           });
         } catch {}
-      }, 750);
+      }, 600);
+    }
+  };
+
+  const handleClearLocalChat = () => {
+    if (confirm('¿Deseas vaciar los mensajes locales de este canal?')) {
+      setMessages([]);
+      try {
+        localStorage.removeItem(`lab_chat_msgs_${channelId}`);
+      } catch {}
     }
   };
 
@@ -1194,15 +1271,24 @@ function AIChatSynchronizedWindow({
           {aiAutoReplyEnabled && (
             <span className="badge badge-sm badge-primary text-primary-content font-bold gap-1">
               <IconSparkles className="w-3 h-3" />
-              Bot IA Activo
+              Synova Activa
             </span>
           )}
           {isAdmin && <span className="badge badge-sm badge-warning font-semibold">Modo Agente Admin</span>}
         </div>
 
-        <span className="text-xs text-base-content/60 font-medium">
-          Atención clínica asistida por IA y especialistas
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-base-content/60 font-medium hidden sm:inline">
+            Atención clínica asistida por IA y especialistas
+          </span>
+          <button
+            onClick={handleClearLocalChat}
+            className="btn btn-ghost btn-xs text-base-content/50 hover:text-error"
+            title="Limpiar chat local"
+          >
+            Limpiar historial
+          </button>
+        </div>
       </div>
 
       {/* Lista de Mensajes */}
@@ -1214,29 +1300,35 @@ function AIChatSynchronizedWindow({
             </div>
             <p className="text-xs font-bold text-base-content/70">Sin mensajes aún en {channelName}</p>
             <p className="text-xs text-base-content/50 max-w-xs">
-              Escribe cualquier consulta técnica u operativa para recibir apoyo inmediato del Asistente IA.
+              Escribe cualquier consulta técnica u operativa para recibir apoyo inmediato de Synova.
             </p>
           </div>
         ) : (
           messages.map((m) => {
             const isSelf = m.sender === realUserName;
-            const isAIMessage = m.isAI || m.sender.includes('🤖') || m.sender.includes('IA');
+            const isAIMessage =
+              m.isAI ||
+              m.sender.toLowerCase().includes('synova') ||
+              m.sender.toLowerCase().includes('lia') ||
+              m.sender.includes('🤖') ||
+              m.sender.includes('✨') ||
+              m.sender.includes('IA');
 
             return (
               <div key={m.id} className={`chat ${isSelf ? 'chat-end' : 'chat-start'}`}>
-                <div className="chat-header text-[11px] text-base-content/50 mb-1 font-semibold flex items-center gap-1">
+                <div className="chat-header text-[11px] text-base-content/50 mb-1 font-semibold flex items-center gap-1.5">
                   <span>{m.sender}</span>
                   {isAIMessage && (
-                    <span className="badge badge-xs badge-primary font-bold text-[9px] px-1 py-0.5">
-                      IA
+                    <span className="badge badge-xs badge-primary font-bold text-[9px] px-1.5 py-0.5">
+                      IA Clínica
                     </span>
                   )}
                   <time className="text-[10px] opacity-70 ml-1 font-mono">{m.time}</time>
                 </div>
                 <div
-                  className={`chat-bubble text-sm rounded-xl px-4 py-2.5 whitespace-pre-wrap leading-relaxed ${
+                  className={`chat-bubble text-sm rounded-2xl px-4 py-2.5 whitespace-pre-wrap leading-relaxed ${
                     isAIMessage
-                      ? 'bg-primary/10 text-base-content border border-primary/30 shadow-xs font-normal'
+                      ? 'bg-primary/10 text-base-content border border-primary/25 shadow-xs font-normal'
                       : isSelf
                       ? 'chat-bubble-primary font-medium'
                       : 'bg-base-200 text-base-content border border-base-300 shadow-xs font-medium'
@@ -1251,13 +1343,14 @@ function AIChatSynchronizedWindow({
 
         {isAITyping && (
           <div className="chat chat-start">
-            <div className="chat-header text-[11px] text-primary mb-1 font-bold flex items-center gap-1">
-              <IconSparkles className="w-3 h-3 animate-spin" />
-              <span>🤖 Asistente Clínico IA</span>
+            <div className="chat-header text-[11px] text-primary mb-1 font-bold flex items-center gap-1.5">
+              <IconSparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
+              <span>✨ Synova • Asistente Clínico IA</span>
+              <span className="badge badge-xs badge-primary font-bold text-[9px]">Escribiendo</span>
             </div>
-            <div className="chat-bubble bg-primary/10 text-primary border border-primary/30 rounded-xl px-4 py-2 flex items-center gap-2">
+            <div className="chat-bubble bg-primary/10 text-primary border border-primary/20 rounded-2xl px-4 py-2.5 flex items-center gap-2">
               <span className="loading loading-dots loading-xs"></span>
-              <span className="text-xs font-medium">Analizando consulta clínica y generando respuesta técnica...</span>
+              <span className="text-xs font-medium">Synova está preparando una respuesta clínica...</span>
             </div>
           </div>
         )}
