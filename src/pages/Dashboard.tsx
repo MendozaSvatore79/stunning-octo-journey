@@ -9,6 +9,7 @@ import { useMaintenance } from '../context/MaintenanceContext';
 import AdminDashboardView from '../components/AdminDashboardView';
 import OperatorDashboardView from '../components/OperatorDashboardView';
 import ModuleMaintenanceView from '../components/ModuleMaintenanceView';
+import { IconSparkles } from '../components/icons';
 
 // Carga perezosa (Code Splitting) de vistas pesadas
 const CreateLabModal = lazy(() => import('../components/CreateLabModal'));
@@ -132,26 +133,27 @@ export default function Dashboard() {
             LabSystem
           </a>
 
-          <span className="hidden sm:inline-flex badge badge-outline text-xs font-semibold">
+          <span className="hidden sm:inline-flex badge badge-ghost border border-base-200 py-2.5 px-3 text-xs font-semibold text-base-content/80 gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
             Rol: {role || 'Cargando...'}
           </span>
 
           {isVipPassed && !isAdmin && (
-            <span className="badge badge-accent text-xs font-extrabold gap-1 px-3 py-2 rounded-xl">
-              ✨ Acceso VIP de Mantenimiento
+            <span className="badge badge-accent badge-sm font-bold gap-1 px-3 py-2 rounded-xl">
+              ✨ Acceso VIP
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Botón exclusivo de Administrador para Control de Mantenimiento */}
           {isAdmin && (
             <button
               onClick={() => setIsMaintenanceControlOpen(true)}
-              className={`btn btn-sm text-xs font-black rounded-xl gap-1.5 border-none shadow-sm ${
+              className={`btn btn-sm text-xs font-semibold rounded-xl gap-1.5 transition-all ${
                 config.globalMaintenance
-                  ? 'bg-rose-600 text-white hover:bg-rose-700 animate-pulse'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  ? 'btn-error text-error-content shadow-xs animate-pulse font-bold'
+                  : 'btn-ghost border border-base-200 hover:bg-base-200 text-base-content/80'
               }`}
               title="Gestor de Mantenimiento y Acceso VIP"
             >
@@ -161,12 +163,10 @@ export default function Dashboard() {
 
           <button
             onClick={() => setIsOnboardingOpen(true)}
-            className="btn btn-sm btn-ghost gap-1.5 text-xs text-base-content/70 hover:text-primary rounded-xl"
+            className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 gap-1.5 text-xs text-base-content/80 rounded-xl"
             title="Ver Guía de Inicio Rápido"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <IconSparkles className="w-3.5 h-3.5 text-primary" />
             <span className="hidden md:inline">Guía</span>
           </button>
 
@@ -185,7 +185,9 @@ export default function Dashboard() {
       </header>
 
       {/* Contenido Principal condicional por Vista, Rol y Mantenimiento con React Suspense */}
-      <main className="mx-auto max-w-7xl w-full px-4 py-8 lg:px-8">
+      <main className={`w-full px-4 py-6 sm:px-6 lg:px-8 mx-auto transition-all ${
+        activeView === 'support' ? 'max-w-none' : 'max-w-7xl'
+      }`}>
         {isUserLoading ? (
           <div className="min-h-[400px] flex flex-col items-center justify-center gap-3">
             <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -275,6 +277,7 @@ export default function Dashboard() {
                 onOpenCreateLab={() => setIsCreateLabOpen(true)}
                 onOpenOnboarding={() => setIsOnboardingOpen(true)}
                 onDeleteLabSuccess={handleLabDeleted}
+                onNavigate={setActiveView}
               />
             ) : (
               <OperatorDashboardView
@@ -284,6 +287,8 @@ export default function Dashboard() {
                 isLoadingLabs={isLoadingLabs}
                 onOpenCreateLab={() => setIsCreateLabOpen(true)}
                 onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                onDeleteLabSuccess={handleLabDeleted}
+                onNavigate={setActiveView}
               />
             )}
           </Suspense>

@@ -237,13 +237,17 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
     <div className="space-y-6 animate-fade-in">
       
       {/* Barra de Acciones de Impresión Superior (Ficha de Paciente) */}
-      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-base-100 p-5 rounded-3xl border border-base-200 shadow-sm">
+      <section className="card bg-base-100 border border-base-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
+          <div className="badge badge-primary badge-outline text-xs font-semibold mb-1.5 gap-1">
+            <IconClipboardList className="w-3.5 h-3.5" />
+            Módulo de Recepción y Control
+          </div>
           <h1 className="text-xl sm:text-2xl font-black text-base-content tracking-tight">
             Ficha de Paciente y Hoja de Trabajo
           </h1>
           <p className="text-xs text-base-content/60 mt-0.5">
-            Generación de órdenes clínicas, captura de resultados e impresión de PDFs oficiales.
+            Generación de órdenes clínicas, captura de resultados e impresión de comprobantes oficiales.
           </p>
         </div>
 
@@ -251,7 +255,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => window.print()}
-            className="btn btn-sm btn-slate bg-slate-800 text-white hover:bg-slate-900 border-none font-bold rounded-xl gap-1.5 text-xs"
+            className="btn btn-sm btn-outline rounded-xl font-bold gap-1.5 text-xs"
           >
             <IconPrinter className="w-4 h-4" />
             Imprimir Etiquetas
@@ -262,7 +266,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               if (orders.length > 0) setCreatedOrderTicket(orders[0]);
               else alert('Aún no hay órdenes generadas para reimprimir.');
             }}
-            className="btn btn-sm bg-slate-700 text-white hover:bg-slate-800 border-none font-bold rounded-xl gap-1.5 text-xs"
+            className="btn btn-sm btn-outline rounded-xl font-bold gap-1.5 text-xs"
           >
             <IconPrinter className="w-4 h-4" />
             Re-Imprimir Comprobante
@@ -273,7 +277,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               if (completedOrders.length > 0) setSelectedOrderForPDF(completedOrders[0]);
               else alert('No hay órdenes completadas para imprimir resultados.');
             }}
-            className="btn btn-sm bg-slate-800 text-white hover:bg-slate-900 border-none font-bold rounded-xl gap-1.5 text-xs"
+            className="btn btn-sm btn-primary text-primary-content rounded-xl font-bold gap-1.5 text-xs"
           >
             <IconPrinter className="w-4 h-4" />
             Imprimir Resultados PDF
@@ -282,11 +286,11 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       </section>
 
       {/* Control de Pestañas */}
-      <div className="tabs tabs-boxed bg-base-200 p-1.5 rounded-2xl max-w-md">
+      <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl max-w-md">
         <button
           onClick={() => setActiveTab('create')}
-          className={`tab rounded-xl font-bold gap-2 text-xs sm:text-sm ${
-            activeTab === 'create' ? 'tab-active bg-primary text-primary-content shadow-sm' : ''
+          className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+            activeTab === 'create' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
           <IconClipboardList className="w-4 h-4" />
@@ -295,8 +299,8 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
         <button
           onClick={() => setActiveTab('pending')}
-          className={`tab rounded-xl font-bold gap-2 text-xs sm:text-sm ${
-            activeTab === 'pending' ? 'tab-active bg-primary text-primary-content shadow-sm' : ''
+          className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+            activeTab === 'pending' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
           Pendientes ({pendingOrders.length})
@@ -304,8 +308,8 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
         <button
           onClick={() => setActiveTab('completed')}
-          className={`tab rounded-xl font-bold gap-2 text-xs sm:text-sm ${
-            activeTab === 'completed' ? 'tab-active bg-primary text-primary-content shadow-sm' : ''
+          className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+            activeTab === 'completed' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
           Completadas ({completedOrders.length})
@@ -343,22 +347,22 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
           
           {/* COLUMNA IZQUIERDA: PACIENTE, MÉDICO Y SEDE (7 Cols) */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="card bg-base-100 border border-base-200 shadow-xl rounded-3xl p-6 space-y-5">
+            <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-5 sm:p-6 space-y-5">
               
-              <h2 className="text-base font-black text-primary uppercase tracking-wider flex items-center gap-2 border-b border-base-200 pb-3">
-                <IconUsers className="w-5 h-5" /> 1. Datos del Paciente y Médico Tratante
+              <h2 className="text-xs sm:text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2 border-b border-base-200 pb-3">
+                <IconUsers className="w-4 h-4" /> 1. Datos del Paciente y Médico Tratante
               </h2>
 
               {/* Campo Paciente con Select y Botón Agregar */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="label py-0">
-                  <span className="label-text font-bold text-sm">
+                  <span className="label-text font-bold text-xs sm:text-sm">
                     Paciente: <span className="text-error">*</span>
                   </span>
                 </label>
                 <div className="flex gap-2">
                   <select
-                    className="select select-bordered w-full rounded-2xl focus:select-primary font-semibold text-sm"
+                    className="select select-bordered w-full rounded-xl focus:select-primary font-semibold text-sm"
                     value={selectedPatientId}
                     onChange={(e) => setSelectedPatientId(e.target.value)}
                   >
@@ -372,7 +376,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
                   <button
                     onClick={() => setIsQuickPatientOpen(true)}
-                    className="btn btn-primary text-white font-bold rounded-2xl gap-1 shrink-0 shadow-md"
+                    className="btn btn-primary text-primary-content font-bold rounded-xl gap-1 shrink-0"
                     title="Agregar Nuevo Paciente a la BD"
                   >
                     <IconPlus className="w-4 h-4" />
@@ -382,22 +386,22 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
                 {/* Info en Tiempo Real del Paciente Seleccionado */}
                 {currentPatient ? (
-                  <div className="bg-base-200/60 p-3.5 rounded-2xl border border-base-200 grid grid-cols-3 gap-2 text-xs font-semibold mt-2">
+                  <div className="bg-base-200/50 p-3.5 rounded-xl border border-base-200 grid grid-cols-3 gap-2 text-xs font-semibold mt-2">
                     <div>
                       <span className="text-base-content/50 block text-[10px] font-bold uppercase">Edad:</span>
-                      <span className="text-base-content text-sm">{patientAge} años</span>
+                      <span className="text-base-content text-xs sm:text-sm">{patientAge} años</span>
                     </div>
 
                     <div>
                       <span className="text-base-content/50 block text-[10px] font-bold uppercase">Género:</span>
-                      <span className="text-base-content text-sm">
+                      <span className="text-base-content text-xs sm:text-sm">
                         {currentPatient.gender === 'M' ? 'Masculino' : currentPatient.gender === 'F' ? 'Femenino' : 'Otro'}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-base-content/50 block text-[10px] font-bold uppercase">No. Telefónico:</span>
-                      <span className="text-base-content text-sm">{currentPatient.phone || 'Sin número'}</span>
+                      <span className="text-base-content/50 block text-[10px] font-bold uppercase">Teléfono:</span>
+                      <span className="text-base-content text-xs sm:text-sm truncate block">{currentPatient.phone || 'Sin número'}</span>
                     </div>
                   </div>
                 ) : (
@@ -408,9 +412,9 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               </div>
 
               {/* Campo Médico Tratante con Botón Agregar */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="label py-0">
-                  <span className="label-text font-bold text-sm">
+                  <span className="label-text font-bold text-xs sm:text-sm">
                     Médico: <span className="text-error">*</span>
                   </span>
                 </label>
@@ -418,29 +422,29 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                   <input
                     type="text"
                     placeholder="Escribe el nombre del médico tratante"
-                    className="input input-bordered w-full rounded-2xl focus:input-primary transition-all font-medium text-sm"
+                    className="input input-bordered w-full rounded-xl focus:input-primary transition-all font-medium text-sm"
                     value={doctorName}
                     onChange={(e) => setDoctorName(e.target.value)}
                   />
                   <button
                     onClick={() => setDoctorName('Dr. Sanatorio Particular')}
-                    className="btn btn-primary text-white font-bold rounded-2xl gap-1 shrink-0 shadow-md"
+                    className="btn btn-outline rounded-xl font-bold gap-1 shrink-0"
                   >
                     <IconPlus className="w-4 h-4" />
-                    Agregar
+                    Predeterminado
                   </button>
                 </div>
               </div>
 
               {/* Campo Sede / Laboratorio */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="label py-0">
-                  <span className="label-text font-bold text-sm flex items-center gap-1.5">
-                    <IconBuilding className="w-4 h-4 text-blue-600" /> Sede de Atención / Laboratorio:
+                  <span className="label-text font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                    <IconBuilding className="w-4 h-4 text-primary" /> Sede de Atención / Laboratorio:
                   </span>
                 </label>
                 <select
-                  className="select select-bordered w-full rounded-2xl focus:select-primary font-semibold text-sm"
+                  className="select select-bordered w-full rounded-xl focus:select-primary font-semibold text-sm"
                   value={selectedLabId}
                   onChange={(e) => setSelectedLabId(e.target.value)}
                 >
@@ -454,12 +458,12 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               </div>
 
               {/* Campo Descuento */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="label py-0">
-                  <span className="label-text font-bold text-sm">Descuento:</span>
+                  <span className="label-text font-bold text-xs sm:text-sm">Descuento:</span>
                 </label>
                 <select
-                  className="select select-bordered w-full rounded-2xl focus:select-primary font-semibold text-sm"
+                  className="select select-bordered w-full rounded-xl focus:select-primary font-semibold text-sm"
                   value={discountPercent}
                   onChange={(e) => setDiscountPercent(Number(e.target.value))}
                 >
@@ -478,20 +482,20 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
           {/* COLUMNA DERECHA: ESTUDIOS Y CÁLCULO MONTO (5 Cols) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="card bg-base-100 border border-base-200 shadow-xl rounded-3xl p-6 space-y-5">
+            <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-5 sm:p-6 space-y-5">
               
-              <h2 className="text-base font-black text-primary uppercase tracking-wider flex items-center gap-2 border-b border-base-200 pb-3">
-                <IconFlask className="w-5 h-5 text-blue-600" /> 2. Selección de Estudios Clínicos
+              <h2 className="text-xs sm:text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2 border-b border-base-200 pb-3">
+                <IconFlask className="w-4 h-4 text-primary" /> 2. Selección de Estudios Clínicos
               </h2>
 
               {/* Campo Estudios con Select de BD + Botón Agregar */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="label py-0">
-                  <span className="label-text font-bold text-sm">Estudio(s):</span>
+                  <span className="label-text font-bold text-xs sm:text-sm">Estudio(s):</span>
                 </label>
                 <div className="flex gap-2">
                   <select
-                    className="select select-bordered w-full rounded-2xl focus:select-primary font-semibold text-sm"
+                    className="select select-bordered w-full rounded-xl focus:select-primary font-semibold text-sm"
                     value={selectedStudyId}
                     onChange={(e) => setSelectedStudyId(e.target.value)}
                   >
@@ -505,7 +509,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
                   <button
                     onClick={handleAddStudy}
-                    className="btn btn-primary text-white font-bold rounded-2xl gap-1 shrink-0 shadow-md"
+                    className="btn btn-primary text-primary-content font-bold rounded-xl gap-1 shrink-0"
                   >
                     <IconPlus className="w-4 h-4" />
                     Agregar
@@ -514,8 +518,8 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               </div>
 
               {/* Tabla de Estudios Seleccionados */}
-              <div className="border border-base-200 rounded-2xl overflow-hidden min-h-[160px] bg-base-200/20">
-                <table className="table table-compact w-full text-xs">
+              <div className="border border-base-200 rounded-xl overflow-hidden min-h-[150px] bg-base-200/20">
+                <table className="table table-sm w-full text-xs">
                   <thead>
                     <tr className="bg-base-200/80 text-base-content/70">
                       <th className="font-bold">Estudio</th>
@@ -553,16 +557,16 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               </div>
 
               {/* RESUMEN FINANCIERO EN TIEMPO REAL */}
-              <div className="space-y-2 pt-2 border-t border-base-200 text-right">
-                <div className="text-sm font-bold text-base-content/70">
-                  IMPORTE: <span className="font-mono text-base text-base-content">${subtotal.toFixed(2)}</span>
+              <div className="space-y-1.5 pt-2 border-t border-base-200 text-right">
+                <div className="text-xs font-bold text-base-content/70">
+                  IMPORTE: <span className="font-mono text-sm text-base-content">${subtotal.toFixed(2)}</span>
                 </div>
 
-                <div className="text-sm font-bold text-base-content/70">
-                  DESCUENTO ({discountPercent}%): <span className="font-mono text-base text-error">-${discountAmount.toFixed(2)}</span>
+                <div className="text-xs font-bold text-base-content/70">
+                  DESCUENTO ({discountPercent}%): <span className="font-mono text-sm text-error">-${discountAmount.toFixed(2)}</span>
                 </div>
 
-                <div className="text-3xl font-black text-primary tracking-tight pt-2">
+                <div className="text-2xl sm:text-3xl font-black text-primary tracking-tight pt-2">
                   TOTAL: <span className="font-mono">${totalAmount.toFixed(2)}</span>
                 </div>
               </div>
@@ -570,12 +574,12 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               {/* Botón Principal: Capturar Monto y Crear Orden */}
               <button
                 onClick={handleCreateOrder}
-                className="btn btn-primary btn-lg w-full text-white font-black rounded-2xl shadow-xl shadow-primary/25 hover:scale-[1.01] transition-all text-base uppercase tracking-wider"
+                className="btn btn-primary btn-md sm:btn-lg w-full text-primary-content font-bold rounded-xl shadow-xs text-sm sm:text-base uppercase tracking-wider"
                 disabled={isSubmitting || selectedStudiesList.length === 0}
               >
                 {isSubmitting ? (
                   <>
-                    <span className="loading loading-spinner loading-md"></span>
+                    <span className="loading loading-spinner loading-sm"></span>
                     Procesando Orden...
                   </>
                 ) : (
@@ -592,27 +596,27 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       {/* PESTAÑA 2: ÓRDENES PENDIENTES CON BOTÓN DE CAPTURAR RESULTADOS / VERIFICAR */}
       {!isLoadingData && activeTab === 'pending' && (
         <section className="space-y-4">
-          <div className="card bg-base-100 border border-base-200 shadow-md p-6 rounded-3xl">
-            <h2 className="text-lg font-bold text-base-content mb-4 flex items-center gap-2">
+          <div className="card bg-base-100 border border-base-200 shadow-xs p-5 sm:p-6 rounded-2xl">
+            <h2 className="text-base font-bold text-base-content mb-4 flex items-center gap-2">
               <IconClipboardList className="w-5 h-5 text-warning" />
               Órdenes de Trabajo Pendientes de Procesamiento
             </h2>
 
             {pendingOrders.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-base-200 rounded-2xl">
+              <div className="p-8 text-center border-2 border-dashed border-base-200 rounded-xl">
                 <p className="text-xs text-base-content/60 font-semibold">No hay órdenes pendientes en este momento.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {pendingOrders.map((order) => (
-                  <div key={order.id} className="border border-base-200 p-5 rounded-2xl bg-base-100 shadow-sm space-y-3">
+                  <div key={order.id} className="border border-base-200 p-4 sm:p-5 rounded-xl bg-base-100 shadow-xs space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="badge badge-primary font-mono font-bold">Folio #{order.folio || order.id.slice(0, 6)}</span>
-                      <span className="badge badge-warning text-xs font-bold">PENDIENTE</span>
+                      <span className="badge badge-primary badge-sm font-mono font-bold">Folio #{order.folio || order.id.slice(0, 6)}</span>
+                      <span className="badge badge-warning badge-sm text-xs font-bold">PENDIENTE</span>
                     </div>
 
                     <div>
-                      <div className="font-bold text-base text-base-content">
+                      <div className="font-bold text-sm sm:text-base text-base-content">
                         {order.patient?.firstName} {order.patient?.lastName}
                       </div>
                       <div className="text-xs text-base-content/60">
@@ -622,7 +626,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
                     <div className="border-t border-base-200 pt-2 text-xs font-semibold text-base-content/70">
                       Estudios ({order.analyses?.length || 0}):
-                      <ul className="list-disc list-inside mt-1 font-normal">
+                      <ul className="list-disc list-inside mt-1 font-normal text-base-content/80">
                         {order.analyses?.map((a) => (
                           <li key={a.id}>{a.analysis?.name}</li>
                         ))}
@@ -632,18 +636,18 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-base-200 pt-3">
                       <button
                         onClick={() => setCreatedOrderTicket(order)}
-                        className="btn btn-xs btn-ghost text-slate-500 font-bold gap-1"
+                        className="btn btn-xs btn-ghost text-base-content/60 font-bold gap-1"
                       >
                         <IconPrinter className="w-3.5 h-3.5" /> Comprobante
                       </button>
 
-                      {/* BOTÓN PRINCIPAL EXIGIDO: Capturar Resultados / Verificar */}
+                      {/* BOTÓN PRINCIPAL: Capturar Resultados / Verificar */}
                       <button
                         onClick={() => setSelectedOrderForCapture(order)}
-                        className="btn btn-sm btn-primary text-white font-bold rounded-xl gap-1.5 shadow-md hover:scale-[1.02] transition-all"
+                        className="btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-1.5"
                       >
                         <IconClipboardList className="w-4 h-4" />
-                        Capturar Resultados / Verificar
+                        Capturar Resultados
                       </button>
                     </div>
                   </div>
@@ -657,27 +661,27 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       {/* PESTAÑA 3: ÓRDENES COMPLETADAS CON BOTÓN IMPRIMIR PDF OFICIAL */}
       {!isLoadingData && activeTab === 'completed' && (
         <section className="space-y-4">
-          <div className="card bg-base-100 border border-base-200 shadow-md p-6 rounded-3xl">
-            <h2 className="text-lg font-bold text-base-content mb-4 flex items-center gap-2">
+          <div className="card bg-base-100 border border-base-200 shadow-xs p-5 sm:p-6 rounded-2xl">
+            <h2 className="text-base font-bold text-base-content mb-4 flex items-center gap-2">
               <IconCheckCircle className="w-5 h-5 text-success" />
               Órdenes de Trabajo Completadas y Verificadas
             </h2>
 
             {completedOrders.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-base-200 rounded-2xl">
+              <div className="p-8 text-center border-2 border-dashed border-base-200 rounded-xl">
                 <p className="text-xs text-base-content/60 font-semibold">No hay órdenes completadas registradas aún.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {completedOrders.map((order) => (
-                  <div key={order.id} className="border border-base-200 p-5 rounded-2xl bg-base-100 shadow-sm space-y-3">
+                  <div key={order.id} className="border border-base-200 p-4 sm:p-5 rounded-xl bg-base-100 shadow-xs space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="badge badge-success text-white font-mono font-bold">Folio #{order.folio || order.id.slice(0, 6)}</span>
-                      <span className="badge badge-success text-white text-xs font-bold">COMPLETADO</span>
+                      <span className="badge badge-success text-white badge-sm font-mono font-bold">Folio #{order.folio || order.id.slice(0, 6)}</span>
+                      <span className="badge badge-success text-white badge-sm text-xs font-bold">COMPLETADO</span>
                     </div>
 
                     <div>
-                      <div className="font-bold text-base text-base-content">
+                      <div className="font-bold text-sm sm:text-base text-base-content">
                         {order.patient?.firstName} {order.patient?.lastName}
                       </div>
                       <div className="text-xs text-base-content/60">
@@ -688,17 +692,17 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                     <div className="flex items-center justify-between border-t border-base-200 pt-3">
                       <button
                         onClick={() => setCreatedOrderTicket(order)}
-                        className="btn btn-xs btn-ghost text-slate-500 font-bold"
+                        className="btn btn-xs btn-ghost text-base-content/60 font-bold"
                       >
                         Comprobante
                       </button>
 
                       <button
                         onClick={() => setSelectedOrderForPDF(order)}
-                        className="btn btn-sm bg-slate-900 text-white hover:bg-slate-800 border-none font-bold rounded-xl gap-1.5 shadow-md"
+                        className="btn btn-sm btn-outline btn-success font-bold rounded-xl gap-1.5"
                       >
-                        <IconPrinter className="w-4 h-4 text-emerald-400" />
-                        Imprimir PDF de Resultados
+                        <IconPrinter className="w-4 h-4" />
+                        Imprimir Resultados PDF
                       </button>
                     </div>
                   </div>
@@ -736,26 +740,26 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       {/* MODAL / COMPROBANTE DE TICKET SIMPLE */}
       {createdOrderTicket && (
         <dialog className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box max-w-lg rounded-3xl p-6 border border-base-300 shadow-2xl">
+          <div className="modal-box max-w-lg rounded-2xl p-6 border border-base-200 shadow-xl">
             
             <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
-              <div className="flex items-center gap-2 text-primary font-black text-lg">
-                <IconCheckCircle className="w-6 h-6 text-success" />
+              <div className="flex items-center gap-2 text-primary font-bold text-base">
+                <IconCheckCircle className="w-5 h-5 text-success" />
                 <span>Comprobante de Recepción</span>
               </div>
               <button
                 onClick={() => setCreatedOrderTicket(null)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
-                <IconX className="w-5 h-5" />
+                <IconX className="w-4 h-4" />
               </button>
             </div>
 
-            <div id="printable-ticket" className="bg-base-200/40 p-5 rounded-2xl border border-base-200 space-y-3 text-xs">
+            <div id="printable-ticket" className="bg-base-200/40 p-4 sm:p-5 rounded-xl border border-base-200 space-y-3 text-xs">
               <div className="text-center pb-2 border-b border-base-200">
-                <h4 className="font-black text-base text-base-content">{createdOrderTicket.laboratory?.name || 'LabSystem Clinique'}</h4>
+                <h4 className="font-bold text-base text-base-content">{createdOrderTicket.laboratory?.name || 'LabSystem Clinique'}</h4>
                 <p className="text-[11px] text-base-content/60">Comprobante de Recepción de Muestras Médicas</p>
-                <div className="mt-2 inline-block bg-primary text-white font-mono font-extrabold text-sm px-3 py-1 rounded-full">
+                <div className="mt-2 inline-block bg-primary text-primary-content font-mono font-bold text-xs px-3 py-1 rounded-full">
                   FOLIO DE ORDEN: #{createdOrderTicket.folio || createdOrderTicket.id.slice(0, 6)}
                 </div>
               </div>
@@ -795,16 +799,16 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
             <div className="modal-action pt-4 border-t border-base-200 flex justify-end gap-2">
               <button
                 onClick={() => setCreatedOrderTicket(null)}
-                className="btn btn-ghost rounded-xl"
+                className="btn btn-ghost btn-sm rounded-xl font-semibold"
               >
                 Cerrar
               </button>
 
               <button
                 onClick={() => window.print()}
-                className="btn btn-primary text-white font-bold rounded-xl gap-2 shadow-md"
+                className="btn btn-primary btn-sm text-primary-content font-bold rounded-xl gap-2 shadow-xs"
               >
-                <IconPrinter className="w-5 h-5" />
+                <IconPrinter className="w-4 h-4" />
                 Imprimir Comprobante
               </button>
             </div>
@@ -818,9 +822,9 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       {/* MODAL INLINE DE ALTA RÁPIDA DE PACIENTE */}
       {isQuickPatientOpen && (
         <dialog className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box max-w-md rounded-3xl p-6 border border-base-300 shadow-2xl">
+          <div className="modal-box max-w-md rounded-2xl p-5 sm:p-6 border border-base-200 shadow-xl">
             <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
-              <h3 className="font-bold text-lg text-base-content flex items-center gap-2">
+              <h3 className="font-bold text-base text-base-content flex items-center gap-2">
                 <IconUserPlus className="w-5 h-5 text-primary" />
                 Alta Rápida de Paciente
               </h3>
@@ -899,13 +903,13 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                 <button
                   type="button"
                   onClick={() => setIsQuickPatientOpen(false)}
-                  className="btn btn-ghost btn-sm rounded-xl"
+                  className="btn btn-ghost btn-sm rounded-xl font-semibold"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary btn-sm text-white font-bold rounded-xl"
+                  className="btn btn-primary btn-sm text-primary-content font-bold rounded-xl"
                 >
                   Guardar Paciente
                 </button>

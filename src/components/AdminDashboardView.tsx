@@ -1,6 +1,6 @@
 // src/components/AdminDashboardView.tsx
 import type { Laboratory } from '../types/lab';
-import LabCard from './LabCard';
+import type { DashboardViewType } from './Sidebar';
 import {
   IconShield,
   IconPlus,
@@ -8,8 +8,15 @@ import {
   IconFlask,
   IconUsers,
   IconActivity,
-  IconSettings,
-  IconFileText,
+  IconBuilding,
+  IconCertificate,
+  IconClipboardList,
+  IconUserPlus,
+  IconFolder,
+  IconChartLine,
+  IconHeadphones,
+  IconArrowRight,
+  IconMapPin,
 } from './icons';
 
 interface AdminDashboardViewProps {
@@ -19,6 +26,7 @@ interface AdminDashboardViewProps {
   onOpenCreateLab: () => void;
   onOpenOnboarding: () => void;
   onDeleteLabSuccess: (id: string) => void;
+  onNavigate?: (view: DashboardViewType) => void;
 }
 
 export default function AdminDashboardView({
@@ -27,174 +35,399 @@ export default function AdminDashboardView({
   isLoadingLabs,
   onOpenCreateLab,
   onOpenOnboarding,
-  onDeleteLabSuccess,
+  onNavigate,
 }: AdminDashboardViewProps) {
+  // Mostrar las primeras 4 sedes en el resumen compacto
+  const previewLabs = labs.slice(0, 4);
+
   return (
-    <div className="space-y-8">
-      {/* Banner de Administración */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary/15 via-base-100 to-secondary/10 p-6 sm:p-8 border border-primary/20 shadow-md">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div>
-            <div className="badge badge-primary gap-1.5 mb-3 font-semibold text-xs py-2.5 px-3 rounded-xl">
-              <IconShield className="w-4 h-4" />
-              Administrador General del Sistema
+    <div className="space-y-6">
+      {/* 1. Cabecera Principal Limpia y Compacta */}
+      <section className="card bg-base-100 border border-base-200 p-5 sm:p-6 shadow-xs rounded-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="badge badge-sm badge-outline text-primary border-primary/30 font-semibold gap-1.5 py-2.5 px-3">
+                <IconShield className="w-3.5 h-3.5" />
+                Administrador General
+              </span>
+              <span className="badge badge-sm badge-ghost text-base-content/60 font-medium">
+                Panel Central
+              </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-base-content tracking-tight">
-              Panel Administrativo
+            <h1 className="text-xl sm:text-2xl font-bold text-base-content tracking-tight">
+              Panel de Control Clínico
             </h1>
-            <p className="text-base-content/70 mt-1 max-w-xl text-sm sm:text-base">
-              Hola <span className="font-bold text-primary">{userName || 'Administrador'}</span>, tienes acceso completo para gestionar laboratorios, roles de usuario y parámetros globales del sistema.
+            <p className="text-xs sm:text-sm text-base-content/70 max-w-2xl leading-relaxed">
+              Hola, <span className="font-semibold text-base-content">{userName || 'Administrador'}</span>. Supervisa las operaciones del laboratorio, gestiona el personal y da seguimiento a los módulos clínicos.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={onOpenCreateLab}
-              className="btn btn-primary text-primary-content font-bold rounded-2xl gap-2 shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all"
+              className="btn btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
             >
-              <IconPlus className="w-5 h-5" />
-              Nuevo Laboratorio
+              <IconPlus className="w-4 h-4" />
+              Nueva Sede
             </button>
 
             <button
               onClick={onOpenOnboarding}
-              className="btn btn-ghost rounded-2xl gap-2 text-xs"
+              className="btn btn-ghost btn-sm border border-base-200 hover:bg-base-200 gap-1.5 rounded-xl text-xs font-semibold text-base-content/80"
             >
-              <IconSparkles className="w-4 h-4 text-primary" />
-              Guía de Inicio
+              <IconSparkles className="w-3.5 h-3.5 text-primary" />
+              Guía
             </button>
-          </div>
-        </div>
-
-        {/* Estadísticas para Administradores */}
-        <div className="stats stats-vertical sm:stats-horizontal shadow-sm bg-base-100/90 border border-base-200 mt-6 w-full rounded-2xl backdrop-blur-sm">
-          <div className="stat">
-            <div className="stat-figure text-primary">
-              <IconFlask className="w-8 h-8" />
-            </div>
-            <div className="stat-title text-xs font-semibold uppercase">Laboratorios Registrados</div>
-            <div className="stat-value text-primary">{labs.length}</div>
-            <div className="stat-desc">Sedes globales en BD</div>
-          </div>
-
-          <div className="stat">
-            <div className="stat-figure text-secondary">
-              <IconUsers className="w-8 h-8" />
-            </div>
-            <div className="stat-title text-xs font-semibold uppercase">Roles de Usuario</div>
-            <div className="stat-value text-secondary">ADMIN / TECH</div>
-            <div className="stat-desc">Permisos gestionados por API</div>
-          </div>
-
-          <div className="stat">
-            <div className="stat-figure text-accent">
-              <IconActivity className="w-8 h-8" />
-            </div>
-            <div className="stat-title text-xs font-semibold uppercase">Estado del Servidor</div>
-            <div className="stat-value text-success text-2xl">Activo 100%</div>
-            <div className="stat-desc">Base de Datos PostgreSQL</div>
           </div>
         </div>
       </section>
 
-      {/* Gestión de Laboratorios */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-base-content flex items-center gap-2">
-              <span>Gestión de Laboratorios</span>
-              <span className="badge badge-sm badge-primary">{labs.length}</span>
+      {/* 2. Barra de Indicadores Operativos (DaisyUI Stats Compacto) */}
+      <section className="stats stats-vertical sm:stats-horizontal bg-base-100 border border-base-200 shadow-xs w-full rounded-2xl divide-base-200">
+        <div className="stat py-3.5 px-5">
+          <div className="stat-figure text-primary">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <IconBuilding className="w-4 h-4 text-primary" />
+            </div>
+          </div>
+          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
+            Sedes Activas
+          </div>
+          <div className="stat-value text-xl font-bold text-base-content mt-0.5">
+            {labs.length}
+          </div>
+          <div className="stat-desc text-[11px] text-base-content/50">
+            Red hospitalaria y clínica
+          </div>
+        </div>
+
+        <div className="stat py-3.5 px-5">
+          <div className="stat-figure text-success">
+            <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
+              <IconActivity className="w-4 h-4 text-success" />
+            </div>
+          </div>
+          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
+            Disponibilidad
+          </div>
+          <div className="stat-value text-lg font-bold text-base-content mt-0.5 flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+            </span>
+            Operativo
+          </div>
+          <div className="stat-desc text-[11px] text-base-content/50">
+            Sincronización en línea
+          </div>
+        </div>
+
+        <div className="stat py-3.5 px-5">
+          <div className="stat-figure text-primary">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <IconShield className="w-4 h-4 text-primary" />
+            </div>
+          </div>
+          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
+            Nivel de Acceso
+          </div>
+          <div className="stat-value text-lg font-bold text-base-content mt-0.5">
+            Administrador
+          </div>
+          <div className="stat-desc text-[11px] text-base-content/50">
+            Control de configuración
+          </div>
+        </div>
+
+        <div className="stat py-3.5 px-5">
+          <div className="stat-figure text-primary">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <IconFlask className="w-4 h-4 text-primary" />
+            </div>
+          </div>
+          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
+            Módulos Clínicos
+          </div>
+          <div className="stat-value text-lg font-bold text-base-content mt-0.5">
+            Activos
+          </div>
+          <div className="stat-desc text-[11px] text-base-content/50">
+            Pacientes, Órdenes y QC
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Distribución Organizada en Cuadrícula Armónica (2 Columnas) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        {/* Columna Izquierda (2/3 de ancho): Flujos Operativos y Módulos Clínicos */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-base-content uppercase tracking-wider text-xs">
+              Flujo Operativo y Clínico
             </h2>
-            <p className="text-sm text-base-content/60">
-              Administración de sedes globales y configuración de entidades
-            </p>
+            <span className="text-xs text-base-content/50">Accesos directos a módulos</span>
           </div>
-          <button
-            onClick={onOpenCreateLab}
-            className="btn btn-sm btn-primary rounded-xl gap-1.5 font-bold"
-          >
-            <IconPlus className="w-4 h-4" />
-            Crear Laboratorio
-          </button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            {/* Card: Pacientes y Expedientes */}
+            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <IconUsers className="w-4 h-4" />
+                  </div>
+                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
+                    Recepción
+                  </span>
+                </div>
+                <h3 className="font-bold text-base text-base-content mb-1">
+                  Pacientes y Expedientes
+                </h3>
+                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                  Registro de pacientes, búsqueda de expedientes y consulta de historiales clínicos.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
+                <button
+                  onClick={() => onNavigate?.('add-patient')}
+                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs"
+                >
+                  <IconUserPlus className="w-4 h-4" /> Registrar Paciente
+                </button>
+                <button
+                  onClick={() => onNavigate?.('patients')}
+                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
+                >
+                  <IconFolder className="w-4 h-4 text-primary" /> Directorio de Pacientes
+                </button>
+              </div>
+            </div>
+
+            {/* Card: Órdenes de Trabajo */}
+            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <IconClipboardList className="w-4 h-4" />
+                  </div>
+                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
+                    Pre-Analítica
+                  </span>
+                </div>
+                <h3 className="font-bold text-base text-base-content mb-1">
+                  Órdenes de Trabajo
+                </h3>
+                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                  Generación de solicitudes de análisis clínicos y monitoreo de muestras pendientes.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
+                <button
+                  onClick={() => onNavigate?.('create-order')}
+                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs"
+                >
+                  <IconPlus className="w-4 h-4" /> Nueva Orden de Análisis
+                </button>
+                <button
+                  onClick={() => onNavigate?.('pending-orders')}
+                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
+                >
+                  <IconClipboardList className="w-4 h-4 text-primary" /> Órdenes Pendientes
+                </button>
+              </div>
+            </div>
+
+            {/* Card: Control de Calidad */}
+            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <IconCertificate className="w-4 h-4" />
+                  </div>
+                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
+                    Analítica
+                  </span>
+                </div>
+                <h3 className="font-bold text-base text-base-content mb-1">
+                  Control de Calidad (QC)
+                </h3>
+                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                  Supervisión de lotes de control, validación analítica y gráficas de Levey-Jennings.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
+                <button
+                  onClick={() => onNavigate?.('qc-controls')}
+                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs"
+                >
+                  <IconFlask className="w-4 h-4" /> Lotes de Control
+                </button>
+                <button
+                  onClick={() => onNavigate?.('qc-levey-jennings')}
+                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
+                >
+                  <IconChartLine className="w-4 h-4 text-primary" /> Gráfica Levey-Jennings
+                </button>
+              </div>
+            </div>
+
+            {/* Card: Catálogo y Servicios */}
+            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <IconFlask className="w-4 h-4" />
+                  </div>
+                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
+                    Parámetros
+                  </span>
+                </div>
+                <h3 className="font-bold text-base text-base-content mb-1">
+                  Catálogo de Servicios
+                </h3>
+                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                  Configuración de estudios clínicos, valores de referencia y precios del laboratorio.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
+                <button
+                  onClick={() => onNavigate?.('analysis-catalog')}
+                  className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 text-base-content/80 rounded-xl gap-2 font-semibold justify-start text-xs"
+                >
+                  <IconArrowRight className="w-4 h-4 text-primary" /> Ver Catálogo de Estudios
+                </button>
+                <button
+                  onClick={() => onNavigate?.('add-user')}
+                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
+                >
+                  <IconUsers className="w-4 h-4 text-primary" /> Gestión de Personal
+                </button>
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        {isLoadingLabs ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="skeleton h-44 w-full rounded-2xl"></div>
-            ))}
-          </div>
-        ) : labs.length === 0 ? (
-          <div className="card bg-base-100 border-2 border-dashed border-base-300 p-8 sm:p-12 text-center rounded-3xl">
-            <div className="mx-auto w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-4">
-              <IconFlask className="w-8 h-8" />
+        {/* Columna Derecha (1/3 de ancho): Resumen Compacto de Sedes y Asistencia */}
+        <div className="space-y-4">
+          
+          {/* Card Resumen de Sedes (Compacto y sin duplicidad masiva) */}
+          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="font-bold text-sm text-base-content flex items-center gap-1.5">
+                  <IconBuilding className="w-4 h-4 text-primary" />
+                  Sedes Activas
+                </h3>
+                <span className="text-[11px] text-base-content/50">
+                  {labs.length} registradas en el sistema
+                </span>
+              </div>
+              <button
+                onClick={() => onNavigate?.('labs')}
+                className="btn btn-xs btn-ghost text-primary font-semibold gap-1"
+                title="Ir al Directorio de Sedes Completo"
+              >
+                Ver todas <IconArrowRight className="w-3 h-3" />
+              </button>
             </div>
-            <h3 className="text-xl font-bold text-base-content mb-1">No hay laboratorios registrados</h3>
-            <p className="text-sm text-base-content/60 max-w-md mx-auto mb-6">
-              Como Administrador, crea el primer laboratorio para habilitar la operación clínica del sistema.
+
+            {isLoadingLabs ? (
+              <div className="space-y-2 py-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton h-10 w-full rounded-xl"></div>
+                ))}
+              </div>
+            ) : previewLabs.length === 0 ? (
+              <div className="text-center py-6 border border-dashed border-base-200 rounded-xl p-4">
+                <p className="text-xs text-base-content/60 mb-2">No hay sedes registradas</p>
+                <button
+                  onClick={onOpenCreateLab}
+                  className="btn btn-xs btn-primary font-semibold rounded-lg"
+                >
+                  Crear primera sede
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 divide-y divide-base-100">
+                {previewLabs.map((lab) => (
+                  <div key={lab.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {lab.logo ? (
+                        <img
+                          src={lab.logo}
+                          alt={lab.name}
+                          className="w-7 h-7 rounded-lg object-cover border border-base-200 shrink-0"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
+                          {lab.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-base-content truncate">
+                          {lab.name}
+                        </p>
+                        {lab.city && (
+                          <p className="text-[10px] text-base-content/50 flex items-center gap-1 truncate">
+                            <IconMapPin className="w-3 h-3 shrink-0" />
+                            {lab.city}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="w-2 h-2 rounded-full bg-success shrink-0" title="Sede Operativa"></span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-4 pt-3 border-t border-base-200">
+              <button
+                onClick={onOpenCreateLab}
+                className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 w-full rounded-xl gap-2 text-xs font-semibold text-base-content/80"
+              >
+                <IconPlus className="w-3.5 h-3.5" /> Agregar Nueva Sede
+              </button>
+            </div>
+          </div>
+
+          {/* Card Soporte Técnico Live */}
+          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <IconHeadphones className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xs text-base-content">Soporte Técnico</h3>
+                  <span className="text-[10px] text-base-content/50">Asistencia técnica en vivo</span>
+                </div>
+              </div>
+              <span className="badge badge-accent badge-xs font-bold font-mono">LIVE</span>
+            </div>
+
+            <p className="text-xs text-base-content/60 leading-relaxed mb-3">
+              ¿Dudas con una orden o resultado? Conéctate con soporte mediante chat o videollamada integrada.
             </p>
+
             <button
-              onClick={onOpenCreateLab}
-              className="btn btn-primary font-bold text-primary-content rounded-xl gap-2 shadow-md mx-auto"
+              onClick={() => onNavigate?.('support')}
+              className="btn btn-sm btn-primary w-full rounded-xl gap-2 text-xs font-semibold shadow-xs"
             >
-              <IconPlus className="w-5 h-5" />
-              Crear primer laboratorio
+              Abrir Canal de Soporte <IconArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {labs.map((lab) => (
-              <LabCard
-                key={lab.id}
-                lab={lab}
-                onDeleteSuccess={onDeleteLabSuccess}
-              />
-            ))}
-          </div>
-        )}
-      </section>
 
-      {/* Herramientas Exclusivas de Administración con Íconos Vectoriales */}
-      <section className="grid gap-6 md:grid-cols-3">
-        <div className="card bg-base-100 shadow-sm border border-base-200 rounded-3xl p-6 hover:shadow-md transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold mb-4">
-            <IconUsers className="w-6 h-6" />
-          </div>
-          <h3 className="font-bold text-lg text-base-content mb-1">Gestión de Usuarios</h3>
-          <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-            Asigna roles (`ADMIN`, `TECH`, `LAB_TECHNICIAN`, `RECEPTIONIST`) a los usuarios registrados.
-          </p>
-          <button className="btn btn-sm btn-outline btn-primary rounded-xl w-full">
-            Administrar Usuarios
-          </button>
         </div>
 
-        <div className="card bg-base-100 shadow-sm border border-base-200 rounded-3xl p-6 hover:shadow-md transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center font-bold mb-4">
-            <IconSettings className="w-6 h-6" />
-          </div>
-          <h3 className="font-bold text-lg text-base-content mb-1">Ajustes del Sistema</h3>
-          <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-            Configura parámetros generales, integraciones de correo y webhooks del servidor.
-          </p>
-          <button className="btn btn-sm btn-outline btn-secondary rounded-xl w-full">
-            Configurar Parámetros
-          </button>
-        </div>
-
-        <div className="card bg-base-100 shadow-sm border border-base-200 rounded-3xl p-6 hover:shadow-md transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-accent/10 text-accent flex items-center justify-center font-bold mb-4">
-            <IconFileText className="w-6 h-6" />
-          </div>
-          <h3 className="font-bold text-lg text-base-content mb-1">Auditoría y Reportes</h3>
-          <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-            Inspecciona el historial de cambios, registro de logs y exportación de reportes globales.
-          </p>
-          <button className="btn btn-sm btn-outline btn-accent rounded-xl w-full">
-            Ver Logs de Auditoría
-          </button>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }

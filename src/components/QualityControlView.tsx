@@ -261,30 +261,30 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
   const currentResults = results.filter((r) => r.controlId === (currentControl?.id || ''));
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Encabezado del Módulo de Control de Calidad */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl">
+      <section className="card bg-base-100 border border-base-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shadow-inner shrink-0">
-            <IconCertificate className="w-8 h-8" />
+          <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+            <IconCertificate className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black tracking-tight">Control de Calidad Clínico</h1>
-              <span className="badge badge-accent text-slate-950 font-bold text-xs uppercase tracking-wider">ISO 15189</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-black text-base-content tracking-tight">Control de Calidad Clínico</h1>
+              <span className="badge badge-primary badge-outline text-[11px] font-bold uppercase tracking-wider">ISO 15189</span>
             </div>
-            <p className="text-xs text-indigo-200/80 font-medium mt-1">
+            <p className="text-xs text-base-content/60 mt-0.5">
               Evaluación de Lotes, Captura de Corridas y Gráficas de Levey-Jennings con Reglas de Westgard
             </p>
           </div>
         </div>
 
         {/* Pestañas de Navegación Sub-Menú */}
-        <div className="flex items-center gap-1 bg-white/10 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
+        <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl shrink-0">
           <button
             onClick={() => setSubView('controls')}
-            className={`btn btn-sm rounded-xl border-none gap-2 font-bold ${
-              subView === 'controls' ? 'bg-white text-slate-900 shadow-md' : 'btn-ghost text-white hover:bg-white/10'
+            className={`tab rounded-lg font-bold gap-1.5 text-xs sm:text-sm ${
+              subView === 'controls' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
             <IconFlask className="w-4 h-4" />
@@ -292,8 +292,8 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
           </button>
           <button
             onClick={() => setSubView('results')}
-            className={`btn btn-sm rounded-xl border-none gap-2 font-bold ${
-              subView === 'results' ? 'bg-white text-slate-900 shadow-md' : 'btn-ghost text-white hover:bg-white/10'
+            className={`tab rounded-lg font-bold gap-1.5 text-xs sm:text-sm ${
+              subView === 'results' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
             <IconClipboardList className="w-4 h-4" />
@@ -301,18 +301,18 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
           </button>
           <button
             onClick={() => setSubView('levey-jennings')}
-            className={`btn btn-sm rounded-xl border-none gap-2 font-bold ${
-              subView === 'levey-jennings' ? 'bg-white text-slate-900 shadow-md' : 'btn-ghost text-white hover:bg-white/10'
+            className={`tab rounded-lg font-bold gap-1.5 text-xs sm:text-sm ${
+              subView === 'levey-jennings' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
-            <IconChartLine className="w-4 h-4 text-emerald-500" />
-            Gráfica de Levey Jennings
+            <IconChartLine className="w-4 h-4" />
+            Levey-Jennings
           </button>
         </div>
-      </div>
+      </section>
 
       {isLoading ? (
-        <div className="p-12 text-center bg-base-100 rounded-3xl border border-base-200 shadow-sm">
+        <div className="p-12 text-center bg-base-100 rounded-2xl border border-base-200 shadow-xs">
           <span className="loading loading-spinner loading-lg text-primary"></span>
           <p className="mt-2 text-sm font-bold text-base-content/70">Cargando módulo de Control de Calidad...</p>
         </div>
@@ -321,14 +321,14 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
           {/* ================= 1. SUB-VISTA: CONTROLES (CATÁLOGO DE LOTES) ================= */}
           {subView === 'controls' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-bold text-base-content">Catálogo de Lotes de Control</h2>
+                  <h2 className="text-base font-bold text-base-content">Catálogo de Lotes de Control</h2>
                   <p className="text-xs text-base-content/60">Gestión de sueros y estándares de referencia para análisis clínico</p>
                 </div>
                 <button
                   onClick={() => setIsAddLotModalOpen(true)}
-                  className="btn btn-primary text-white font-bold rounded-2xl gap-2 shadow-md"
+                  className="btn btn-primary btn-sm text-primary-content font-bold rounded-xl gap-2 shadow-xs"
                 >
                   <IconPlus className="w-4 h-4" />
                   Nuevo Lote de Control
@@ -336,7 +336,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
               </div>
 
               {/* Tabla de Lotes */}
-              <div className="bg-base-100 rounded-3xl border border-base-200 shadow-sm overflow-hidden">
+              <div className="card bg-base-100 rounded-2xl border border-base-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="table table-zebra w-full text-sm">
                     <thead>
@@ -345,8 +345,8 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                         <th>Lote</th>
                         <th>Parámetro</th>
                         <th>Nivel</th>
-                        <th className="text-center">Media Target ($\mu$)</th>
-                        <th className="text-center">Desv. Estándar ($\sigma$)</th>
+                        <th className="text-center">Media Target (μ)</th>
+                        <th className="text-center">Desv. Estándar (σ)</th>
                         <th>Caducidad</th>
                         <th className="text-right">Acciones</th>
                       </tr>
@@ -363,7 +363,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                           </td>
                           <td className="font-bold text-primary">{ctrl.parameter}</td>
                           <td>
-                            <span className={`badge font-bold text-xs ${ctrl.level === 'Normal' ? 'badge-info text-white' : 'badge-warning'}`}>
+                            <span className={`badge badge-sm font-bold text-xs ${ctrl.level === 'Normal' ? 'badge-info text-info-content' : 'badge-warning'}`}>
                               {ctrl.level}
                             </span>
                           </td>
@@ -380,7 +380,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                                 setSelectedControlId(ctrl.id);
                                 setSubView('levey-jennings');
                               }}
-                              className="btn btn-xs btn-outline btn-primary rounded-xl gap-1"
+                              className="btn btn-xs btn-outline btn-primary rounded-lg gap-1 font-bold"
                             >
                               <IconChartLine className="w-3.5 h-3.5" />
                               Ver Gráfica
@@ -399,9 +399,9 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
           {subView === 'results' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Formulario de Registro */}
-              <div className="lg:col-span-5 bg-base-100 rounded-3xl border border-base-200 shadow-sm p-6 space-y-4">
+              <div className="lg:col-span-5 card bg-base-100 rounded-2xl border border-base-200 shadow-xs p-5 sm:p-6 space-y-4">
                 <div>
-                  <h2 className="text-lg font-bold text-base-content flex items-center gap-2">
+                  <h2 className="text-base font-bold text-base-content flex items-center gap-2">
                     <IconClipboardList className="w-5 h-5 text-primary" />
                     Registrar Corrida de Control
                   </h2>
@@ -414,7 +414,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                     <select
                       value={runControlId}
                       onChange={(e) => setRunControlId(e.target.value)}
-                      className="select select-bordered w-full rounded-2xl text-sm font-semibold"
+                      className="select select-bordered w-full rounded-xl text-sm font-semibold"
                     >
                       {controls.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -432,7 +432,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                       placeholder="Ej. 95.2"
                       value={runValue}
                       onChange={(e) => setRunValue(e.target.value === '' ? '' : Number(e.target.value))}
-                      className="input input-bordered w-full rounded-2xl text-lg font-mono font-black"
+                      className="input input-bordered w-full rounded-xl text-base sm:text-lg font-mono font-bold"
                       required
                     />
                   </div>
@@ -444,7 +444,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                         type="date"
                         value={runDate}
                         onChange={(e) => setRunDate(e.target.value)}
-                        className="input input-bordered w-full rounded-2xl text-xs font-mono"
+                        className="input input-bordered w-full rounded-xl text-xs font-mono"
                       />
                     </div>
                     <div>
@@ -453,7 +453,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                         type="text"
                         value={runOperator}
                         onChange={(e) => setRunOperator(e.target.value)}
-                        className="input input-bordered w-full rounded-2xl text-xs"
+                        className="input input-bordered w-full rounded-xl text-xs font-medium"
                       />
                     </div>
                   </div>
@@ -464,13 +464,13 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                       placeholder="Ej. Calibrador reactivo lote OK..."
                       value={runNotes}
                       onChange={(e) => setRunNotes(e.target.value)}
-                      className="textarea textarea-bordered w-full rounded-2xl text-xs"
+                      className="textarea textarea-bordered w-full rounded-xl text-xs"
                       rows={2}
                     ></textarea>
                   </div>
 
-                  <button type="submit" className="btn btn-primary w-full text-white font-bold rounded-2xl gap-2 shadow-md">
-                    <IconPlus className="w-5 h-5" />
+                  <button type="submit" className="btn btn-primary w-full text-primary-content font-bold rounded-xl gap-2 shadow-xs">
+                    <IconPlus className="w-4 h-4" />
                     Evaluar y Registrar Corrida
                   </button>
                 </form>
@@ -478,33 +478,33 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                 {/* Banner de Resultado de la Última Evaluación */}
                 {lastEvaluatedRun && (
                   <div
-                    className={`p-4 rounded-2xl border text-xs space-y-1 ${
+                    className={`p-4 rounded-xl border text-xs space-y-1 ${
                       lastEvaluatedRun.status === 'OK'
-                        ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                        ? 'bg-success/10 border-success/30 text-success-content'
                         : lastEvaluatedRun.status === 'WARNING'
-                        ? 'bg-amber-50 border-amber-300 text-amber-900'
-                        : 'bg-rose-50 border-rose-300 text-rose-900'
+                        ? 'bg-warning/10 border-warning/30 text-warning-content'
+                        : 'bg-error/10 border-error/30 text-error-content'
                     }`}
                   >
                     <div className="flex items-center justify-between font-bold">
                       <span>Resultado de Evaluación Westgard:</span>
-                      <span className="font-mono text-sm">Z = {lastEvaluatedRun.zScore} SD</span>
+                      <span className="font-mono text-xs sm:text-sm">Z = {lastEvaluatedRun.zScore} SD</span>
                     </div>
-                    <p className="font-black text-sm">{lastEvaluatedRun.westgardRule}</p>
+                    <p className="font-bold text-sm">{lastEvaluatedRun.westgardRule}</p>
                     <p className="opacity-80">Valor: {lastEvaluatedRun.measuredValue} | Operador: {lastEvaluatedRun.operator}</p>
                   </div>
                 )}
               </div>
 
               {/* Histórico de Resultados */}
-              <div className="lg:col-span-7 bg-base-100 rounded-3xl border border-base-200 shadow-sm p-6 space-y-4">
+              <div className="lg:col-span-7 card bg-base-100 rounded-2xl border border-base-200 shadow-xs p-5 sm:p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-base-content">Bitácora de Corridas de Control</h2>
+                  <h2 className="text-base font-bold text-base-content">Bitácora de Corridas de Control</h2>
                   <span className="badge badge-neutral text-xs font-mono font-bold">{results.length} Medición(es)</span>
                 </div>
 
                 <div className="overflow-x-auto max-h-[480px]">
-                  <table className="table table-compact table-zebra w-full text-xs">
+                  <table className="table table-sm table-zebra w-full text-xs">
                     <thead className="sticky top-0 bg-base-200 z-10">
                       <tr>
                         <th>Fecha</th>
@@ -552,13 +552,13 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
           {subView === 'levey-jennings' && currentControl && (
             <div className="space-y-6">
               {/* Selector de Lote para la Gráfica */}
-              <div className="bg-base-100 p-4 rounded-3xl border border-base-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="card bg-base-100 p-4 sm:p-5 rounded-2xl border border-base-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-black">
-                    <IconChartLine className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black">
+                    <IconChartLine className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-base-content">Gráfica de Control de Levey-Jennings</h2>
+                    <h2 className="text-sm sm:text-base font-bold text-base-content">Gráfica de Control de Levey-Jennings</h2>
                     <p className="text-xs text-base-content/60">
                       Parámetro: <strong className="text-primary">{currentControl.parameter}</strong> | Lote: <span className="font-mono font-bold">{currentControl.lotNumber}</span>
                     </p>
@@ -583,52 +583,53 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
 
               {/* Ficha Técnica de Límites de Control */}
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-2xl text-center">
-                  <span className="block text-[10px] font-bold text-rose-700 uppercase">+3 SD (Límite Rechazo)</span>
-                  <span className="text-sm font-mono font-black text-rose-900">{(currentControl.targetMean + 3 * currentControl.targetSD).toFixed(2)}</span>
+                <div className="bg-base-200/50 border border-base-200 p-2.5 rounded-xl text-center">
+                  <span className="block text-[10px] font-bold text-error uppercase">+3 SD (Límite Rechazo)</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-base-content">{(currentControl.targetMean + 3 * currentControl.targetSD).toFixed(2)}</span>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-2xl text-center">
-                  <span className="block text-[10px] font-bold text-amber-700 uppercase">+2 SD (Advertencia)</span>
-                  <span className="text-sm font-mono font-black text-amber-900">{(currentControl.targetMean + 2 * currentControl.targetSD).toFixed(2)}</span>
+                <div className="bg-base-200/50 border border-base-200 p-2.5 rounded-xl text-center">
+                  <span className="block text-[10px] font-bold text-warning uppercase">+2 SD (Advertencia)</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-base-content">{(currentControl.targetMean + 2 * currentControl.targetSD).toFixed(2)}</span>
                 </div>
-                <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl text-center">
-                  <span className="block text-[10px] font-bold text-slate-600 uppercase">+1 SD</span>
-                  <span className="text-sm font-mono font-black text-slate-800">{(currentControl.targetMean + currentControl.targetSD).toFixed(2)}</span>
+                <div className="bg-base-200/50 border border-base-200 p-2.5 rounded-xl text-center">
+                  <span className="block text-[10px] font-bold text-base-content/60 uppercase">+1 SD</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-base-content">{(currentControl.targetMean + currentControl.targetSD).toFixed(2)}</span>
                 </div>
-                <div className="bg-emerald-100 border border-emerald-300 p-2.5 rounded-2xl text-center shadow-sm">
-                  <span className="block text-[10px] font-black text-emerald-800 uppercase">MEDIA ($\mu$) TARGET</span>
-                  <span className="text-base font-mono font-black text-emerald-950">{currentControl.targetMean.toFixed(2)}</span>
+                <div className="bg-primary/10 border border-primary/20 p-2.5 rounded-xl text-center shadow-xs">
+                  <span className="block text-[10px] font-bold text-primary uppercase">MEDIA (μ) TARGET</span>
+                  <span className="text-sm sm:text-base font-mono font-black text-primary">{currentControl.targetMean.toFixed(2)}</span>
                 </div>
-                <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl text-center">
-                  <span className="block text-[10px] font-bold text-slate-600 uppercase">-1 SD</span>
-                  <span className="text-sm font-mono font-black text-slate-800">{(currentControl.targetMean - currentControl.targetSD).toFixed(2)}</span>
+                <div className="bg-base-200/50 border border-base-200 p-2.5 rounded-xl text-center">
+                  <span className="block text-[10px] font-bold text-base-content/60 uppercase">-1 SD</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-base-content">{(currentControl.targetMean - currentControl.targetSD).toFixed(2)}</span>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-2xl text-center">
-                  <span className="block text-[10px] font-bold text-amber-700 uppercase">-2 SD (Advertencia)</span>
-                  <span className="text-sm font-mono font-black text-amber-900">{(currentControl.targetMean - 2 * currentControl.targetSD).toFixed(2)}</span>
+                <div className="bg-base-200/50 border border-base-200 p-2.5 rounded-xl text-center">
+                  <span className="block text-[10px] font-bold text-warning uppercase">-2 SD (Advertencia)</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-base-content">{(currentControl.targetMean - 2 * currentControl.targetSD).toFixed(2)}</span>
                 </div>
-                <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-2xl text-center">
-                  <span className="block text-[10px] font-bold text-rose-700 uppercase">-3 SD (Límite Rechazo)</span>
-                  <span className="text-sm font-mono font-black text-rose-900">{(currentControl.targetMean - 3 * currentControl.targetSD).toFixed(2)}</span>
+                <div className="bg-base-200/50 border border-base-200 p-2.5 rounded-xl text-center">
+                  <span className="block text-[10px] font-bold text-error uppercase">-3 SD (Límite Rechazo)</span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-base-content">{(currentControl.targetMean - 3 * currentControl.targetSD).toFixed(2)}</span>
                 </div>
               </div>
 
               {/* RENDERIZADO VECTORIAL DE LA GRÁFICA DE LEVEY-JENNINGS (SVG INTERACTIVO) */}
-              <div className="bg-base-100 p-6 rounded-3xl border border-base-200 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
+              {/* RENDERIZADO VECTORIAL DE LA GRÁFICA DE LEVEY-JENNINGS (SVG INTERACTIVO) */}
+              <div className="card bg-base-100 p-5 sm:p-6 rounded-2xl border border-base-200 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="text-xs font-bold text-base-content/70">
                     Trazado Estadístico por Corridas Analíticas ({currentResults.length} mediciones)
                   </span>
-                  <div className="flex items-center gap-4 text-xs font-semibold">
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Normal</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Advertencia (1-2s)</span>
-                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block"></span> Rechazo (1-3s)</span>
+                  <div className="flex items-center gap-3 text-xs font-semibold">
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Normal</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Advertencia (1-2s)</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block"></span> Rechazo (1-3s)</span>
                   </div>
                 </div>
 
                 {/* SVG Levey Jennings Chart */}
                 <div className="w-full overflow-x-auto">
-                  <div className="min-w-[700px] h-[340px] relative bg-slate-950 rounded-2xl p-4 text-slate-200 shadow-inner">
+                  <div className="min-w-[700px] h-[340px] relative bg-slate-950 rounded-xl p-4 text-slate-200 shadow-xs">
                     <svg className="w-full h-full" viewBox="0 0 800 300">
                       {/* Fondo de bandas de desviación estándar */}
                       <rect x="60" y="20" width="710" height="260" fill="#020617" />
@@ -656,7 +657,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
 
                       {/* Línea Central de la Media (Verde Vivo) */}
                       <line x1="60" y1="150" x2="770" y2="150" stroke="#10b981" strokeWidth="2.5" />
-                      <text x="15" y="154" fill="#34d399" fontSize="11" fontWeight="900">MEDIA ($\mu$)</text>
+                      <text x="15" y="154" fill="#34d399" fontSize="11" fontWeight="900">MEDIA (μ)</text>
 
                       <line x1="60" y1="190" x2="770" y2="190" stroke="#64748b" strokeWidth="1" strokeDasharray="2 2" />
                       <text x="15" y="194" fill="#94a3b8" fontSize="10">-1 SD</text>
@@ -723,8 +724,8 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
       {/* MODAL PARA AGREGAR NUEVO LOTE DE CONTROL */}
       {isAddLotModalOpen && (
         <dialog className="modal modal-open backdrop-blur-xs z-50">
-          <div className="modal-box max-w-lg bg-base-100 rounded-3xl p-6 border border-base-200 shadow-2xl">
-            <h3 className="font-black text-lg text-base-content mb-1">Agregar Lote de Control</h3>
+          <div className="modal-box max-w-lg bg-base-100 rounded-2xl p-6 border border-base-200 shadow-xl">
+            <h3 className="font-bold text-base text-base-content mb-1">Agregar Lote de Control</h3>
             <p className="text-xs text-base-content/60 mb-4">Define los parámetros de referencia de fábrica para el control clínico</p>
 
             <form onSubmit={handleSaveLot} className="space-y-3">
@@ -735,7 +736,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                   placeholder="Ej. Control Glucosa Nivel 1 Normal"
                   value={newLotName}
                   onChange={(e) => setNewLotName(e.target.value)}
-                  className="input input-bordered w-full rounded-2xl text-sm"
+                  className="input input-bordered w-full rounded-xl text-sm"
                   required
                 />
               </div>
@@ -748,7 +749,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                     placeholder="Ej. LOT-2026-A1"
                     value={newLotNumber}
                     onChange={(e) => setNewLotNumber(e.target.value)}
-                    className="input input-bordered w-full rounded-2xl text-xs font-mono font-bold"
+                    className="input input-bordered w-full rounded-xl text-xs font-mono font-bold"
                     required
                   />
                 </div>
@@ -759,7 +760,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                     placeholder="Ej. GLUCOSA, HEMOGLOBINA"
                     value={newLotParam}
                     onChange={(e) => setNewLotParam(e.target.value)}
-                    className="input input-bordered w-full rounded-2xl text-xs uppercase"
+                    className="input input-bordered w-full rounded-xl text-xs uppercase"
                     required
                   />
                 </div>
@@ -767,26 +768,26 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="label text-xs font-bold">Media ($\mu$ Target)</label>
+                  <label className="label text-xs font-bold">Media (μ Target)</label>
                   <input
                     type="number"
                     step="any"
                     placeholder="100.0"
                     value={newLotMean}
                     onChange={(e) => setNewLotMean(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="input input-bordered w-full rounded-2xl text-xs font-mono font-bold"
+                    className="input input-bordered w-full rounded-xl text-xs font-mono font-bold"
                     required
                   />
                 </div>
                 <div>
-                  <label className="label text-xs font-bold">Desv. Estándar ($\sigma$)</label>
+                  <label className="label text-xs font-bold">Desv. Estándar (σ)</label>
                   <input
                     type="number"
                     step="any"
                     placeholder="5.0"
                     value={newLotSD}
                     onChange={(e) => setNewLotSD(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="input input-bordered w-full rounded-2xl text-xs font-mono font-bold"
+                    className="input input-bordered w-full rounded-xl text-xs font-mono font-bold"
                     required
                   />
                 </div>
@@ -797,7 +798,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                     placeholder="mg/dL, g/dL"
                     value={newLotUnit}
                     onChange={(e) => setNewLotUnit(e.target.value)}
-                    className="input input-bordered w-full rounded-2xl text-xs"
+                    className="input input-bordered w-full rounded-xl text-xs"
                     required
                   />
                 </div>
@@ -810,7 +811,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                     type="date"
                     value={newLotExp}
                     onChange={(e) => setNewLotExp(e.target.value)}
-                    className="input input-bordered w-full rounded-2xl text-xs font-mono"
+                    className="input input-bordered w-full rounded-xl text-xs font-mono"
                   />
                 </div>
                 <div>
@@ -818,7 +819,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                   <select
                     value={newLotLevel}
                     onChange={(e) => setNewLotLevel(e.target.value)}
-                    className="select select-bordered w-full rounded-2xl text-xs font-semibold"
+                    className="select select-bordered w-full rounded-xl text-xs font-semibold"
                   >
                     <option value="Normal">Normal</option>
                     <option value="Patológico">Patológico</option>
@@ -832,11 +833,11 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                 <button
                   type="button"
                   onClick={() => setIsAddLotModalOpen(false)}
-                  className="btn btn-ghost rounded-2xl text-xs"
+                  className="btn btn-ghost btn-sm rounded-xl text-xs font-semibold"
                 >
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-primary text-white font-bold rounded-2xl text-xs">
+                <button type="submit" className="btn btn-primary btn-sm text-primary-content font-bold rounded-xl text-xs">
                   Guardar Lote de Control
                 </button>
               </div>

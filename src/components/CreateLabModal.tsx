@@ -192,16 +192,16 @@ export default function CreateLabModal({
 
   return (
     <dialog className="modal modal-open backdrop-blur-xs">
-      <div className="modal-box max-w-xl border border-base-300 bg-base-100 p-6 sm:p-8 shadow-2xl rounded-3xl">
+      <div className="modal-box max-w-xl border border-base-200 bg-base-100 p-5 sm:p-6 shadow-xl rounded-2xl">
         
         {/* Cabecera del Modal */}
-        <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-5">
+        <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-2xl shadow-md shadow-blue-500/20">
-              <IconFlask className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+              <IconFlask className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-xl text-base-content tracking-tight">
+              <h3 className="font-bold text-lg text-base-content tracking-tight">
                 Crear Nueva Sede de Laboratorio
               </h3>
               <p className="text-xs text-base-content/60">
@@ -220,15 +220,15 @@ export default function CreateLabModal({
 
         {/* Mensajes de Alerta */}
         {errorMsg && (
-          <div className="alert alert-error mb-4 text-sm shadow-sm py-2.5 rounded-2xl text-white">
-            <IconAlertCircle className="w-5 h-5 shrink-0" />
+          <div className="alert alert-error mb-4 text-xs font-medium shadow-xs py-2 rounded-xl text-white">
+            <IconAlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="alert alert-success mb-4 text-sm shadow-sm py-2.5 rounded-2xl text-white">
-            <IconCheckCircle className="w-5 h-5 shrink-0" />
+          <div className="alert alert-success mb-4 text-xs font-medium shadow-xs py-2 rounded-xl text-white">
+            <IconCheckCircle className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
@@ -396,7 +396,7 @@ export default function CreateLabModal({
             </button>
             <button
               type="submit"
-              className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[150px] shadow-lg shadow-primary/20"
+              className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[150px] shadow-xs btn-sm"
               disabled={isLoading}
             >
               {isLoading ? (

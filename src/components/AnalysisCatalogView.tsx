@@ -100,8 +100,10 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
       setErrorMsg('El nombre del estudio es obligatorio.');
       return;
     }
-    if (!formData.price || Number(formData.price) < 0) {
-      setErrorMsg('Ingresa un precio válido mayor o igual a 0.');
+
+    const priceNum = parseFloat(formData.price);
+    if (isNaN(priceNum) || priceNum < 0) {
+      setErrorMsg('Ingresa un precio válido (mayor o igual a 0).');
       return;
     }
 
@@ -110,22 +112,32 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
     setSuccessMsg(null);
 
     try {
-      const payload = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        price: Number(formData.price),
-        referenceValues: formData.referenceValues.trim() || undefined,
-      };
-
       if (editingStudy) {
-        await api.patch(`/analysis/${editingStudy.id}`, payload);
-        setSuccessMsg('¡Estudio clínico actualizado con éxito!');
+        // Editar estudio existente
+        const res = await api.patch<ClinicalAnalysis>(`/analysis/${editingStudy.id}`, {
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          price: priceNum,
+          referenceValues: formData.referenceValues.trim() || undefined,
+        });
+
+        setStudies((prev) =>
+          prev.map((s) => (s.id === editingStudy.id ? res.data : s))
+        );
+        setSuccessMsg('¡Estudio clínico actualizado exitosamente!');
       } else {
-        await api.post('/analysis', payload);
-        setSuccessMsg('¡Nuevo estudio registrado exitosamente en la base de datos!');
+        // Crear nuevo estudio
+        const res = await api.post<ClinicalAnalysis>('/analysis', {
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          price: priceNum,
+          referenceValues: formData.referenceValues.trim() || undefined,
+        });
+
+        setStudies((prev) => [res.data, ...prev]);
+        setSuccessMsg('¡Estudio clínico registrado exitosamente!');
       }
 
-      fetchStudies();
       if (onStudyCreatedOrUpdated) onStudyCreatedOrUpdated();
 
       setTimeout(() => {
@@ -156,43 +168,49 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
 
   return (
     <div className="space-y-6 animate-fade-in">
-      
-      {/* Encabezado del Catálogo de Servicios */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-base-100 p-6 rounded-3xl border border-base-200 shadow-sm">
-        <div>
-          <div className="badge badge-primary badge-outline text-xs font-semibold mb-1">
-            <IconFlask className="w-3.5 h-3.5 mr-1" />
-            Catálogo General de Análisis
+      {/* Encabezado del Catálogo de Servicios con DaisyUI */}
+      <section className="card bg-base-100 border border-base-200 p-5 sm:p-6 shadow-xs rounded-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="badge badge-sm badge-outline text-primary border-primary/30 font-semibold gap-1.5 py-2.5 px-3">
+                <IconFlask className="w-3.5 h-3.5" />
+                Catálogo de Estudios
+              </span>
+              <span className="badge badge-sm badge-ghost text-base-content/60 font-medium">
+                {filteredStudies.length} {filteredStudies.length === 1 ? 'estudio registrado' : 'estudios registrados'}
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-base-content tracking-tight">
+              Catálogo de Servicios Clínicos
+            </h1>
+            <p className="text-xs sm:text-sm text-base-content/70 max-w-2xl leading-relaxed">
+              Administra los estudios de laboratorio, descripciones, tarifas y valores de referencia analítica.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-base-content tracking-tight">
-            Catálogo de Servicios Clínicos
-          </h1>
-          <p className="text-xs sm:text-sm text-base-content/70 mt-0.5">
-            Administra los estudios de laboratorio, descripciones, precios y valores de referencia guardados en la BD.
-          </p>
-        </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="btn btn-primary text-primary-content font-bold rounded-2xl gap-2 shadow-md hover:scale-[1.02] transition-all shrink-0"
-        >
-          <IconPlus className="w-5 h-5" />
-          Crear Nuevo Estudio
-        </button>
+          <button
+            onClick={handleOpenCreate}
+            className="btn btn-primary btn-sm sm:btn-md gap-2 font-semibold rounded-xl shadow-xs shrink-0"
+          >
+            <IconPlus className="w-4 h-4" />
+            Nuevo Estudio
+          </button>
+        </div>
       </section>
 
       {/* Barra de Búsqueda */}
-      <section className="card bg-base-100 border border-base-200 shadow-sm p-4 sm:p-5 rounded-3xl">
+      <section className="card bg-base-100 border border-base-200 shadow-xs p-3.5 sm:p-4 rounded-2xl">
         <div className="relative">
           <input
             type="text"
             placeholder="Buscar estudio clínico por nombre, descripción o valores de referencia..."
-            className="input input-bordered w-full rounded-2xl pl-11 focus:input-primary transition-all text-sm font-medium"
+            className="input input-bordered input-sm sm:input-md w-full rounded-xl pl-10 focus:input-primary text-xs sm:text-sm font-medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <svg
-            className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40"
+            className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -206,69 +224,78 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
       {/* Listado de Estudios en Tabla */}
       <section className="space-y-4">
         {isLoading ? (
-          <div className="skeleton h-64 w-full rounded-3xl"></div>
+          <div className="skeleton h-60 w-full rounded-2xl"></div>
         ) : filteredStudies.length === 0 ? (
-          <div className="card bg-base-100 border-2 border-dashed border-base-300 p-12 text-center rounded-3xl">
-            <div className="mx-auto w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-3">
-              <IconFlask className="w-8 h-8" />
+          <div className="card bg-base-100 border border-dashed border-base-200 p-8 sm:p-12 text-center rounded-2xl">
+            <div className="mx-auto w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-3">
+              <IconFlask className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-base-content mb-1">No se encontraron estudios clínicos</h3>
-            <p className="text-xs text-base-content/60 max-w-md mx-auto mb-4">
+            <h3 className="text-base font-bold text-base-content mb-1">
+              No se encontraron estudios clínicos
+            </h3>
+            <p className="text-xs text-base-content/60 max-w-sm mx-auto mb-4">
               {searchTerm
-                ? `No hay coincidencia para "${searchTerm}".`
-                : 'Aún no hay análisis clínicos registrados en la base de datos.'}
+                ? `No hay coincidencias para "${searchTerm}".`
+                : 'Aún no hay análisis clínicos registrados en el catálogo.'}
             </p>
             <button
               onClick={handleOpenCreate}
-              className="btn btn-primary text-white font-bold rounded-xl gap-2 mx-auto"
+              className="btn btn-primary btn-sm font-semibold rounded-xl gap-2 mx-auto shadow-xs"
             >
               <IconPlus className="w-4 h-4" />
               Crear Primer Estudio
             </button>
           </div>
         ) : (
-          <div className="card bg-base-100 border border-base-200 shadow-md rounded-3xl overflow-hidden">
+          <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="table table-zebra w-full text-sm">
+              <table className="table table-zebra w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="bg-base-200/60 text-base-content/70">
+                  <tr className="bg-base-200/60 text-base-content/70 uppercase text-[11px] tracking-wider">
                     <th className="font-bold">Estudio Clínico</th>
-                    <th className="font-bold">Descripción</th>
+                    <th className="font-bold">Descripción / Indicaciones</th>
                     <th className="font-bold">Valores de Referencia</th>
-                    <th className="font-bold text-right">Precio ($)</th>
+                    <th className="font-bold">Precio</th>
                     <th className="font-bold text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredStudies.map((study) => (
                     <tr key={study.id} className="hover:bg-base-200/40">
-                      <td>
-                        <div className="font-bold text-base-content text-base">{study.name}</div>
-                        <span className="text-[11px] text-base-content/50 font-mono">
-                          ID: {study.id.slice(0, 8)}...
-                        </span>
+                      <td className="font-semibold text-base-content">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                            <IconFlask className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="block font-bold">{study.name}</span>
+                            <span className="text-[10px] text-base-content/50 font-mono">
+                              ID: {study.id.slice(0, 8)}...
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="max-w-xs text-xs text-base-content/70">
+                        {study.description || (
+                          <span className="italic text-base-content/40">Sin descripción</span>
+                        )}
+                      </td>
+
+                      <td className="max-w-xs font-mono text-[11px] text-base-content/80">
+                        {study.referenceValues || (
+                          <span className="italic font-sans text-base-content/40">No especificado</span>
+                        )}
                       </td>
 
                       <td>
-                        <span className="text-xs text-base-content/80 max-w-xs block font-medium">
-                          {study.description || 'Sin descripción'}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span className="text-xs text-base-content/70 bg-base-200 px-2.5 py-1 rounded-lg inline-block font-mono">
-                          {study.referenceValues || 'N/A'}
-                        </span>
-                      </td>
-
-                      <td className="text-right">
-                        <span className="font-mono font-extrabold text-primary text-base">
-                          ${study.price.toFixed(2)}
+                        <span className="badge badge-ghost font-bold text-xs text-base-content">
+                          ${study.price.toFixed(2)} MXN
                         </span>
                       </td>
 
                       <td className="text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => handleOpenEdit(study)}
                             className="btn btn-xs btn-ghost text-primary hover:bg-primary/10 rounded-lg font-semibold"
@@ -278,6 +305,7 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
                           <button
                             onClick={() => handleDeleteStudy(study.id, study.name)}
                             className="btn btn-xs btn-ghost text-error hover:bg-error/10 rounded-lg"
+                            title="Eliminar estudio"
                           >
                             <IconTrash className="w-3.5 h-3.5" />
                           </button>
@@ -295,19 +323,18 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
       {/* MODAL DE CREAR / EDITAR ESTUDIO CLÍNICO */}
       {isModalOpen && (
         <dialog className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box max-w-lg rounded-3xl p-6 sm:p-8 border border-base-300 shadow-2xl">
-            
-            <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
-                  <IconFlask className="w-6 h-6" />
+          <div className="modal-box max-w-lg rounded-2xl p-6 border border-base-200 shadow-xl">
+            <div className="flex items-center justify-between border-b border-base-200 pb-3.5 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-primary/10 text-primary rounded-xl">
+                  <IconFlask className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl text-base-content">
-                    {editingStudy ? 'Editar Estudio Clínico' : 'Crear Nuevo Estudio Clínico'}
+                  <h3 className="font-bold text-base text-base-content">
+                    {editingStudy ? 'Editar Estudio Clínico' : 'Nuevo Estudio Clínico'}
                   </h3>
                   <p className="text-xs text-base-content/60">
-                    Se guardará directamente en la base de datos de servicios
+                    Configuración de parámetros analíticos y tarifas
                   </p>
                 </div>
               </div>
@@ -315,36 +342,36 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
                 onClick={() => setIsModalOpen(false)}
                 className="btn btn-sm btn-circle btn-ghost"
               >
-                <IconX className="w-5 h-5" />
+                <IconX className="w-4 h-4" />
               </button>
             </div>
 
             {/* Alertas */}
             {successMsg && (
-              <div className="alert alert-success text-white shadow-md rounded-2xl py-2.5 mb-3 text-sm">
-                <IconCheckCircle className="w-5 h-5 shrink-0" />
+              <div className="alert alert-success text-white shadow-xs rounded-xl py-2 mb-3 text-xs">
+                <IconCheckCircle className="w-4 h-4 shrink-0" />
                 <span>{successMsg}</span>
               </div>
             )}
 
             {errorMsg && (
-              <div className="alert alert-error text-white shadow-md rounded-2xl py-2.5 mb-3 text-sm">
-                <IconAlertCircle className="w-5 h-5 shrink-0" />
+              <div className="alert alert-error text-white shadow-xs rounded-xl py-2 mb-3 text-xs">
+                <IconAlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3.5">
               <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">
+                <label className="label py-1">
+                  <span className="label-text text-xs font-semibold">
                     Nombre del Estudio Clínico <span className="text-error">*</span>
                   </span>
                 </label>
                 <input
                   type="text"
                   placeholder="Ej. Química Sanguínea (6 Elementos)"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all font-medium"
+                  className="input input-bordered input-sm sm:input-md w-full rounded-xl focus:input-primary text-xs sm:text-sm font-medium"
                   value={formData.name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   required
@@ -352,9 +379,9 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
               </div>
 
               <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Precio Público ($ MXN) <span className="text-error">*</span>
+                <label className="label py-1">
+                  <span className="label-text text-xs font-semibold">
+                    Precio al Público ($ MXN) <span className="text-error">*</span>
                   </span>
                 </label>
                 <input
@@ -362,7 +389,7 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
                   step="0.01"
                   min="0"
                   placeholder="Ej. 350.00"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all font-mono font-bold"
+                  className="input input-bordered input-sm sm:input-md w-full rounded-xl focus:input-primary text-xs sm:text-sm font-mono font-bold"
                   value={formData.price}
                   onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                   required
@@ -370,66 +397,64 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
               </div>
 
               <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Descripción / Indicaciones</span>
+                <label className="label py-1">
+                  <span className="label-text text-xs font-semibold">Descripción / Indicaciones</span>
                 </label>
                 <textarea
                   placeholder="Ej. Ayuno obligatorio de 8 a 12 horas. Incluye Glucosa, Urea, Creatinina..."
-                  className="textarea textarea-bordered w-full rounded-xl focus:textarea-primary transition-all h-20 text-sm"
+                  className="textarea textarea-bordered w-full rounded-xl focus:textarea-primary text-xs h-20"
                   value={formData.description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                 />
               </div>
 
               <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">Valores de Referencia Médicos</span>
+                <label className="label py-1">
+                  <span className="label-text text-xs font-semibold">Valores de Referencia Médicos</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Ej. Glucosa 70-99 mg/dL, Urea 15-45 mg/dL"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all text-xs font-mono"
+                  className="input input-bordered input-sm sm:input-md w-full rounded-xl focus:input-primary text-xs font-mono"
                   value={formData.referenceValues}
                   onChange={(e) => setFormData((prev) => ({ ...prev, referenceValues: e.target.value }))}
                 />
               </div>
 
-              <div className="modal-action border-t border-base-200 pt-4 mt-6">
+              <div className="modal-action border-t border-base-200 pt-3.5 mt-4">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn btn-ghost rounded-xl"
+                  className="btn btn-sm btn-ghost rounded-xl text-xs"
                   disabled={isSubmitting}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary text-white font-bold rounded-xl gap-2 min-w-[140px]"
+                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold text-xs shadow-xs"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="loading loading-spinner loading-sm"></span>
+                      <span className="loading loading-spinner loading-xs"></span>
                       Guardando...
                     </>
                   ) : (
                     <>
-                      <IconPlus className="w-5 h-5" />
+                      <IconPlus className="w-4 h-4" />
                       {editingStudy ? 'Actualizar Estudio' : 'Guardar Estudio'}
                     </>
                   )}
                 </button>
               </div>
             </form>
-
           </div>
           <form method="dialog" className="modal-backdrop">
             <button onClick={() => setIsModalOpen(false)}>close</button>
           </form>
         </dialog>
       )}
-
     </div>
   );
 }

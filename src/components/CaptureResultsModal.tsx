@@ -238,18 +238,18 @@ export default function CaptureResultsModal({
   return (
     <>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-        <div className="bg-base-100 text-base-content max-w-5xl w-full rounded-3xl p-6 sm:p-8 shadow-2xl border border-base-200 relative my-auto max-h-[94vh] flex flex-col">
+        <div className="bg-base-100 text-base-content max-w-5xl w-full rounded-2xl p-5 sm:p-7 shadow-2xl border border-base-200 relative my-auto max-h-[94vh] flex flex-col">
           
           {/* ENCABEZADO SUPERIOR */}
-          <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-5 shrink-0">
+          <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-4 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 text-primary rounded-2xl shrink-0">
+              <div className="p-2.5 bg-primary/10 text-primary rounded-xl shrink-0">
                 <IconClipboardList className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-black text-base-content">Captura de Resultados Clínicos</h2>
-                  <span className="badge badge-primary text-white font-mono text-xs font-bold">
+                  <h2 className="text-lg sm:text-xl font-black text-base-content">Captura de Resultados Clínicos</h2>
+                  <span className="badge badge-primary text-primary-content font-mono text-xs font-bold">
                     FOLIO #{folioNumber}
                   </span>
                 </div>
@@ -265,20 +265,20 @@ export default function CaptureResultsModal({
           </div>
 
           {/* BANNER INFORMATIVO DE ENVÍO DE NOTIFICACIONES */}
-          <div className="bg-gradient-to-r from-emerald-900/90 via-teal-900/90 to-slate-900 text-white p-3 rounded-2xl mb-4 flex items-center justify-between text-xs font-semibold shadow-inner shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <div className="bg-base-200/60 border border-base-300 text-base-content p-3 rounded-xl mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-semibold shrink-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-success inline-block"></span>
               <span>Despacho de Notificaciones:</span>
-              <span className="bg-white/10 px-2 py-0.5 rounded-lg text-[11px] font-mono">📱 WhatsApp: {patientPhone}</span>
-              <span className="bg-white/10 px-2 py-0.5 rounded-lg text-[11px] font-mono">📧 Email: {patientEmail}</span>
+              <span className="bg-base-300/80 px-2 py-0.5 rounded-md text-[11px] font-mono">📱 {patientPhone}</span>
+              <span className="bg-base-300/80 px-2 py-0.5 rounded-md text-[11px] font-mono">📧 {patientEmail}</span>
             </div>
-            <span className="text-[10px] text-emerald-300 font-bold uppercase">Apertura Automática al Guardar</span>
+            <span className="text-[10px] text-primary font-bold uppercase">Apertura Automática al Guardar</span>
           </div>
 
           {errorMsg && (
-            <div className="alert alert-error text-white shadow-md rounded-2xl py-3 mb-4 shrink-0 animate-fade-in">
-              <IconAlertCircle className="w-6 h-6 shrink-0" />
-              <div className="font-semibold text-sm">{errorMsg}</div>
+            <div className="alert alert-error text-white shadow-sm rounded-xl py-2.5 mb-4 shrink-0 animate-fade-in text-xs font-medium">
+              <IconAlertCircle className="w-5 h-5 shrink-0" />
+              <div>{errorMsg}</div>
             </div>
           )}
 

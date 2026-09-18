@@ -168,26 +168,26 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
     <div className="space-y-6 animate-fade-in">
       
       {/* Encabezado y Pestañas Navegables */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-base-100 p-6 rounded-3xl border border-base-200 shadow-sm">
+      <section className="card bg-base-100 border border-base-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="badge badge-primary badge-outline text-xs font-semibold mb-1">
-            <IconUsers className="w-3.5 h-3.5 mr-1" />
+          <div className="badge badge-primary badge-outline text-xs font-semibold mb-1.5 gap-1">
+            <IconUsers className="w-3.5 h-3.5" />
             Módulo de Expedientes Médicos
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-base-content tracking-tight">
             Gestión de Pacientes
           </h1>
-          <p className="text-xs sm:text-sm text-base-content/70 mt-0.5">
+          <p className="text-xs sm:text-sm text-base-content/60 mt-1">
             Directorio de historiales clínicos, alta de expedientes y seguimiento de análisis.
           </p>
         </div>
 
         {/* Control de Pestañas DaisyUI */}
-        <div className="tabs tabs-boxed bg-base-200 p-1.5 rounded-2xl">
+        <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab('directory')}
-            className={`tab rounded-xl font-bold gap-2 text-xs sm:text-sm ${
-              activeTab === 'directory' ? 'tab-active bg-primary text-primary-content shadow-sm' : ''
+            className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+              activeTab === 'directory' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
             <IconUsers className="w-4 h-4" />
@@ -196,8 +196,8 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
           <button
             onClick={() => setActiveTab('register')}
-            className={`tab rounded-xl font-bold gap-2 text-xs sm:text-sm ${
-              activeTab === 'register' ? 'tab-active bg-primary text-primary-content shadow-sm' : ''
+            className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+              activeTab === 'register' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
             <IconUserPlus className="w-4 h-4" />
@@ -206,8 +206,8 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`tab rounded-xl font-bold gap-2 text-xs sm:text-sm ${
-              activeTab === 'history' ? 'tab-active bg-primary text-primary-content shadow-sm' : ''
+            className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+              activeTab === 'history' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
             <IconFolder className="w-4 h-4" />
@@ -221,12 +221,12 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
         <section className="space-y-6">
           
           {/* Barra de Búsqueda y Estadísticas */}
-          <div className="card bg-base-100 border border-base-200 p-4 sm:p-5 rounded-3xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="card bg-base-100 border border-base-200 p-4 sm:p-5 rounded-2xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Buscar paciente por nombre, correo, teléfono o folio ID..."
-                className="input input-bordered w-full rounded-2xl pl-11 focus:input-primary transition-all text-sm font-medium"
+                className="input input-bordered w-full rounded-xl pl-11 focus:input-primary transition-all text-sm font-medium"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -243,22 +243,22 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
             <button
               onClick={() => setActiveTab('register')}
-              className="btn btn-primary text-primary-content font-bold rounded-2xl gap-2 shadow-md hover:scale-[1.02] transition-all shrink-0"
+              className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 shadow-xs shrink-0"
             >
-              <IconUserPlus className="w-5 h-5" />
+              <IconUserPlus className="w-4 h-4" />
               Nuevo Paciente
             </button>
           </div>
 
           {/* Tabla de Pacientes */}
           {isLoadingPatients ? (
-            <div className="skeleton h-64 w-full rounded-3xl"></div>
+            <div className="skeleton h-64 w-full rounded-2xl"></div>
           ) : filteredPatients.length === 0 ? (
-            <div className="card bg-base-100 border-2 border-dashed border-base-300 p-12 text-center rounded-3xl">
-              <div className="mx-auto w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-3">
-                <IconUsers className="w-8 h-8" />
+            <div className="card bg-base-100 border-2 border-dashed border-base-300 p-12 text-center rounded-2xl">
+              <div className="mx-auto w-14 h-14 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-3">
+                <IconUsers className="w-7 h-7" />
               </div>
-              <h3 className="text-lg font-bold text-base-content mb-1">No se encontraron pacientes</h3>
+              <h3 className="text-base font-bold text-base-content mb-1">No se encontraron pacientes</h3>
               <p className="text-xs text-base-content/60 max-w-md mx-auto mb-4">
                 {searchTerm
                   ? `No hay coincidencias para "${searchTerm}".`
@@ -266,14 +266,14 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
               </p>
               <button
                 onClick={() => setActiveTab('register')}
-                className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 mx-auto"
+                className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 mx-auto btn-sm"
               >
                 <IconUserPlus className="w-4 h-4" />
                 Registrar Primer Paciente
               </button>
             </div>
           ) : (
-            <div className="card bg-base-100 border border-base-200 shadow-md rounded-3xl overflow-hidden">
+            <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="table table-zebra w-full text-sm">
                   <thead>
@@ -290,11 +290,11 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                       <tr key={patient.id} className="hover:bg-base-200/40">
                         <td>
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black flex items-center justify-center text-base shadow-sm shrink-0">
+                            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary font-black flex items-center justify-center text-sm shrink-0 border border-primary/20">
                               {patient.firstName.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className="font-bold text-base-content text-base">
+                              <div className="font-bold text-base-content text-sm">
                                 {patient.firstName} {patient.lastName}
                               </div>
                               <span className="text-[11px] text-base-content/50 font-mono">
@@ -314,8 +314,8 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                         </td>
 
                         <td>
-                          <span className={`badge text-xs font-semibold rounded-lg ${
-                            patient.gender === 'M' ? 'badge-info text-info-content' : patient.gender === 'F' ? 'badge-secondary text-secondary-content' : 'badge-ghost'
+                          <span className={`badge badge-sm font-semibold rounded-lg ${
+                            patient.gender === 'M' ? 'badge-info text-info-content' : patient.gender === 'F' ? 'badge-primary text-primary-content' : 'badge-ghost'
                           }`}>
                             {patient.gender === 'M' ? 'Masculino' : patient.gender === 'F' ? 'Femenino' : 'Otro'}
                           </span>
@@ -348,17 +348,17 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                                 setSelectedPatient(patient);
                                 setActiveTab('history');
                               }}
-                              className="btn btn-sm btn-outline btn-primary rounded-xl gap-1 text-xs font-bold"
+                              className="btn btn-xs btn-outline btn-primary rounded-lg gap-1 font-bold"
                             >
-                              <IconFolder className="w-4 h-4" /> Historial
+                              <IconFolder className="w-3.5 h-3.5" /> Historial
                             </button>
 
                             <button
                               onClick={() => handleDeletePatient(patient.id, `${patient.firstName} ${patient.lastName}`)}
-                              className="btn btn-sm btn-ghost text-error hover:bg-error/10 rounded-xl"
+                              className="btn btn-xs btn-ghost text-error hover:bg-error/10 rounded-lg"
                               title="Eliminar Expediente"
                             >
-                              <IconTrash className="w-4 h-4" />
+                              <IconTrash className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -374,28 +374,28 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
       {/* CONTENIDO 2: REGISTRAR NUEVO PACIENTE */}
       {activeTab === 'register' && (
-        <section className="card bg-base-100 border border-base-200 shadow-xl rounded-3xl p-6 sm:p-8 max-w-4xl mx-auto">
+        <section className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto">
           <div className="border-b border-base-200 pb-4 mb-6">
-            <h2 className="text-2xl font-black text-base-content flex items-center gap-2">
-              <IconUserPlus className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-black text-base-content flex items-center gap-2">
+              <IconUserPlus className="w-5 h-5 text-primary" />
               Alta de Nuevo Expediente de Paciente
             </h2>
-            <p className="text-xs text-base-content/60">
+            <p className="text-xs text-base-content/60 mt-0.5">
               Ingresa los datos personales del paciente para crear su historial clínico en el sistema.
             </p>
           </div>
 
           {successMsg && (
-            <div className="alert alert-success text-white shadow-md rounded-2xl py-3 mb-4 animate-fade-in">
-              <IconCheckCircle className="w-6 h-6 shrink-0" />
-              <div className="font-semibold text-sm">{successMsg}</div>
+            <div className="alert alert-success text-white shadow-sm rounded-xl py-3 mb-4 animate-fade-in">
+              <IconCheckCircle className="w-5 h-5 shrink-0" />
+              <div className="font-semibold text-xs sm:text-sm">{successMsg}</div>
             </div>
           )}
 
           {errorMsg && (
-            <div className="alert alert-error text-white shadow-md rounded-2xl py-3 mb-4 animate-fade-in">
-              <IconAlertCircle className="w-6 h-6 shrink-0" />
-              <div className="font-semibold text-sm">{errorMsg}</div>
+            <div className="alert alert-error text-white shadow-sm rounded-xl py-3 mb-4 animate-fade-in">
+              <IconAlertCircle className="w-5 h-5 shrink-0" />
+              <div className="font-semibold text-xs sm:text-sm">{errorMsg}</div>
             </div>
           )}
 
@@ -410,7 +410,7 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                   type="text"
                   name="firstName"
                   placeholder="Ej. María Fernanda"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
+                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all text-sm"
                   value={formData.firstName}
                   onChange={handleInputChange}
                   required
@@ -425,7 +425,7 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                   type="text"
                   name="lastName"
                   placeholder="Ej. López Gómez"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
+                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all text-sm"
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
@@ -441,7 +441,7 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                 <input
                   type="date"
                   name="dateOfBirth"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
+                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all text-sm"
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
                   required
@@ -454,7 +454,7 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                 </label>
                 <select
                   name="gender"
-                  className="select select-bordered w-full rounded-xl focus:select-primary transition-all font-medium"
+                  className="select select-bordered w-full rounded-xl focus:select-primary transition-all font-medium text-sm"
                   value={formData.gender}
                   onChange={handleInputChange}
                   required
@@ -475,7 +475,7 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                   type="tel"
                   name="phone"
                   placeholder="Ej. +52 55 1234 5678"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
+                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all text-sm"
                   value={formData.phone || ''}
                   onChange={handleInputChange}
                 />
@@ -491,7 +491,7 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
                   type="email"
                   name="email"
                   placeholder="ejemplo@paciente.com"
-                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
+                  className="input input-bordered w-full rounded-xl focus:input-primary transition-all text-sm"
                   value={formData.email || ''}
                   onChange={handleInputChange}
                 />
@@ -503,24 +503,24 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
               <button
                 type="button"
                 onClick={() => setActiveTab('directory')}
-                className="btn btn-ghost rounded-xl font-semibold"
+                className="btn btn-ghost rounded-xl font-semibold btn-sm"
                 disabled={isSubmitting}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[160px]"
+                className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 btn-sm min-w-[140px]"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <span className="loading loading-spinner loading-sm"></span>
+                    <span className="loading loading-spinner loading-xs"></span>
                     Guardando...
                   </>
                 ) : (
                   <>
-                    <IconUserPlus className="w-5 h-5" />
+                    <IconUserPlus className="w-4 h-4" />
                     Registrar Paciente
                   </>
                 )}
@@ -535,10 +535,10 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
         <section className="space-y-6">
           
           {/* Selector de Paciente */}
-          <div className="card bg-base-100 border border-base-200 p-6 rounded-3xl shadow-sm space-y-4">
+          <div className="card bg-base-100 border border-base-200 p-5 sm:p-6 rounded-2xl shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-base-content flex items-center gap-2">
+                <h2 className="text-base font-bold text-base-content flex items-center gap-2">
                   <IconFolder className="w-5 h-5 text-primary" />
                   Expediente Clínico Seleccionado
                 </h2>
@@ -566,36 +566,36 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
             {/* Resumen del Paciente Seleccionado */}
             {selectedPatient ? (
-              <div className="bg-gradient-to-r from-blue-600/10 via-indigo-500/10 to-base-100 p-6 rounded-2xl border border-blue-200/50 grid grid-cols-1 sm:grid-cols-4 gap-4 mt-2">
+              <div className="bg-base-200/50 p-4 sm:p-5 rounded-xl border border-base-200 grid grid-cols-1 sm:grid-cols-4 gap-4 mt-2">
                 <div>
-                  <span className="text-[11px] font-bold text-base-content/50 uppercase">Nombre Completo</span>
-                  <div className="font-bold text-base text-base-content">{selectedPatient.firstName} {selectedPatient.lastName}</div>
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase">Nombre Completo</span>
+                  <div className="font-bold text-sm sm:text-base text-base-content">{selectedPatient.firstName} {selectedPatient.lastName}</div>
                 </div>
 
                 <div>
-                  <span className="text-[11px] font-bold text-base-content/50 uppercase">Edad / Nacimiento</span>
-                  <div className="font-semibold text-sm text-base-content">
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase">Edad / Nacimiento</span>
+                  <div className="font-semibold text-xs sm:text-sm text-base-content">
                     {calculateAge(selectedPatient.dateOfBirth)} años ({new Date(selectedPatient.dateOfBirth).toLocaleDateString()})
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[11px] font-bold text-base-content/50 uppercase">Contacto</span>
-                  <div className="font-semibold text-sm text-base-content truncate">
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase">Contacto</span>
+                  <div className="font-semibold text-xs sm:text-sm text-base-content truncate">
                     {selectedPatient.phone || selectedPatient.email || 'Sin contacto'}
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[11px] font-bold text-base-content/50 uppercase">Total de Órdenes</span>
-                  <div className="font-black text-lg text-primary">
+                  <span className="text-[10px] font-bold text-base-content/50 uppercase">Total de Órdenes</span>
+                  <div className="font-black text-base sm:text-lg text-primary">
                     {selectedPatient.workOrders?.length || 0} Historiales
                   </div>
                 </div>
               </div>
             ) : (
               <div className="alert alert-warning text-xs rounded-xl py-3">
-                <IconAlertCircle className="w-5 h-5" />
+                <IconAlertCircle className="w-4 h-4" />
                 <span>Selecciona o registra un paciente para ver su historial clínico.</span>
               </div>
             )}
@@ -603,27 +603,27 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
           {/* Historial de Órdenes de Trabajo del Paciente */}
           {selectedPatient && (
-            <div className="card bg-base-100 border border-base-200 shadow-md p-6 rounded-3xl space-y-4">
+            <div className="card bg-base-100 border border-base-200 shadow-xs p-5 sm:p-6 rounded-2xl space-y-4">
               <h3 className="text-base font-bold text-base-content flex items-center gap-2">
-                <IconClipboardList className="w-5 h-5 text-accent" />
+                <IconClipboardList className="w-5 h-5 text-primary" />
                 Órdenes de Trabajo y Estudios Analíticos
               </h3>
 
               {!selectedPatient.workOrders || selectedPatient.workOrders.length === 0 ? (
-                <div className="p-8 text-center border-2 border-dashed border-base-200 rounded-2xl">
+                <div className="p-8 text-center border-2 border-dashed border-base-200 rounded-xl">
                   <IconFlask className="w-8 h-8 text-base-content/30 mx-auto mb-2" />
                   <p className="text-xs text-base-content/60 font-semibold">
                     El paciente no cuenta con órdenes de trabajo o estudios analíticos registrados aún.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {selectedPatient.workOrders.map((order: any) => (
-                    <div key={order.id} className="border border-base-200 p-4 rounded-2xl bg-base-200/30 flex flex-col sm:flex-row justify-between gap-4">
+                    <div key={order.id} className="border border-base-200 p-4 rounded-xl bg-base-200/30 flex flex-col sm:flex-row justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="badge badge-primary font-mono text-xs">Folio #{order.folio || order.id.slice(0, 6)}</span>
-                          <span className="badge badge-outline text-xs">{order.status || 'PENDIENTE'}</span>
+                          <span className="badge badge-primary badge-sm font-mono text-xs">Folio #{order.folio || order.id.slice(0, 6)}</span>
+                          <span className="badge badge-outline badge-sm text-xs">{order.status || 'PENDIENTE'}</span>
                         </div>
                         <p className="text-xs text-base-content/70 mt-2 font-medium">
                           Sede: <strong>{order.laboratory?.name || 'Sede Central'}</strong>

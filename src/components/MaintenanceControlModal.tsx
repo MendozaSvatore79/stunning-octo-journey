@@ -65,89 +65,89 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl max-w-2xl w-full overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in overflow-y-auto">
+      <div className="bg-base-100 rounded-2xl border border-base-200 shadow-2xl max-w-2xl w-full overflow-hidden my-8">
         {/* Header del Modal */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-900 to-blue-900 p-6 text-white flex items-center justify-between">
+        <div className="border-b border-base-200 p-5 bg-base-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg">
-              <IconSettings className="w-6 h-6 text-indigo-300 animate-spin" style={{ animationDuration: '15s' }} />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+              <IconSettings className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-black tracking-tight">Gestor de Modo Mantenimiento</h2>
-              <p className="text-xs text-indigo-100/80 font-medium">Panel de Control Exclusivo para Administradores</p>
+              <h2 className="text-base sm:text-lg font-bold text-base-content tracking-tight">Gestor de Modo Mantenimiento</h2>
+              <p className="text-xs text-base-content/60">Panel de Control Exclusivo para Administradores</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="btn btn-sm btn-circle btn-ghost text-white hover:bg-white/20"
+            className="btn btn-sm btn-circle btn-ghost text-base-content/60 hover:bg-base-200"
           >
             ✕
           </button>
         </div>
 
         {/* Cuerpo del Modal */}
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
           {/* MANTENIMIENTO GLOBAL CONTROL SWITCH & BOTÓN PREVISUALIZAR */}
-          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+          <div className="p-4 sm:p-5 rounded-xl bg-base-200/40 border border-base-200 space-y-3">
             <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-black text-slate-900 text-sm">🚨 Mantenimiento Global (Todo el Sistema)</span>
+                  <span className="font-bold text-base-content text-sm">🚨 Mantenimiento Global (Todo el Sistema)</span>
                   {config.globalMaintenance && (
                     <span className="badge badge-error text-[10px] font-bold text-white uppercase px-2 py-0.5 animate-pulse">ACTIVO</span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-base-content/60">
                   Bloquea el acceso público a todo el sistema. Solo los Administradores o personas con la Clave VIP podrán acceder.
                 </p>
               </div>
 
               <input
                 type="checkbox"
-                className="toggle toggle-error toggle-lg"
+                className="toggle toggle-error toggle-md sm:toggle-lg"
                 checked={config.globalMaintenance}
                 onChange={(e) => toggleGlobalMaintenance(e.target.checked)}
               />
             </div>
 
-            <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between gap-2">
-              <span className="text-xs text-slate-600 font-medium">
+            <div className="pt-2 border-t border-base-200 flex items-center justify-between gap-2">
+              <span className="text-xs text-base-content/70 font-medium">
                 ¿Quieres probar cómo la ven los usuarios públicos?
               </span>
               <button
                 onClick={handlePreviewMaintenanceLanding}
-                className="btn btn-xs bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl gap-1"
+                className="btn btn-xs btn-outline rounded-lg font-bold gap-1"
               >
-                👁️ Ver Página de Mantenimiento
+                👁️ Ver Pantalla de Mantenimiento
               </button>
             </div>
           </div>
 
           {/* CLAVE VIP Y ENLACE SEGURO */}
-          <div className="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-indigo-950 font-black text-sm">
-                <IconShield className="w-5 h-5 text-indigo-600" />
+          <div className="p-4 sm:p-5 rounded-xl bg-primary/5 border border-primary/20 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                <IconShield className="w-4 h-4" />
                 Acceso VIP Seguro (Bypass de Mantenimiento)
               </div>
 
               <button
                 onClick={handleCopyVipLink}
-                className="btn btn-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl gap-1 border-none shadow-xs"
+                className="btn btn-xs btn-primary text-primary-content font-bold rounded-lg gap-1 shadow-xs"
               >
                 {copiedLink ? '✓ ¡URL VIP Copiada!' : '📋 Copiar URL VIP Segura'}
               </button>
             </div>
 
-            <p className="text-xs text-indigo-900/80 leading-relaxed">
+            <p className="text-xs text-base-content/70 leading-relaxed">
               Cualquier usuario que abra la aplicación con esta clave en la URL podrá navegar normalmente aunque el proyecto esté en mantenimiento.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
               <div className="sm:col-span-8">
-                <label className="text-[11px] font-extrabold uppercase text-indigo-900 block mb-1">
+                <label className="text-[11px] font-bold uppercase text-base-content/70 block mb-1">
                   Clave VIP Personalizada:
                 </label>
                 <input
@@ -155,14 +155,14 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
                   value={vipKeyInput}
                   onChange={(e) => setVipKeyInput(e.target.value)}
                   placeholder="Ej. SECURE_VIP_PASS_2026"
-                  className="input input-sm input-bordered w-full rounded-xl font-mono text-xs font-bold text-slate-800 border-indigo-200 bg-white"
+                  className="input input-sm input-bordered w-full rounded-xl font-mono text-xs font-bold"
                 />
               </div>
 
               <div className="sm:col-span-4 flex items-end">
                 <button
                   onClick={handleSaveTextChanges}
-                  className="btn btn-sm btn-primary w-full text-white font-bold rounded-xl text-xs"
+                  className="btn btn-sm btn-primary text-primary-content w-full font-bold rounded-xl text-xs shadow-xs"
                 >
                   Guardar Clave
                 </button>
@@ -172,25 +172,25 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
 
           {/* MANTENIMIENTO POR MÓDULOS ESPECÍFICOS */}
           <div className="space-y-3">
-            <h3 className="text-xs font-black uppercase text-slate-500 tracking-wider">
+            <h3 className="text-xs font-bold uppercase text-base-content/60 tracking-wider">
               🛠️ Inhabilitar Módulos Individuales
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {moduleItems.map((item) => {
                 const IconComp = item.icon;
                 const isModuleDisabled = config.modules[item.key];
                 return (
                   <div
                     key={item.key}
-                    className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
+                    className={`p-3.5 rounded-xl border transition-all flex items-center justify-between ${
                       isModuleDisabled
-                        ? 'bg-amber-50/80 border-amber-200 text-amber-950'
-                        : 'bg-white border-slate-200/80 text-slate-800'
+                        ? 'bg-warning/10 border-warning/30 text-warning-content'
+                        : 'bg-base-100 border-base-200 text-base-content'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <IconComp className={`w-5 h-5 ${item.color}`} />
+                    <div className="flex items-center gap-2.5">
+                      <IconComp className="w-4 h-4 text-primary" />
                       <span className="text-xs font-bold">{item.label}</span>
                     </div>
 
@@ -207,9 +207,9 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
           </div>
 
           {/* TIEMPO ESTIMADO Y NOTA */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] font-extrabold uppercase text-slate-500 block mb-1">
+              <label className="text-[11px] font-bold uppercase text-base-content/60 block mb-1">
                 Tiempo Estimado a Mostrar:
               </label>
               <input
@@ -217,36 +217,39 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
                 value={estimatedInput}
                 onChange={(e) => setEstimatedInput(e.target.value)}
                 placeholder="Ej. 30 a 45 minutos"
-                className="input input-sm input-bordered w-full rounded-xl text-xs text-slate-800 border-slate-200"
+                className="input input-sm input-bordered w-full rounded-xl text-xs font-medium"
               />
             </div>
 
             <div>
-              <label className="text-[11px] font-extrabold uppercase text-slate-500 block mb-1">
-                Motivo / Aviso de Mantenimiento:
+              <label className="text-[11px] font-bold uppercase text-base-content/60 block mb-1">
+                Motivo del Mantenimiento:
               </label>
               <input
                 type="text"
                 value={reasonInput}
                 onChange={(e) => setReasonInput(e.target.value)}
-                placeholder="Ej. Optimización de servidores de datos..."
-                className="input input-sm input-bordered w-full rounded-xl text-xs text-slate-800 border-slate-200"
+                placeholder="Ej. Actualización de servidores"
+                className="input input-sm input-bordered w-full rounded-xl text-xs font-medium"
               />
             </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={handleSaveTextChanges}
+              className="btn btn-sm btn-outline rounded-xl font-bold text-xs"
+            >
+              Guardar Mensajes Informativos
+            </button>
           </div>
         </div>
 
         {/* Footer del Modal */}
-        <div className="p-4 px-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-          <button
-            onClick={handleSaveTextChanges}
-            className="btn btn-sm btn-outline btn-indigo font-bold text-xs rounded-xl"
-          >
-            Aplicar Textos
-          </button>
+        <div className="p-4 px-6 bg-base-200/40 border-t border-base-200 flex justify-end">
           <button
             onClick={onClose}
-            className="btn btn-sm bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl px-6 border-none"
+            className="btn btn-sm btn-primary text-primary-content font-bold text-xs rounded-xl px-6"
           >
             Listo / Cerrar
           </button>

@@ -145,21 +145,21 @@ export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserForm
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
       {/* Banner / Encabezado de la Sección */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600/10 via-indigo-500/10 to-base-100 p-6 rounded-3xl border border-blue-200/50">
+      <div className="card bg-base-100 border border-base-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-2xl shadow-lg shadow-blue-500/20 shrink-0">
-            <IconUserPlus className="w-7 h-7" />
+          <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+            <IconUserPlus className="w-6 h-6" />
           </div>
           <div>
-            <span className="badge badge-primary badge-outline text-xs font-semibold uppercase tracking-wider mb-1">
+            <span className="badge badge-primary badge-outline text-[11px] font-semibold uppercase tracking-wider mb-1">
               Administración de Personal
             </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-base-content tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-base-content tracking-tight">
               Agregar Usuario al Laboratorio
             </h1>
-            <p className="text-xs sm:text-sm text-base-content/70 mt-0.5">
+            <p className="text-xs sm:text-sm text-base-content/60 mt-0.5">
               Crea la cuenta en Clerk y asigna al usuario a una de tus sedes operativas.
             </p>
           </div>
@@ -173,7 +173,7 @@ export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserForm
       </div>
 
       {/* Tarjeta del Formulario */}
-      <div className="card bg-base-100 border border-base-200 shadow-xl rounded-3xl overflow-hidden">
+      <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl overflow-hidden">
         <div className="card-body p-6 sm:p-8">
 
           {/* Alertas de Éxito / Error */}
@@ -350,17 +350,17 @@ export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserForm
 
               <button
                 type="submit"
-                className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[160px] shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all"
+                className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[150px] shadow-xs"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <span className="loading loading-spinner loading-sm"></span>
+                    <span className="loading loading-spinner loading-xs"></span>
                     Creando Usuario...
                   </>
                 ) : (
                   <>
-                    <IconUserPlus className="w-5 h-5" />
+                    <IconUserPlus className="w-4 h-4" />
                     Registrar Usuario
                   </>
                 )}
