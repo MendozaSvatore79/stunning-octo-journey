@@ -22,6 +22,8 @@ import {
   IconX,
   IconClock,
   IconPhone,
+  IconSearch,
+  IconFilter,
 } from './icons';
 
 interface WorkOrdersViewProps {
@@ -60,6 +62,8 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   const [selectedOrderForPDF, setSelectedOrderForPDF] = useState<WorkOrder | null>(null);
   const [selectedOrderForLabels, setSelectedOrderForLabels] = useState<WorkOrder | null>(null);
   const [selectedReprintOrderId, setSelectedReprintOrderId] = useState<string>('');
+  const [completedSearchTerm, setCompletedSearchTerm] = useState('');
+  const [completedLabFilter, setCompletedLabFilter] = useState('');
 
   const activeReprintOrder = useMemo(() => {
     if (selectedReprintOrderId) {
@@ -340,28 +344,45 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   const pendingOrders = useMemo(() => orders.filter((o) => o.status === 'PENDING'), [orders]);
   const completedOrders = useMemo(() => orders.filter((o) => o.status === 'COMPLETED'), [orders]);
 
+  const filteredCompletedOrders = useMemo(() => {
+    return completedOrders.filter((ord) => {
+      const term = completedSearchTerm.toLowerCase().trim();
+      const matchesSearch = !term || (
+        String(ord.folio || '').toLowerCase().includes(term) ||
+        (ord.id || '').toLowerCase().includes(term) ||
+        `${ord.patient?.firstName || ''} ${ord.patient?.lastName || ''}`.toLowerCase().includes(term) ||
+        (ord.patient?.phone || '').includes(term) ||
+        ord.analyses?.some((a) => a.analysis?.name.toLowerCase().includes(term))
+      );
+
+      const matchesLab = !completedLabFilter || ord.laboratoryId === completedLabFilter;
+
+      return matchesSearch && matchesLab;
+    });
+  }, [completedOrders, completedSearchTerm, completedLabFilter]);
+
   return (
     <div className="space-y-6 animate-fade-in relative">
-      {/* NOTIFICACIONES FLOTANTES TIPO TOASTIFY */}
+      {/* NOTIFICACIONES FLOTANTES TIPO TOASTIFY CON COLORES DAISYUI / CLINICAL THEME */}
       <div className="fixed top-5 right-5 z-[350] flex flex-col gap-3 max-w-sm sm:max-w-md w-full pointer-events-none px-4 sm:px-0">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto shadow-2xl rounded-2xl p-4 border flex items-start gap-3 backdrop-blur-md transition-all duration-300 transform translate-y-0 opacity-100 animate-in fade-in slide-in-from-top-4 ${
+            className={`pointer-events-auto shadow-2xl rounded-2xl p-4 border flex items-start gap-3.5 backdrop-blur-md transition-all duration-300 transform translate-y-0 opacity-100 animate-in fade-in slide-in-from-top-4 ${
               toast.type === 'success'
-                ? 'bg-slate-900/95 text-white border-emerald-500/50 shadow-emerald-950/40'
+                ? 'bg-base-100/95 text-base-content border-success/40 shadow-success/15'
                 : toast.type === 'error'
-                ? 'bg-slate-900/95 text-white border-rose-500/50 shadow-rose-950/40'
-                : 'bg-slate-900/95 text-white border-slate-700/50 shadow-slate-950/40'
+                ? 'bg-base-100/95 text-base-content border-error/40 shadow-error/15'
+                : 'bg-base-100/95 text-base-content border-primary/40 shadow-primary/15'
             }`}
           >
             <div
               className={`p-2 rounded-xl shrink-0 mt-0.5 ${
                 toast.type === 'success'
-                  ? 'bg-emerald-500/20 text-emerald-400'
+                  ? 'bg-success/15 text-success'
                   : toast.type === 'error'
-                  ? 'bg-rose-500/20 text-rose-400'
-                  : 'bg-primary/20 text-primary'
+                  ? 'bg-error/15 text-error'
+                  : 'bg-primary/15 text-primary'
               }`}
             >
               {toast.type === 'success' ? (
@@ -375,14 +396,14 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
               <div className="flex items-center justify-between gap-2">
                 <span
                   className={`font-black text-xs uppercase tracking-wider ${
-                    toast.type === 'success' ? 'text-emerald-400' : 'text-rose-400'
+                    toast.type === 'success' ? 'text-success' : toast.type === 'error' ? 'text-error' : 'text-primary'
                   }`}
                 >
                   {toast.title}
                 </span>
-                <span className="text-[10px] text-white/50 font-mono">ahora</span>
+                <span className="text-[10px] text-base-content/50 font-mono">ahora</span>
               </div>
-              <p className="text-xs font-semibold text-white/95 leading-relaxed mt-1 break-words">
+              <p className="text-xs font-semibold text-base-content/90 leading-relaxed mt-1 break-words">
                 {toast.message}
               </p>
             </div>
@@ -390,7 +411,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
             <button
               type="button"
               onClick={() => removeToast(toast.id)}
-              className="btn btn-xs btn-circle btn-ghost text-white/60 hover:text-white hover:bg-white/10 shrink-0"
+              className="btn btn-xs btn-circle btn-ghost text-base-content/50 hover:text-base-content hover:bg-base-200 shrink-0"
               title="Cerrar notificación"
             >
               <IconX className="w-4 h-4" />
@@ -877,76 +898,251 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
       {/* PESTAÑA 3: ÓRDENES COMPLETADAS CON BOTÓN IMPRIMIR PDF OFICIAL Y WHATSAPP */}
       {!isLoadingData && activeTab === 'completed' && (
-        <section className="space-y-4">
-          <div className="card bg-base-100 border border-base-200 shadow-xs p-5 sm:p-6 rounded-2xl">
-            <h2 className="text-base font-bold text-base-content mb-4 flex items-center gap-2">
-              <IconCheckCircle className="w-5 h-5 text-success" />
-              Órdenes de Trabajo Completadas y Verificadas
-            </h2>
+        <section className="space-y-4 animate-fade-in">
+          {/* Tarjeta Principal de Órdenes Verificadas */}
+          <div className="card bg-base-100 border border-base-200 shadow-xs p-5 sm:p-6 rounded-2xl space-y-5">
+            {/* Cabecera con Métricas y Estado */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-base-200 pb-4">
+              <div>
+                <div className="badge badge-success badge-outline text-xs font-semibold mb-1 gap-1">
+                  <IconCheckCircle className="w-3.5 h-3.5 text-success" />
+                  Archivo Clínico de Resultados
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-base-content tracking-tight flex items-center gap-2">
+                  Órdenes de Trabajo Completadas y Verificadas
+                </h2>
+                <p className="text-xs text-base-content/60 mt-0.5">
+                  Expedientes procesados con validación analítica listos para entrega, despacho WhatsApp y reimpresión oficial.
+                </p>
+              </div>
 
+              {/* Estadísticas Rápidas DaisyUI */}
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="bg-success/10 border border-success/30 px-3.5 py-1.5 rounded-xl text-center">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-success block">Completadas</span>
+                  <span className="text-base font-black text-success font-mono">{completedOrders.length}</span>
+                </div>
+                {completedOrders.length > 0 && (
+                  <div className="bg-primary/10 border border-primary/30 px-3.5 py-1.5 rounded-xl text-center">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary block">Filtradas</span>
+                    <span className="text-base font-black text-primary font-mono">{filteredCompletedOrders.length}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Barra de Filtros y Búsqueda Interactiva */}
+            {completedOrders.length > 0 && (
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-base-200/50 p-3 rounded-xl border border-base-200">
+                <div className="relative flex-1">
+                  <IconSearch className="w-4 h-4 text-base-content/40 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por folio, paciente, teléfono o estudio..."
+                    className="input input-sm input-bordered rounded-xl pl-9 w-full bg-base-100 text-xs font-medium focus:input-primary"
+                    value={completedSearchTerm}
+                    onChange={(e) => setCompletedSearchTerm(e.target.value)}
+                  />
+                  {completedSearchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setCompletedSearchTerm('')}
+                      className="btn btn-ghost btn-xs btn-circle absolute right-2 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+                    >
+                      <IconX className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <IconFilter className="w-3.5 h-3.5 text-base-content/50" />
+                    <select
+                      className="select select-sm select-bordered rounded-xl text-xs font-semibold bg-base-100 focus:select-primary"
+                      value={completedLabFilter}
+                      onChange={(e) => setCompletedLabFilter(e.target.value)}
+                    >
+                      <option value="">Todas las Sedes</option>
+                      {labs.map((lab) => (
+                        <option key={lab.id} value={lab.id}>
+                          {lab.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {(completedSearchTerm || completedLabFilter) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCompletedSearchTerm('');
+                        setCompletedLabFilter('');
+                      }}
+                      className="btn btn-sm btn-ghost text-xs text-base-content/60 font-semibold rounded-xl"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Listado de Tarjetas de Órdenes */}
             {completedOrders.length === 0 ? (
-              <div className="p-8 text-center border-2 border-dashed border-base-200 rounded-xl">
-                <p className="text-xs text-base-content/60 font-semibold">No hay órdenes completadas registradas aún.</p>
+              <div className="p-12 text-center border-2 border-dashed border-base-200 rounded-2xl bg-base-200/20 space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-base-200 flex items-center justify-center mx-auto text-base-content/40">
+                  <IconCheckCircle className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-sm text-base-content">No hay órdenes completadas aún</h3>
+                <p className="text-xs text-base-content/60 max-w-sm mx-auto font-medium">
+                  Cuando captures y avales los resultados de las órdenes pendientes, se archivarán automáticamente en este catálogo.
+                </p>
+              </div>
+            ) : filteredCompletedOrders.length === 0 ? (
+              <div className="p-10 text-center border border-base-200 rounded-2xl bg-base-200/20 space-y-2">
+                <p className="text-xs text-base-content/60 font-bold">
+                  No se encontraron órdenes completadas con el criterio: "{completedSearchTerm}"
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCompletedSearchTerm('');
+                    setCompletedLabFilter('');
+                  }}
+                  className="btn btn-xs btn-primary btn-outline rounded-xl"
+                >
+                  Restablecer filtros
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {completedOrders.map((order) => (
-                  <div key={order.id} className="border border-base-200 p-4 sm:p-5 rounded-xl bg-base-100 shadow-xs space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="badge badge-success text-white badge-sm font-mono font-bold">Folio #{order.folio || order.id.slice(0, 6)}</span>
-                      <span className="badge badge-success text-white badge-sm text-xs font-bold">COMPLETADO</span>
-                    </div>
+                {filteredCompletedOrders.map((order) => {
+                  const patientFullName = `${order.patient?.firstName || ''} ${order.patient?.lastName || ''}`.trim() || 'Paciente Sin Nombre';
+                  const orderFolio = order.folio || order.id.slice(0, 6);
+                  const studiesCount = order.analyses?.length || 0;
+                  const orderDate = new Date(order.createdAt).toLocaleDateString('es-MX', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  });
 
-                    <div>
-                      <div className="font-bold text-sm sm:text-base text-base-content">
-                        {order.patient?.firstName} {order.patient?.lastName}
+                  return (
+                    <div
+                      key={order.id}
+                      className="card bg-base-100 border border-base-200 hover:border-primary/40 hover:shadow-md transition-all duration-200 rounded-2xl p-5 space-y-4 group"
+                    >
+                      {/* Encabezado de la Tarjeta: Folio y Estado */}
+                      <div className="flex items-center justify-between gap-2 border-b border-base-200 pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="badge badge-primary badge-outline font-mono font-black text-xs px-2.5 py-1">
+                            FOLIO #{orderFolio}
+                          </span>
+                          <span className="text-[11px] text-base-content/50 font-medium flex items-center gap-1">
+                            <IconClock className="w-3 h-3 text-base-content/40" />
+                            {orderDate}
+                          </span>
+                        </div>
+                        <span className="badge badge-success text-success-content font-black text-[11px] gap-1 px-2.5 py-1 shadow-2xs">
+                          <IconCheckCircle className="w-3 h-3" />
+                          COMPLETADO
+                        </span>
                       </div>
-                      <div className="text-xs text-base-content/60">
-                        Sede: {order.laboratory?.name}
-                      </div>
-                    </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-base-200 pt-3">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setCreatedOrderTicket(order)}
-                          className="btn btn-xs btn-ghost text-base-content/60 font-bold"
-                        >
-                          Comprobante
-                        </button>
-                        <button
-                          onClick={() => setSelectedOrderForLabels(order)}
-                          className="btn btn-xs btn-ghost text-secondary font-bold gap-1"
-                          title="Reimprimir etiquetas térmicas de tubos"
-                        >
-                          <IconFlask className="w-3.5 h-3.5" /> Tubos
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendAutomatedWhatsApp(order)}
-                          disabled={sendingWhatsAppOrderId === order.id}
-                          className="btn btn-xs btn-success text-white font-bold gap-1 rounded-lg shadow-2xs"
-                          title="Enviar reporte clínico automáticamente por WhatsApp vía UltraMsg en segundo plano"
-                        >
-                          {sendingWhatsAppOrderId === order.id ? (
-                            <span className="loading loading-spinner loading-xs"></span>
-                          ) : (
-                            <IconPhone className="w-3.5 h-3.5" />
+                      {/* Información del Paciente y Sede */}
+                      <div className="space-y-1">
+                        <div className="font-black text-base text-base-content group-hover:text-primary transition-colors flex items-center justify-between">
+                          <span>{patientFullName}</span>
+                          {order.patient?.phone && (
+                            <span className="text-[11px] font-mono font-medium text-base-content/60 bg-base-200/70 px-2 py-0.5 rounded-md">
+                              {order.patient.phone}
+                            </span>
                           )}
-                          <span>WhatsApp Auto</span>
-                        </button>
+                        </div>
+                        <div className="text-xs text-base-content/60 flex items-center gap-1">
+                          <IconBuilding className="w-3.5 h-3.5 text-base-content/40 shrink-0" />
+                          <span className="truncate">{order.laboratory?.name || 'Sede Laboratorio'}</span>
+                        </div>
                       </div>
 
-                      <button
-                        onClick={() => setSelectedOrderForPDF(order)}
-                        className="btn btn-sm btn-outline btn-success font-bold rounded-xl gap-1.5"
-                      >
-                        <IconPrinter className="w-4 h-4" />
-                        Imprimir Resultados PDF
-                      </button>
+                      {/* Lista resumida de Estudios */}
+                      <div className="bg-base-200/40 rounded-xl p-3 border border-base-200/60 space-y-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-base-content/70">
+                          <span className="uppercase tracking-wider">Estudios Procesados ({studiesCount})</span>
+                          <span className="badge badge-xs badge-success badge-outline font-mono font-bold">Avalado</span>
+                        </div>
+                        <ul className="text-xs text-base-content/80 space-y-1.5">
+                          {order.analyses?.slice(0, 3).map((a) => (
+                            <li key={a.id} className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-base-content/90 truncate">• {a.analysis?.name}</span>
+                              <span className="badge badge-xs badge-ghost text-[10px] font-bold text-success shrink-0">
+                                Validado
+                              </span>
+                            </li>
+                          ))}
+                          {studiesCount > 3 && (
+                            <li className="text-[10px] text-base-content/50 font-semibold italic">
+                              + {studiesCount - 3} estudio(s) adicional(es) en el reporte
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+
+                      {/* Barra de Acciones de Entrega e Impresión */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-base-200">
+                        {/* Acciones Secundarias */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setCreatedOrderTicket(order)}
+                            className="btn btn-xs btn-ghost text-base-content/70 hover:text-base-content font-bold rounded-lg gap-1"
+                            title="Ver o reimprimir comprobante de recepción"
+                          >
+                            <IconPrinter className="w-3.5 h-3.5 text-base-content/50" />
+                            <span className="hidden sm:inline">Comprobante</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrderForLabels(order)}
+                            className="btn btn-xs btn-ghost text-secondary hover:bg-secondary/10 font-bold rounded-lg gap-1"
+                            title="Reimprimir etiquetas térmicas para tubos Vacutainer"
+                          >
+                            <IconFlask className="w-3.5 h-3.5" />
+                            <span>Tubos</span>
+                          </button>
+                        </div>
+
+                        {/* Botones Principales con Tema DaisyUI */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSendAutomatedWhatsApp(order)}
+                            disabled={sendingWhatsAppOrderId === order.id}
+                            className="btn btn-xs sm:btn-sm btn-success text-success-content font-bold gap-1.5 rounded-xl shadow-xs"
+                            title="Despachar notificación automática oficial por WhatsApp vía UltraMsg"
+                          >
+                            {sendingWhatsAppOrderId === order.id ? (
+                              <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
+                              <IconPhone className="w-3.5 h-3.5" />
+                            )}
+                            <span>WhatsApp Auto</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrderForPDF(order)}
+                            className="btn btn-xs sm:btn-sm btn-primary text-primary-content font-bold rounded-xl gap-1.5 shadow-xs"
+                            title="Ver reporte médico oficial en PDF para impresión o descarga"
+                          >
+                            <IconPrinter className="w-3.5 h-3.5" />
+                            <span>Imprimir PDF</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
