@@ -555,22 +555,25 @@ export default function SupportChatView() {
                   return (
                     <button
                       key={ch.id}
+                      type="button"
                       onClick={() => setActiveChannelId(ch.id)}
-                      className={`w-full text-left p-3.5 rounded-xl transition-all border flex flex-col gap-1 ${
+                      className={`w-full text-left p-3.5 rounded-xl transition-all border flex flex-col gap-1.5 cursor-pointer ${
                         isSelected
-                          ? 'bg-primary/10 border-primary/30 text-primary font-bold shadow-xs'
-                          : 'border-base-200 bg-base-200/30 text-base-content hover:bg-base-200/60'
+                          ? 'bg-primary/10 border-primary/40 text-primary font-bold shadow-xs'
+                          : 'border-base-200 bg-base-200/30 text-base-content hover:bg-base-200/60 hover:border-base-300'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold tracking-tight">{ch.name}</span>
-                        <span className="badge badge-xs badge-success text-white font-bold border-none px-1.5 py-0.5">
+                      <div className="flex items-center justify-between gap-2 w-full">
+                        <span className="text-sm font-bold tracking-tight truncate flex-1 min-w-0">
+                          {ch.name}
+                        </span>
+                        <span className="badge badge-sm badge-success text-success-content font-bold border-none px-2 py-0.5 whitespace-nowrap shrink-0 text-[11px] leading-tight">
                           {ch.userCount} online
                         </span>
                       </div>
-                      <span className="text-xs font-normal text-base-content/60 leading-snug">
+                      <p className="text-xs font-normal text-base-content/65 leading-snug">
                         {ch.desc}
-                      </span>
+                      </p>
                     </button>
                   );
                 })}
