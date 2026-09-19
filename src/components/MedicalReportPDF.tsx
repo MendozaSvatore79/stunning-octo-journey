@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useAuth } from '@clerk/clerk-react';
 import type { WorkOrder } from '../types/order';
 import QRCodeSVG from './QRCodeSVG';
 import { IconPrinter, IconX, IconAward } from './icons';
@@ -12,7 +13,8 @@ import DigitalSignatureModal from './DigitalSignatureModal';
 
 interface MedicalReportPDFProps {
   order: WorkOrder;
-  onClose: () => void;
+  onClose?: () => void;
+  isPublic?: boolean;
 }
 
 interface ParsedSubItem {
@@ -26,7 +28,11 @@ interface ParsedSubItem {
 export default function MedicalReportPDF({
   order,
   onClose,
+  isPublic = false,
 }: MedicalReportPDFProps) {
+  const { isSignedIn } = useAuth();
+  const canConfigureSignature = !isPublic && Boolean(isSignedIn);
+
   const [currentOrder, setCurrentOrder] = useState<WorkOrder>(order);
 
   useEffect(() => {
@@ -374,6 +380,18 @@ export default function MedicalReportPDF({
     </div>
   );
 
+  // Si se visualiza desde la URL pública o QR, renderizar directamente sin modal ni botones de edición
+  if (isPublic) {
+    return (
+      <>
+        <div className="w-full bg-white text-slate-900 rounded-3xl p-4 sm:p-8 border border-slate-200 shadow-xl overflow-hidden">
+          {renderPrintableDocument()}
+        </div>
+        {typeof document !== 'undefined' && createPortal(renderPrintableDocument(), document.body)}
+      </>
+    );
+  }
+
   return (
     <>
       {/* VISTA PREVIA EN PANTALLA DENTRO DEL MODAL WEB */}
@@ -387,15 +405,18 @@ export default function MedicalReportPDF({
             </div>
             
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsSignatureModalOpen(true)}
-                className="btn btn-sm btn-outline btn-primary rounded-xl gap-1.5 font-bold"
-                title="Configurar o dibujar la firma del Químico Responsable"
-              >
-                <IconAward className="w-4 h-4" />
-                <span>Firma Q.F.B.</span>
-              </button>
+              {/* Botón restringido únicamente al personal clínico autenticado */}
+              {canConfigureSignature && (
+                <button
+                  type="button"
+                  onClick={() => setIsSignatureModalOpen(true)}
+                  className="btn btn-sm btn-outline btn-primary rounded-xl gap-1.5 font-bold"
+                  title="Configurar o dibujar la firma del Químico Responsable"
+                >
+                  <IconAward className="w-4 h-4" />
+                  <span>Firma Q.F.B.</span>
+                </button>
+              )}
               <button
                 onClick={() => window.print()}
                 className="btn btn-primary text-white font-bold rounded-xl gap-2 shadow-md btn-sm"
@@ -403,9 +424,11 @@ export default function MedicalReportPDF({
                 <IconPrinter className="w-4 h-4" />
                 Imprimir PDF
               </button>
-              <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost text-slate-500">
-                <IconX className="w-5 h-5" />
-              </button>
+              {onClose && (
+                <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost text-slate-500">
+                  <IconX className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -417,12 +440,14 @@ export default function MedicalReportPDF({
         </form>
       </dialog>
 
-      {/* Modal para Ajustar Firma del Q.F.B. */}
-      <DigitalSignatureModal
-        isOpen={isSignatureModalOpen}
-        onClose={() => setIsSignatureModalOpen(false)}
-        onSaved={(newCfg) => setSignatureConfig(newCfg)}
-      />
+      {/* Modal para Ajustar Firma del Q.F.B. (Exclusivo para personal acreditado del laboratorio) */}
+      {canConfigureSignature && (
+        <DigitalSignatureModal
+          isOpen={isSignatureModalOpen}
+          onClose={() => setIsSignatureModalOpen(false)}
+          onSaved={(newCfg) => setSignatureConfig(newCfg)}
+        />
+      )}
 
       {/* PORTAL REAL A DOCUMENT.BODY PARA IMPRESIÓN IMPECABLE DE 2 PÁGINAS EXACTAS */}
       {typeof document !== 'undefined' && createPortal(renderPrintableDocument(), document.body)}

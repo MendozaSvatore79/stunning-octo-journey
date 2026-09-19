@@ -177,9 +177,9 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
         </button>
       </div>
 
-      {/* RENDERIZADO COMPLETO DEL DOCUMENTO MÉDICO PDF */}
+      {/* RENDERIZADO COMPLETO DEL DOCUMENTO MÉDICO PDF EN MODO PÚBLICO (SOLO LECTURA) */}
       <div className="w-full max-w-4xl">
-        <MedicalReportPDF order={order} onClose={() => {}} />
+        <MedicalReportPDF order={order} isPublic={true} />
       </div>
     </div>
   );
