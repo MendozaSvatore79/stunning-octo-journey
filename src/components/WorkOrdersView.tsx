@@ -69,7 +69,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
     return orders.length > 0 ? orders[0] : null;
   }, [orders, selectedReprintOrderId]);
 
-  // Generador de enlace WhatsApp con informe clínico
+  // Generador de enlace WhatsApp con informe clínico (Respaldo manual)
   const getWhatsAppShareUrl = (ord: WorkOrder) => {
     const phone = (ord.patient?.phone || '').trim() || '9211234567';
     const rawDigits = phone.replace(/[^\d]/g, '');
@@ -82,6 +82,37 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
     const labName = (ord.laboratory?.name || 'Laboratorio Clínico').toUpperCase();
     const text = `🏥 *${labName}*\n\nEstimado(a) *${ord.patient?.firstName || 'Paciente'} ${ord.patient?.lastName || ''}*:\nLe informamos que los resultados de sus análisis clínicos correspondientes a la Orden *#${folioNumber}* han sido debidamente procesados y avalados.\n\n📄 Puede consultar o descargar su informe oficial aquí:\n${reportUrl}\n\nAgradecemos su confianza en nuestro servicio.`;
     return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
+  };
+
+  const [sendingWhatsAppOrderId, setSendingWhatsAppOrderId] = useState<string | null>(null);
+
+  // Despacho 100% Automático de WhatsApp en Segundo Plano (UltraMsg)
+  const handleSendAutomatedWhatsApp = async (ord: WorkOrder) => {
+    if (!ord.patient?.phone) {
+      alert('El paciente no tiene un número telefónico registrado.');
+      return;
+    }
+    setSendingWhatsAppOrderId(ord.id);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      const res = await api.post<{ success: boolean; phone: string; folio: string | number; message: string }>(
+        `/orders/${ord.id}/whatsapp`
+      );
+      setSuccessMsg(
+        `✅ WhatsApp automático enviado con éxito al paciente +${res.data?.phone || ord.patient.phone} (Folio #${ord.folio || ord.id.slice(0, 6)}) vía UltraMsg.`
+      );
+    } catch (err: any) {
+      console.error('Error al enviar WhatsApp automático:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Error de conexión con el servicio UltraMsg';
+      setErrorMsg(`No se pudo enviar WhatsApp automático: ${msg}.`);
+      const fallbackUrl = getWhatsAppShareUrl(ord);
+      if (confirm(`El servicio automático UltraMsg no respondió (${msg}). ¿Deseas abrir WhatsApp Web manualmente como respaldo?`)) {
+        window.open(fallbackUrl, '_blank');
+      }
+    } finally {
+      setSendingWhatsAppOrderId(null);
+    }
   };
 
   // Formulario rápido para nuevo paciente
@@ -798,15 +829,20 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                         >
                           <IconFlask className="w-3.5 h-3.5" /> Tubos
                         </button>
-                        <a
-                          href={getWhatsAppShareUrl(order)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-xs btn-outline btn-success font-bold gap-1 rounded-lg"
-                          title="Enviar enlace del reporte directamente por WhatsApp al paciente"
+                        <button
+                          type="button"
+                          onClick={() => handleSendAutomatedWhatsApp(order)}
+                          disabled={sendingWhatsAppOrderId === order.id}
+                          className="btn btn-xs btn-success text-white font-bold gap-1 rounded-lg shadow-2xs"
+                          title="Enviar reporte clínico automáticamente por WhatsApp vía UltraMsg en segundo plano"
                         >
-                          <IconPhone className="w-3.5 h-3.5" /> WhatsApp
-                        </a>
+                          {sendingWhatsAppOrderId === order.id ? (
+                            <span className="loading loading-spinner loading-xs"></span>
+                          ) : (
+                            <IconPhone className="w-3.5 h-3.5" />
+                          )}
+                          <span>WhatsApp Auto</span>
+                        </button>
                       </div>
 
                       <button

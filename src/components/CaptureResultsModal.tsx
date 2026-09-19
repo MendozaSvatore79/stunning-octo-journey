@@ -265,6 +265,28 @@ export default function CaptureResultsModal({
     setTimeout(() => setCopiedSuccess(false), 3000);
   };
 
+  const [isSendingAutoWA, setIsSendingAutoWA] = useState(false);
+  const [autoWASuccessMsg, setAutoWASuccessMsg] = useState<string | null>(null);
+
+  // Disparo 100% Automático por UltraMsg desde el modal
+  const handleTriggerAutoWhatsApp = async () => {
+    setIsSendingAutoWA(true);
+    setAutoWASuccessMsg(null);
+    try {
+      const res = await api.post<{ success: boolean; phone: string; folio: string | number; message: string }>(
+        `/orders/${order.id}/whatsapp`
+      );
+      setAutoWASuccessMsg(
+        `✅ Notificación enviada automáticamente a +${res.data?.phone || cleanPhone} vía UltraMsg.`
+      );
+    } catch (err: any) {
+      console.error('Error re-enviando WhatsApp automático:', err);
+      alert('No se pudo re-enviar el WhatsApp automático con UltraMsg. Puedes usar la opción de respaldo.');
+    } finally {
+      setIsSendingAutoWA(false);
+    }
+  };
+
   const categories = Array.from(new Set(fields.map((f) => f.category)));
 
   return (
@@ -508,21 +530,38 @@ export default function CaptureResultsModal({
             <div className="bg-base-200/60 p-4 rounded-2xl border border-base-200 text-left space-y-3">
               <div className="flex items-center justify-between border-b border-base-300 pb-2">
                 <span className="text-xs font-black uppercase text-base-content/70">
-                  Despacho de Notificaciones al Paciente
+                  Despacho Automático al Paciente (UltraMsg)
                 </span>
-                <span className="badge badge-accent font-mono text-[10px] font-bold">1-Click Dispatch</span>
+                <span className="badge badge-success text-white font-mono text-[10px] font-bold">Auto-Dispatch</span>
               </div>
 
-              {/* Botón WhatsApp Directo */}
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* Banner informativo de envío automático */}
+              <div className="bg-success/10 border border-success/30 rounded-xl p-3 flex items-start gap-2.5 text-xs text-base-content">
+                <IconCheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block text-success text-xs sm:text-sm">
+                    {autoWASuccessMsg || '¡WhatsApp automático despachado en segundo plano!'}
+                  </span>
+                  <p className="text-[11px] text-base-content/70 mt-0.5">
+                    El sistema envió la notificación por UltraMsg a <strong>+{patientPhone}</strong> con el folio #{folioNumber} y el enlace al reporte oficial.
+                  </p>
+                </div>
+              </div>
+
+              {/* Botón Re-enviar Automático por UltraMsg */}
+              <button
+                type="button"
+                onClick={handleTriggerAutoWhatsApp}
+                disabled={isSendingAutoWA}
                 className="btn btn-success text-white w-full rounded-2xl font-bold gap-2 shadow-md hover:scale-[1.01] transition-transform"
               >
-                <IconPhone className="w-5 h-5" />
-                Abrir y Enviar por WhatsApp Web/App ({patientPhone})
-              </a>
+                {isSendingAutoWA ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : (
+                  <IconPhone className="w-5 h-5" />
+                )}
+                <span>Re-enviar WhatsApp Automático (UltraMsg)</span>
+              </button>
 
               {/* Botón Correo Electrónico */}
               <a
@@ -535,23 +574,28 @@ export default function CaptureResultsModal({
                 Enviar Reporte por Correo ({patientEmail})
               </a>
 
-              {/* Botón Copiar Mensaje */}
-              <button
-                onClick={handleCopyMessage}
-                className="btn btn-sm btn-ghost w-full rounded-xl text-xs font-semibold text-base-content/70 inline-flex items-center justify-center gap-1.5"
-              >
-                {copiedSuccess ? (
-                  <>
-                    <IconCheckCircle className="w-4 h-4 text-success" />
-                    <span>Mensaje Copiado al Portapapeles</span>
-                  </>
-                ) : (
-                  <>
-                    <IconClipboardList className="w-4 h-4 text-base-content/60" />
-                    <span>Copiar Texto del Mensaje</span>
-                  </>
-                )}
-              </button>
+              {/* Opciones secundarias de respaldo */}
+              <div className="pt-1 flex items-center justify-between text-xs text-base-content/60">
+                <button
+                  type="button"
+                  onClick={handleCopyMessage}
+                  className="link link-hover inline-flex items-center gap-1 font-semibold"
+                >
+                  <IconClipboardList className="w-3.5 h-3.5" />
+                  {copiedSuccess ? '¡Texto Copiado!' : 'Copiar Texto'}
+                </button>
+
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link link-hover inline-flex items-center gap-1 font-semibold text-primary"
+                  title="Abrir WhatsApp Web manualmente como respaldo si UltraMsg no estuviera disponible"
+                >
+                  <IconPhone className="w-3.5 h-3.5" />
+                  Abrir WhatsApp Web (Respaldo manual)
+                </a>
+              </div>
             </div>
 
             <div className="pt-2 flex items-center justify-center gap-3">
