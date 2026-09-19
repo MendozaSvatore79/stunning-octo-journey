@@ -22,6 +22,8 @@ const AnalysisCatalogView = lazy(() => import('../components/AnalysisCatalogView
 const QualityControlView = lazy(() => import('../components/QualityControlView'));
 const SupportChatView = lazy(() => import('../components/SupportChatView'));
 const MaintenanceControlModal = lazy(() => import('../components/MaintenanceControlModal'));
+const ReagentsInventoryView = lazy(() => import('../components/ReagentsInventoryView'));
+const AnalyzerInterfaceView = lazy(() => import('../components/AnalyzerInterfaceView'));
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
 
@@ -228,6 +230,10 @@ export default function Dashboard() {
               ) : (
                 <AnalysisCatalogView />
               )
+            ) : activeView === 'reagents' ? (
+              <ReagentsInventoryView />
+            ) : activeView === 'analyzers' ? (
+              <AnalyzerInterfaceView />
             ) : activeView === 'create-order' || activeView === 'pending-orders' || activeView === 'completed-orders' ? (
               isWorkOrdersDisabled ? (
                 <ModuleMaintenanceView moduleTitle="Órdenes de Trabajo" moduleKeyName="workOrders" />

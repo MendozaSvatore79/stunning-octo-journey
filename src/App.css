@@ -1,6 +1,52 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/* TEMA CLÍNICO ESPECIALIZADO PARA LABORATORIO DE ANÁLISIS CLÍNICOS (SYNOVA CLINICAL) */
+:root,
+[data-theme="clinical"],
+[data-theme="light"] {
+  color-scheme: light;
+  /* Primario: Teal Bio-Clínico de Alta Precisión (Esterilidad, Diagnóstico, Patología) */
+  --color-primary: oklch(58% 0.158 190);
+  --color-primary-content: oklch(99% 0 0);
+
+  /* Secundario: Azul Marino Clínico / Cobalto Diagnóstico (Jerarquía Médica Institucional) */
+  --color-secondary: oklch(45% 0.12 215);
+  --color-secondary-content: oklch(99% 0 0);
+
+  /* Acento: Bio-Mint / Aqua Quirúrgico Radiante (Reactivos, Bioseguridad, Triage) */
+  --color-accent: oklch(75% 0.15 175);
+  --color-accent-content: oklch(20% 0.05 175);
+
+  /* Neutral: Pizarra Clínica Profunda */
+  --color-neutral: oklch(24% 0.02 200);
+  --color-neutral-content: oklch(98% 0 0);
+
+  /* Fondos y Superficies: Blanco Clínico Inmaculado y Hielo Diagnóstico */
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(97.5% 0.006 195);
+  --color-base-300: oklch(93.5% 0.012 195);
+  --color-base-content: oklch(22% 0.02 200);
+
+  /* Indicadores Clínicos y Analíticos */
+  --color-info: oklch(62% 0.15 225);
+  --color-info-content: oklch(99% 0 0);
+  --color-success: oklch(66% 0.17 155);
+  --color-success-content: oklch(99% 0 0);
+  --color-warning: oklch(78% 0.16 75);
+  --color-warning-content: oklch(99% 0 0);
+  --color-error: oklch(62% 0.22 25);
+  --color-error-content: oklch(99% 0 0);
+
+  /* Radios y Bordes Modernos y Limpios */
+  --radius-selector: 0.75rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
 /* ESTILOS DE IMPRESIÓN IMPRESIONANTE CON PORTAL DIRECTO A BODY */
 @media print {
   html, body {

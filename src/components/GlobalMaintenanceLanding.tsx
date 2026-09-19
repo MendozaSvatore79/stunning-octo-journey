@@ -56,13 +56,13 @@ export default function GlobalMaintenanceLanding() {
       )}
 
       {/* Fondos Decorativos con Gradiente sutil */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-teal-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Header Superior */}
       <header className="p-6 lg:px-12 flex items-center justify-between relative z-10 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-blue-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-teal-500/20">
             L
           </div>
           <div>
@@ -81,8 +81,8 @@ export default function GlobalMaintenanceLanding() {
 
       {/* Contenido Principal de Mantenimiento */}
       <main className="max-w-4xl mx-auto px-6 py-12 text-center relative z-10 flex-1 flex flex-col items-center justify-center space-y-8">
-        <div className="w-24 h-24 rounded-3xl bg-slate-900/90 border border-slate-800 flex items-center justify-center shadow-2xl shadow-indigo-500/10 backdrop-blur-xl relative">
-          <IconSettings className="w-12 h-12 text-indigo-400 animate-spin" style={{ animationDuration: '12s' }} />
+        <div className="w-24 h-24 rounded-3xl bg-slate-900/90 border border-slate-800 flex items-center justify-center shadow-2xl shadow-teal-500/10 backdrop-blur-xl relative">
+          <IconSettings className="w-12 h-12 text-teal-400 animate-spin" style={{ animationDuration: '12s' }} />
           <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs shadow-md">
             !
           </div>
@@ -101,7 +101,7 @@ export default function GlobalMaintenanceLanding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg text-left">
           <div className="bg-slate-900/70 border border-slate-800/80 p-5 rounded-2xl backdrop-blur-md space-y-1">
             <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Tiempo Estimado</span>
-            <span className="text-lg font-black text-indigo-300 block">{config.estimatedTime || '30 a 45 minutos'}</span>
+            <span className="text-lg font-black text-teal-300 block">{config.estimatedTime || '30 a 45 minutos'}</span>
           </div>
 
           <div className="bg-slate-900/70 border border-slate-800/80 p-5 rounded-2xl backdrop-blur-md space-y-1">

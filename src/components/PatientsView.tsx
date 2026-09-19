@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useApi } from '../hooks/useApi';
 import type { Patient, CreatePatientDto } from '../types/patient';
+import PatientAnalyteEvolutionChart from './PatientAnalyteEvolutionChart';
 import {
   IconUsers,
   IconUserPlus,
@@ -593,6 +594,11 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
               </div>
             )}
           </div>
+
+          {/* Gráfica y Cinética Evolutiva de Analitos en el Tiempo */}
+          {selectedPatient && (
+            <PatientAnalyteEvolutionChart patient={selectedPatient} />
+          )}
 
           {/* Historial de Órdenes de Trabajo del Paciente */}
           {selectedPatient && (

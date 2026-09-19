@@ -6,6 +6,8 @@ import type { Laboratory } from '../types/lab';
 import type { ClinicalAnalysis, WorkOrder, CreateOrderDto } from '../types/order';
 import CaptureResultsModal from './CaptureResultsModal';
 import MedicalReportPDF from './MedicalReportPDF';
+import BarcodeThermalLabelModal from './BarcodeThermalLabelModal';
+import QRCodeSVG from './QRCodeSVG';
 import {
   IconClipboardList,
   IconUsers,
@@ -19,6 +21,7 @@ import {
   IconAlertCircle,
   IconX,
   IconClock,
+  IconPhone,
 } from './icons';
 
 interface WorkOrdersViewProps {
@@ -52,9 +55,34 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   const [createdOrderTicket, setCreatedOrderTicket] = useState<WorkOrder | null>(null);
   const [isQuickPatientOpen, setIsQuickPatientOpen] = useState(false);
 
-  // Estados para modal de Captura de Resultados y PDF Oficial
+  // Estados para modal de Captura de Resultados, PDF Oficial y Etiquetas Térmicas
   const [selectedOrderForCapture, setSelectedOrderForCapture] = useState<WorkOrder | null>(null);
   const [selectedOrderForPDF, setSelectedOrderForPDF] = useState<WorkOrder | null>(null);
+  const [selectedOrderForLabels, setSelectedOrderForLabels] = useState<WorkOrder | null>(null);
+  const [selectedReprintOrderId, setSelectedReprintOrderId] = useState<string>('');
+
+  const activeReprintOrder = useMemo(() => {
+    if (selectedReprintOrderId) {
+      const found = orders.find((o) => o.id === selectedReprintOrderId);
+      if (found) return found;
+    }
+    return orders.length > 0 ? orders[0] : null;
+  }, [orders, selectedReprintOrderId]);
+
+  // Generador de enlace WhatsApp con informe clínico
+  const getWhatsAppShareUrl = (ord: WorkOrder) => {
+    const phone = (ord.patient?.phone || '').trim() || '9211234567';
+    const rawDigits = phone.replace(/[^\d]/g, '');
+    const cleanPhone = rawDigits.length === 10 ? `52${rawDigits}` : rawDigits;
+    const folioNumber = ord.folio || ord.id.slice(0, 6);
+    const origin = window.location.origin.includes('localhost')
+      ? window.location.origin.replace('https://', 'http://')
+      : window.location.origin;
+    const reportUrl = `${origin}/results/${ord.id}`;
+    const labName = (ord.laboratory?.name || 'Laboratorio Clínico').toUpperCase();
+    const text = `🏥 *${labName}*\n\nEstimado(a) *${ord.patient?.firstName || 'Paciente'} ${ord.patient?.lastName || ''}*:\nLe informamos que los resultados de sus análisis clínicos correspondientes a la Orden *#${folioNumber}* han sido debidamente procesados y avalados.\n\n📄 Puede consultar o descargar su informe oficial aquí:\n${reportUrl}\n\nAgradecemos su confianza en nuestro servicio.`;
+    return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
+  };
 
   // Formulario rápido para nuevo paciente
   const [quickPatientData, setQuickPatientData] = useState({
@@ -102,12 +130,15 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       if (loadedStudies.length > 0 && !selectedStudyId) {
         setSelectedStudyId(loadedStudies[0].id);
       }
+      if (loadedOrders.length > 0 && !selectedReprintOrderId) {
+        setSelectedReprintOrderId(loadedOrders[0].id);
+      }
     } catch (err) {
       console.error('Error al cargar datos de órdenes:', err);
     } finally {
       setIsLoadingData(false);
     }
-  }, [api, selectedPatientId, selectedLabId, selectedStudyId]);
+  }, [api, selectedPatientId, selectedLabId, selectedStudyId, selectedReprintOrderId]);
 
   useEffect(() => {
     loadInitialData();
@@ -188,6 +219,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
       const res = await api.post<WorkOrder>('/orders', payload);
       setSuccessMsg(`¡Orden de Trabajo #${res.data.folio || res.data.id.slice(0, 6)} creada exitosamente!`);
+      setSelectedReprintOrderId(res.data.id);
       setCreatedOrderTicket(res.data);
 
       setSelectedStudiesList([]);
@@ -252,37 +284,87 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
           </p>
         </div>
 
-        {/* Botones de Acción Superiores */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => window.print()}
-            className="btn btn-sm btn-outline rounded-xl font-bold gap-1.5 text-xs"
-          >
-            <IconPrinter className="w-4 h-4" />
-            Imprimir Etiquetas
-          </button>
+        {/* Barra de Reimpresión con Selector Dinámico de Paciente / Folio */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-base-200/60 p-2.5 rounded-2xl border border-base-300/60">
+          <div className="flex items-center gap-1.5 px-2">
+            <IconUsers className="w-4 h-4 text-primary shrink-0" />
+            <select
+              value={activeReprintOrder?.id || ''}
+              onChange={(e) => {
+                setSelectedReprintOrderId(e.target.value);
+                const found = orders.find((o) => o.id === e.target.value);
+                if (found) {
+                  if (selectedOrderForLabels) setSelectedOrderForLabels(found);
+                  if (createdOrderTicket) setCreatedOrderTicket(found);
+                  if (selectedOrderForPDF) setSelectedOrderForPDF(found);
+                }
+              }}
+              className="select select-xs select-bordered rounded-xl font-bold text-xs text-primary focus:select-primary max-w-[200px] sm:max-w-[240px] truncate bg-base-100"
+              title="Seleccionar paciente o folio para reimprimir"
+            >
+              {orders.length === 0 && <option value="">Sin órdenes aún</option>}
+              {orders.map((ord) => (
+                <option key={ord.id} value={ord.id}>
+                  Folio #{ord.folio || ord.id.slice(0, 6)} - {ord.patient?.firstName} {ord.patient?.lastName} ({ord.status})
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <button
-            onClick={() => {
-              if (orders.length > 0) setCreatedOrderTicket(orders[0]);
-              else alert('Aún no hay órdenes generadas para reimprimir.');
-            }}
-            className="btn btn-sm btn-outline rounded-xl font-bold gap-1.5 text-xs"
-          >
-            <IconPrinter className="w-4 h-4" />
-            Re-Imprimir Comprobante
-          </button>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              onClick={() => {
+                if (activeReprintOrder) {
+                  setSelectedOrderForLabels(activeReprintOrder);
+                } else if (orders.length > 0) {
+                  setSelectedOrderForLabels(orders[0]);
+                } else {
+                  alert('Aún no hay órdenes registradas para imprimir etiquetas.');
+                }
+              }}
+              className="btn btn-xs btn-outline rounded-xl font-bold gap-1 text-[11px]"
+              title="Imprimir etiquetas de código de barras para tubos Vacutainer"
+            >
+              <IconPrinter className="w-3.5 h-3.5" />
+              Imprimir Etiquetas
+            </button>
 
-          <button
-            onClick={() => {
-              if (completedOrders.length > 0) setSelectedOrderForPDF(completedOrders[0]);
-              else alert('No hay órdenes completadas para imprimir resultados.');
-            }}
-            className="btn btn-sm btn-primary text-primary-content rounded-xl font-bold gap-1.5 text-xs"
-          >
-            <IconPrinter className="w-4 h-4" />
-            Imprimir Resultados PDF
-          </button>
+            <button
+              onClick={() => {
+                if (activeReprintOrder) {
+                  setCreatedOrderTicket(activeReprintOrder);
+                } else if (orders.length > 0) {
+                  setCreatedOrderTicket(orders[0]);
+                } else {
+                  alert('Aún no hay órdenes generadas para reimprimir comprobante.');
+                }
+              }}
+              className="btn btn-xs btn-outline rounded-xl font-bold gap-1 text-[11px]"
+              title="Re-imprimir comprobante de recepción para el paciente"
+            >
+              <IconPrinter className="w-3.5 h-3.5" />
+              Re-Imprimir Comprobante
+            </button>
+
+            <button
+              onClick={() => {
+                if (activeReprintOrder) {
+                  setSelectedOrderForPDF(activeReprintOrder);
+                } else if (completedOrders.length > 0) {
+                  setSelectedOrderForPDF(completedOrders[0]);
+                } else if (orders.length > 0) {
+                  setSelectedOrderForPDF(orders[0]);
+                } else {
+                  alert('No hay órdenes para imprimir resultados.');
+                }
+              }}
+              className="btn btn-xs btn-primary text-primary-content rounded-xl font-bold gap-1 text-[11px] shadow-xs"
+              title="Imprimir reporte oficial de resultados clínicos en PDF"
+            >
+              <IconPrinter className="w-3.5 h-3.5" />
+              Imprimir Resultados PDF
+            </button>
+          </div>
         </div>
       </section>
 
@@ -637,12 +719,21 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-base-200 pt-3">
-                      <button
-                        onClick={() => setCreatedOrderTicket(order)}
-                        className="btn btn-xs btn-ghost text-base-content/60 font-bold gap-1"
-                      >
-                        <IconPrinter className="w-3.5 h-3.5" /> Comprobante
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setCreatedOrderTicket(order)}
+                          className="btn btn-xs btn-ghost text-base-content/60 font-bold gap-1"
+                        >
+                          <IconPrinter className="w-3.5 h-3.5" /> Comprobante
+                        </button>
+                        <button
+                          onClick={() => setSelectedOrderForLabels(order)}
+                          className="btn btn-xs btn-outline btn-secondary font-bold rounded-lg gap-1"
+                          title="Imprimir etiquetas térmicas para tubos de toma de muestra"
+                        >
+                          <IconFlask className="w-3.5 h-3.5" /> Tubos Vacutainer
+                        </button>
+                      </div>
 
                       {/* BOTÓN PRINCIPAL: Capturar Resultados / Verificar */}
                       <button
@@ -661,7 +752,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         </section>
       )}
 
-      {/* PESTAÑA 3: ÓRDENES COMPLETADAS CON BOTÓN IMPRIMIR PDF OFICIAL */}
+      {/* PESTAÑA 3: ÓRDENES COMPLETADAS CON BOTÓN IMPRIMIR PDF OFICIAL Y WHATSAPP */}
       {!isLoadingData && activeTab === 'completed' && (
         <section className="space-y-4">
           <div className="card bg-base-100 border border-base-200 shadow-xs p-5 sm:p-6 rounded-2xl">
@@ -692,13 +783,31 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-base-200 pt-3">
-                      <button
-                        onClick={() => setCreatedOrderTicket(order)}
-                        className="btn btn-xs btn-ghost text-base-content/60 font-bold"
-                      >
-                        Comprobante
-                      </button>
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-base-200 pt-3">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setCreatedOrderTicket(order)}
+                          className="btn btn-xs btn-ghost text-base-content/60 font-bold"
+                        >
+                          Comprobante
+                        </button>
+                        <button
+                          onClick={() => setSelectedOrderForLabels(order)}
+                          className="btn btn-xs btn-ghost text-secondary font-bold gap-1"
+                          title="Reimprimir etiquetas térmicas de tubos"
+                        >
+                          <IconFlask className="w-3.5 h-3.5" /> Tubos
+                        </button>
+                        <a
+                          href={getWhatsAppShareUrl(order)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-xs btn-outline btn-success font-bold gap-1 rounded-lg"
+                          title="Enviar enlace del reporte directamente por WhatsApp al paciente"
+                        >
+                          <IconPhone className="w-3.5 h-3.5" /> WhatsApp
+                        </a>
+                      </div>
 
                       <button
                         onClick={() => setSelectedOrderForPDF(order)}
@@ -737,6 +846,14 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         <MedicalReportPDF
           order={selectedOrderForPDF}
           onClose={() => setSelectedOrderForPDF(null)}
+        />
+      )}
+
+      {/* MODAL DE ETIQUETAS TÉRMICAS VACUTAINER */}
+      {selectedOrderForLabels && (
+        <BarcodeThermalLabelModal
+          order={selectedOrderForLabels}
+          onClose={() => setSelectedOrderForLabels(null)}
         />
       )}
 
@@ -797,6 +914,25 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                 <span className="text-base-content/60 font-bold block">FECHA DE REGISTRO:</span>
                 <span className="font-semibold text-base-content">{new Date(createdOrderTicket.createdAt).toLocaleString()}</span>
               </div>
+
+              {/* QR de Autenticidad y Consulta para el Paciente */}
+              <div className="pt-2.5 border-t border-base-200 flex items-center justify-between gap-3 bg-base-100/70 p-2.5 rounded-xl">
+                <div className="text-left space-y-0.5">
+                  <span className="text-[10px] text-primary font-black block uppercase tracking-wider">CONSULTA DIGITAL EN LÍNEA:</span>
+                  <p className="text-[10.5px] text-base-content/70 font-medium">
+                    Escanea este código con la cámara de tu celular para consultar tus resultados en tiempo real.
+                  </p>
+                </div>
+                <div className="shrink-0 text-center">
+                  <QRCodeSVG
+                    value={`${window.location.origin}/results/${createdOrderTicket.id}`}
+                    size={58}
+                  />
+                  <span className="block text-[7.5px] font-mono text-base-content/50 uppercase mt-0.5 font-bold">
+                    VALIDAR
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="modal-action pt-4 border-t border-base-200 flex justify-end gap-2">
@@ -805,6 +941,18 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                 className="btn btn-ghost btn-sm rounded-xl font-semibold"
               >
                 Cerrar
+              </button>
+
+              <button
+                onClick={() => {
+                  const targetOrd = createdOrderTicket;
+                  setCreatedOrderTicket(null);
+                  setSelectedOrderForLabels(targetOrd);
+                }}
+                className="btn btn-secondary btn-sm text-white font-bold rounded-xl gap-1.5 shadow-xs"
+              >
+                <IconFlask className="w-4 h-4" />
+                Etiquetas Tubos
               </button>
 
               <button

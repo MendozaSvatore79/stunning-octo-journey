@@ -1,18 +1,24 @@
-// src/components/CaptureResultsModal.tsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApi } from '../hooks/useApi';
 import type { WorkOrder } from '../types/order';
 import {
   IconClipboardList,
   IconCheckCircle,
   IconAlertCircle,
+  IconAlertTriangle,
   IconPrinter,
   IconX,
   IconPlus,
   IconPhone,
   IconMail,
   IconFlask,
+  IconSparkles,
+  IconShieldCheck,
 } from './icons';
+import {
+  evaluatePanicValues,
+  generateAICorrelationNote,
+} from '../utils/panicValues';
 
 interface CaptureResultsModalProps {
   order: WorkOrder;
@@ -128,6 +134,25 @@ export default function CaptureResultsModal({
   const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false);
   const [copiedSuccess, setCopiedSuccess] = useState<boolean>(false);
 
+  // Detección en tiempo real de Valores de Pánico
+  const panicAlerts = useMemo(() => {
+    return evaluatePanicValues(fields);
+  }, [fields]);
+
+  const [isPanicConfirmOpen, setIsPanicConfirmOpen] = useState(false);
+  const [isPanicRatified, setIsPanicRatified] = useState(false);
+  const [hasRecheckedSample, setHasRecheckedSample] = useState(false);
+  const [isGeneratingCorrelation, setIsGeneratingCorrelation] = useState(false);
+
+  const handleSuggestCorrelation = () => {
+    setIsGeneratingCorrelation(true);
+    setTimeout(() => {
+      const aiNote = generateAICorrelationNote(fields, patient?.dateOfBirth, patient?.gender);
+      setGeneralNotes(aiNote);
+      setIsGeneratingCorrelation(false);
+    }, 350);
+  };
+
   // Formatear datos de contacto del paciente
   const patientPhone = (patient?.phone || '').trim() || '9211234567';
   const patientEmail = (patient?.email || '').trim() || 'paciente@ejemplo.com';
@@ -142,7 +167,9 @@ export default function CaptureResultsModal({
   const cleanPhone = rawDigits.length === 10 ? `52${rawDigits}` : rawDigits;
 
   const labName = (order.laboratory?.name || 'LABORATORIO CLÍNICO CENTRAL').toUpperCase();
-  const whatsappMsg = `🏥 *${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*,\n\nTus resultados del *Folio #${folioNumber}* ya han sido validados clínicamente.\n\n📄 Consulta o descarga tu reporte en PDF de forma pública aquí:\n${verificationUrl}\n\n_Atentamente: Q.F.B. Juan Carlos Mendoza_`;
+  const whatsappMsg = panicAlerts.length > 0
+    ? `🚨 *AVISO DE VALOR CRÍTICO - ${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*:\nSe han emitido tus resultados del *Folio #${folioNumber}* con parámetros de atención prioritaria:\n${panicAlerts.map(p => `• *${p.paramName}*: ${p.value} ${p.units} (${p.panicThresholdDescription})`).join('\n')}\n\n📄 Consulta tu informe médico validado aquí:\n${verificationUrl}\n\n_Por favor ponte en contacto con tu médico tratante a la brevedad._`
+    : `🏥 *${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*,\n\nTus resultados del *Folio #${folioNumber}* ya han sido validados clínicamente.\n\n📄 Consulta o descarga tu reporte en PDF de forma pública aquí:\n${verificationUrl}\n\n_Atentamente: Q.F.B. Juan Carlos Mendoza_`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(whatsappMsg)}`;
   const mailtoUrl = `mailto:${patientEmail}?subject=Resultados%20de%20Laboratorio%20-%20Folio%20%23${folioNumber}&body=${encodeURIComponent(whatsappMsg)}`;
@@ -168,7 +195,12 @@ export default function CaptureResultsModal({
   };
 
   // Guardar y Cerrar Orden + Abrir Panel de Notificaciones
-  const handleSaveAndCloseOrder = async () => {
+  const handleSaveAndCloseOrder = async (bypassPanicCheck = false) => {
+    if (panicAlerts.length > 0 && !isPanicRatified && !bypassPanicCheck) {
+      setIsPanicConfirmOpen(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
@@ -275,6 +307,33 @@ export default function CaptureResultsModal({
             <span className="text-[10px] text-primary font-bold uppercase">Apertura Automática al Guardar</span>
           </div>
 
+          {/* BANNER DE VALORES DE PÁNICO DETECTADOS */}
+          {panicAlerts.length > 0 && (
+            <div className="alert alert-error text-white shadow-md rounded-2xl py-3 px-4 mb-4 shrink-0 flex items-start gap-3 border-2 border-red-300 animate-pulse">
+              <IconAlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div className="flex-1 text-xs space-y-1">
+                <div className="font-black text-sm uppercase tracking-wide flex items-center justify-between">
+                  <span>⚠️ ¡Atención! {panicAlerts.length} Valor(es) Crítico(s) de Pánico Detectado(s)</span>
+                  {isPanicRatified && (
+                    <span className="badge badge-sm bg-white text-error font-bold gap-1">
+                      <IconShieldCheck className="w-3.5 h-3.5" /> Ratificado
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {panicAlerts.map((pa) => (
+                    <span key={pa.paramId} className="bg-black/20 px-2 py-1 rounded-lg font-mono text-[11px] font-bold">
+                      {pa.paramName}: {pa.value} {pa.units} ({pa.panicThresholdDescription})
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] opacity-90 leading-tight pt-0.5">
+                  Protocolo ISO 15189: Requiere verificación en segundo analizador o frotis antes de liberar resultados.
+                </p>
+              </div>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="alert alert-error text-white shadow-sm rounded-xl py-2.5 mb-4 shrink-0 animate-fade-in text-xs font-medium">
               <IconAlertCircle className="w-5 h-5 shrink-0" />
@@ -366,12 +425,29 @@ export default function CaptureResultsModal({
               </div>
 
               <div>
-                <label className="label text-[11px] font-bold text-base-content/70">Observaciones y Diagnóstico Periférico</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-base-content/70">Observaciones y Dictamen Clínico</label>
+                  <button
+                    type="button"
+                    onClick={handleSuggestCorrelation}
+                    disabled={isGeneratingCorrelation}
+                    className="btn btn-xs btn-outline btn-primary rounded-lg font-bold gap-1 shadow-xs"
+                    title="Generar dictamen orientativo preliminar con Synova IA"
+                  >
+                    {isGeneratingCorrelation ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : (
+                      <IconSparkles className="w-3.5 h-3.5 text-primary" />
+                    )}
+                    Dictamen con Synova IA
+                  </button>
+                </div>
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={generalNotes}
                   onChange={(e) => setGeneralNotes(e.target.value)}
-                  className="textarea textarea-bordered w-full rounded-xl text-xs font-medium"
+                  placeholder="Observaciones clínicas, notas del frotis o dictamen diagnóstico..."
+                  className="textarea textarea-bordered w-full rounded-xl text-xs font-medium leading-relaxed"
                 ></textarea>
               </div>
             </div>
@@ -392,7 +468,7 @@ export default function CaptureResultsModal({
                 Cancelar
               </button>
               <button
-                onClick={handleSaveAndCloseOrder}
+                onClick={() => handleSaveAndCloseOrder(false)}
                 disabled={isSubmitting}
                 className="btn btn-primary text-white font-bold rounded-2xl shadow-lg gap-2"
               >
@@ -489,6 +565,83 @@ export default function CaptureResultsModal({
               >
                 <IconPrinter className="w-5 h-5" />
                 Ver e Imprimir Reporte PDF
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
+
+      {/* MODAL DE CONFIRMACIÓN DE VALORES DE PÁNICO (ISO 15189) */}
+      {isPanicConfirmOpen && (
+        <dialog className="modal modal-open z-[65]">
+          <div className="modal-box max-w-lg bg-base-100 rounded-3xl p-6 border-2 border-error/40 shadow-2xl space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-error/15 text-error flex items-center justify-center shrink-0">
+                <IconAlertTriangle className="w-7 h-7 animate-pulse" />
+              </div>
+              <div>
+                <div className="badge badge-error text-white font-bold text-xs uppercase tracking-wider mb-1">
+                  Protocolo Crítico ISO 15189
+                </div>
+                <h3 className="font-extrabold text-lg text-base-content leading-tight">
+                  Ratificación de Valores Críticos (Pánico)
+                </h3>
+                <p className="text-xs text-base-content/70 mt-1">
+                  Se detectaron analitos que comprometen el estado fisiológico inmediato del paciente.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-error/5 border border-error/20 rounded-2xl p-4 space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-error block">
+                Analitos Fuera de Rango Vital:
+              </span>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                {panicAlerts.map((a, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-xs bg-base-100/80 p-2 rounded-xl border border-error/20">
+                    <span className="font-bold text-base-content">{a.paramName}</span>
+                    <div className="text-right">
+                      <span className="font-mono font-black text-error text-sm">{a.value} {a.units}</span>
+                      <span className="block text-[10px] text-base-content/60 font-semibold">{a.panicThresholdDescription}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-warning/10 border border-warning/30 rounded-2xl p-3.5 flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="panic-recheck"
+                checked={hasRecheckedSample}
+                onChange={(e) => setHasRecheckedSample(e.target.checked)}
+                className="checkbox checkbox-error mt-0.5 rounded-lg"
+              />
+              <label htmlFor="panic-recheck" className="text-xs text-base-content/80 font-medium cursor-pointer leading-relaxed select-none">
+                <strong className="text-base-content font-bold">Certificación Obligatoria:</strong> He verificado la integridad de la muestra y ratifico que los valores fueron comprobados o correlacionados en el equipo analizador antes de su liberación al expediente.
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsPanicConfirmOpen(false)}
+                className="btn btn-ghost rounded-2xl text-xs font-bold"
+              >
+                Volver a Revisar Analitos
+              </button>
+              <button
+                type="button"
+                disabled={!hasRecheckedSample}
+                onClick={() => {
+                  setIsPanicRatified(true);
+                  setIsPanicConfirmOpen(false);
+                  handleSaveAndCloseOrder(true);
+                }}
+                className="btn btn-error text-white font-bold rounded-2xl text-xs gap-2 shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50"
+              >
+                <IconShieldCheck className="w-4 h-4" />
+                Ratificar y Liberar Orden
               </button>
             </div>
           </div>

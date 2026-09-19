@@ -1,8 +1,14 @@
-// src/components/MedicalReportPDF.tsx
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { WorkOrder } from '../types/order';
 import QRCodeSVG from './QRCodeSVG';
-import { IconPrinter, IconX } from './icons';
+import { IconPrinter, IconX, IconAward } from './icons';
+import {
+  getSanitarySignatureConfig,
+  generateOrderCryptoHash,
+  type SanitarySignatureConfig,
+} from '../utils/cryptoSecurity';
+import DigitalSignatureModal from './DigitalSignatureModal';
 
 interface MedicalReportPDFProps {
   order: WorkOrder;
@@ -17,12 +23,41 @@ interface ParsedSubItem {
   ref: string;
 }
 
-export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFProps) {
-  const patient = order.patient;
-  const lab = order.laboratory;
+export default function MedicalReportPDF({
+  order,
+  onClose,
+}: MedicalReportPDFProps) {
+  const [currentOrder, setCurrentOrder] = useState<WorkOrder>(order);
+
+  useEffect(() => {
+    setCurrentOrder(order);
+  }, [order]);
+
+  const patient = currentOrder.patient;
+  const lab = currentOrder.laboratory;
+
+  const [signatureConfig, setSignatureConfig] = useState<SanitarySignatureConfig>(getSanitarySignatureConfig);
+  const [cryptoHash, setCryptoHash] = useState<string>('');
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    generateOrderCryptoHash(
+      currentOrder.folio || currentOrder.id,
+      `${patient?.firstName || ''} ${patient?.lastName || ''}`,
+      currentOrder.createdAt,
+      currentOrder.analyses?.length || 0,
+      signatureConfig.professionalLicense
+    ).then((hash) => {
+      if (isMounted) setCryptoHash(hash);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentOrder, patient, signatureConfig]);
 
   // Fecha de ingreso e impresión
-  const fechaIngreso = new Date(order.createdAt).toLocaleString('es-MX', {
+  const fechaIngreso = new Date(currentOrder.createdAt).toLocaleString('es-MX', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -44,7 +79,7 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
     : 'N/A';
 
   // Extraer Método, Responsable, Cédula u Observaciones de las notas consolidadas
-  const notesStr = order.notes || '';
+  const notesStr = currentOrder.notes || '';
   const matchMethod = notesStr.match(/Método:\s*([^|]+)/);
   const matchResponsible = notesStr.match(/Responsable:\s*([^|]+)/);
   const matchProfessional = notesStr.match(/Cédula:\s*([^|]+)/);
@@ -53,24 +88,27 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
   const metodoStr = matchMethod ? matchMethod[1].trim() : '( Citometría de flujo / Cinético / Espectrofotometría / Físico / Químico / Microscópico )';
   const responsableStr = matchResponsible
     ? matchResponsible[1].trim()
-    : lab?.createdBy
-    ? `Q.F.B. ${lab.createdBy.firstName || ''} ${lab.createdBy.lastName || ''}`.trim()
-    : 'Q.F.B. JUAN CARLOS MENDOZA HERNÁNDEZ';
-  const cedulaStr = matchProfessional ? matchProfessional[1].trim() : '5518954';
+    : signatureConfig.responsibleName || 'Q.F.B. JUAN CARLOS MENDOZA HERNÁNDEZ';
+  const cedulaStr = matchProfessional ? matchProfessional[1].trim() : signatureConfig.professionalLicense || '5518954';
   const observacionesStr = matchObs ? matchObs[1].trim() : 'NO SE OBSERVO ANOMALIAS EN EL FROTIS PERIFERICO. SUERO NORMAL, ESTUDIO RATIFICADO Y VALIDADO CLINICAMENTE.';
 
-  const authenticityHash = `FOLIO-${order.folio || order.id.slice(0, 8)}-VERIFIED-AUTH-${order.id}`;
-  const verificationUrl = `https://labsystem.clinic/verify?folio=${order.folio}&hash=${authenticityHash}`;
+  const appOrigin = typeof window !== 'undefined'
+    ? (import.meta.env.VITE_PUBLIC_URL ||
+       (window.location.origin.includes('localhost')
+         ? window.location.origin.replace('https://', 'http://')
+         : window.location.origin))
+    : 'http://localhost:5173';
+  const verificationUrl = `${appOrigin}/results/${currentOrder.id}`;
 
   // Parsear y desglosar absolutamente TODOS los sub-parámetros por categoría sin omisiones
   const parseAnalysesToCategories = () => {
     const categoriesMap: Record<string, ParsedSubItem[]> = {};
 
-    if (!order.analyses || order.analyses.length === 0) {
+    if (!currentOrder.analyses || currentOrder.analyses.length === 0) {
       return categoriesMap;
     }
 
-    order.analyses.forEach((item) => {
+    currentOrder.analyses.forEach((item) => {
       let rawVal = (item.resultValue || '').trim();
       const fallbackCat = item.analysis?.name || 'RESULTADOS DE LABORATORIO';
 
@@ -188,7 +226,7 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
               }}
             />
           ) : (
-            <div className="w-11 h-11 bg-gradient-to-tr from-blue-700 to-indigo-800 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-sm shrink-0">
+            <div className="w-11 h-11 bg-gradient-to-tr from-teal-700 to-cyan-800 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-sm shrink-0">
               {lab?.name?.[0] || 'L'}
             </div>
           )}
@@ -205,8 +243,8 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
 
         {/* Código QR de Autenticidad */}
         <div className="text-center shrink-0">
-          <QRCodeSVG value={verificationUrl} size={65} />
-          <span className="block text-[7px] font-mono text-slate-500 mt-0.5 uppercase tracking-tighter">
+          <QRCodeSVG value={verificationUrl} size={70} />
+          <span className="block text-[7px] font-mono font-bold text-slate-600 mt-0.5 uppercase tracking-tighter">
             QR DE AUTENTICIDAD
           </span>
         </div>
@@ -238,7 +276,7 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
 
         <div className="col-span-12 border-t border-slate-200 pt-1 mt-0.5">
           <span className="text-slate-500 font-bold">MÉDICO:</span>{' '}
-          <span className="text-slate-900 font-bold">{order.notes?.split('|')?.[0]?.replace('Médico:', '')?.trim() || 'A QUIEN CORRESPONDA'}</span>
+          <span className="text-slate-900 font-bold">{currentOrder.notes?.split('|')?.[0]?.replace('Médico:', '')?.trim() || 'A QUIEN CORRESPONDA'}</span>
         </div>
       </div>
 
@@ -297,15 +335,40 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
         </p>
       </div>
 
-      {/* BLOQUE DE FIRMA Y AUTENTICIDAD (Protegido de cortes) */}
+      {/* BLOQUE DE FIRMA DIGITAL Y SELLO CRIPTOGRÁFICO SHA-256 */}
       <div
-        className="pt-3 text-center space-y-0.5 break-inside-avoid"
+        className="pt-2 text-center space-y-1 break-inside-avoid"
         style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
       >
-        <div className="w-52 border-t-2 border-slate-800 mx-auto mb-1"></div>
-        <p className="font-bold text-slate-700 text-[9.5px] uppercase tracking-widest">ATENTAMENTE</p>
-        <p className="font-black text-slate-900 text-[11px] uppercase">{responsableStr}</p>
-        <p className="text-[9.5px] text-slate-600 font-mono font-bold">CED. PROF. {cedulaStr}</p>
+        <div className="flex flex-col items-center justify-center">
+          {signatureConfig.signatureDataUrl ? (
+            <img
+              src={signatureConfig.signatureDataUrl}
+              alt="Firma Digital"
+              className="h-12 max-w-[200px] object-contain mb-0.5"
+            />
+          ) : (
+            <div className="h-9"></div>
+          )}
+          <div className="w-56 border-t-2 border-slate-800 mx-auto mb-0.5"></div>
+          <p className="font-bold text-slate-700 text-[9px] uppercase tracking-widest">RESPONSABLE SANITARIO</p>
+          <p className="font-black text-slate-900 text-[10.5px] uppercase">{signatureConfig.responsibleName || responsableStr}</p>
+          <p className="text-[9px] text-slate-600 font-mono font-bold">CED. PROF. {signatureConfig.professionalLicense || cedulaStr}</p>
+          {signatureConfig.digitalCertificateId && (
+            <p className="text-[8px] text-slate-500 font-mono leading-none">CERTIFICADO: {signatureConfig.digitalCertificateId}</p>
+          )}
+        </div>
+
+        {/* Sello Digital Criptográfico SHA-256 */}
+        <div className="mt-1.5 pt-1 border-t border-slate-200 text-left px-1">
+          <div className="flex items-center justify-between text-[7px] font-mono text-slate-500 leading-none">
+            <span>SELLO DIGITAL DE AUTENTICIDAD CLÍNICA (SHA-256):</span>
+            <span className="font-bold text-slate-700">NORMATIVA ISO 15189 / NOM-007-SSA3</span>
+          </div>
+          <div className="text-[6.5px] font-mono font-bold text-slate-800 tracking-wider break-all select-all mt-0.5">
+            {cryptoHash || 'CALCULANDO-SELLO-CRIPTOGRAFICO...'}
+          </div>
+        </div>
       </div>
 
     </div>
@@ -317,19 +380,28 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
       <dialog className="modal modal-open backdrop-blur-xs z-[150]">
         <div className="modal-box max-w-4xl w-full bg-white text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl overflow-y-auto max-h-[92vh]">
           {/* Barra de Acciones Superior */}
-          <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4 print:hidden">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4 print:hidden gap-3 flex-wrap">
             <div className="flex items-center gap-2 text-primary font-black text-lg">
               <span>Reporte Oficial de Resultados Clínicos</span>
-              <span className="badge badge-success text-white font-mono text-xs">FOLIO #{order.folio || order.id.slice(0, 6)}</span>
+              <span className="badge badge-success text-white font-mono text-xs">FOLIO #{currentOrder.folio || currentOrder.id.slice(0, 6)}</span>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSignatureModalOpen(true)}
+                className="btn btn-sm btn-outline btn-primary rounded-xl gap-1.5 font-bold"
+                title="Configurar o dibujar la firma del Químico Responsable"
+              >
+                <IconAward className="w-4 h-4" />
+                <span>Firma Q.F.B.</span>
+              </button>
               <button
                 onClick={() => window.print()}
-                className="btn btn-primary text-white font-bold rounded-2xl gap-2 shadow-md"
+                className="btn btn-primary text-white font-bold rounded-xl gap-2 shadow-md btn-sm"
               >
-                <IconPrinter className="w-5 h-5" />
-                Imprimir PDF de Resultados
+                <IconPrinter className="w-4 h-4" />
+                Imprimir PDF
               </button>
               <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost text-slate-500">
                 <IconX className="w-5 h-5" />
@@ -344,6 +416,13 @@ export default function MedicalReportPDF({ order, onClose }: MedicalReportPDFPro
           <button onClick={onClose}>close</button>
         </form>
       </dialog>
+
+      {/* Modal para Ajustar Firma del Q.F.B. */}
+      <DigitalSignatureModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onSaved={(newCfg) => setSignatureConfig(newCfg)}
+      />
 
       {/* PORTAL REAL A DOCUMENT.BODY PARA IMPRESIÓN IMPECABLE DE 2 PÁGINAS EXACTAS */}
       {typeof document !== 'undefined' && createPortal(renderPrintableDocument(), document.body)}

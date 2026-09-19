@@ -152,7 +152,7 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
       {/* Barra de Encabezado Público */}
       <div className="w-full max-w-4xl bg-slate-900 text-white p-4 sm:p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 flex items-center justify-center text-white font-black text-xl shadow-md shrink-0">
             L
           </div>
           <div>

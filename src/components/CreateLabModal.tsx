@@ -281,7 +281,7 @@ export default function CreateLabModal({
               <div className="form-control">
                 <label className="label py-1">
                   <span className="label-text text-xs font-bold flex items-center gap-1">
-                    <IconGlobe className="w-3.5 h-3.5 text-blue-600" /> País
+                    <IconGlobe className="w-3.5 h-3.5 text-primary" /> País
                   </span>
                 </label>
                 <select

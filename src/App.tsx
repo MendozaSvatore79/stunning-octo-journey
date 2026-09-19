@@ -76,15 +76,15 @@ function AppContent() {
       {isSigningOut && (
         <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center text-white animate-fade-in transition-all duration-700">
           
-          {/* Logo Médico con Resplandor Azul */}
+          {/* Logo Clínico con Resplandor Teal Diagnóstico */}
           <div className="relative mb-6">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-4xl shadow-2xl shadow-blue-500/60 animate-pulse">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-4xl shadow-2xl shadow-teal-500/60 animate-pulse">
               L
             </div>
-            <div className="absolute inset-0 rounded-3xl bg-blue-500/30 blur-xl animate-ping"></div>
+            <div className="absolute inset-0 rounded-3xl bg-teal-500/30 blur-xl animate-ping"></div>
           </div>
 
-          <span className="loading loading-spinner loading-lg text-blue-400 mb-5"></span>
+          <span className="loading loading-spinner loading-lg text-teal-400 mb-5"></span>
           
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white text-center drop-shadow-md">
             Cerrando sistema clínico...
@@ -95,7 +95,7 @@ function AppContent() {
           </p>
 
           <div className="mt-6 flex items-center gap-2 text-xs text-slate-400 font-medium bg-white/5 px-4 py-2 rounded-full border border-white/10">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
             Guardando estado del sistema
           </div>
         </div>

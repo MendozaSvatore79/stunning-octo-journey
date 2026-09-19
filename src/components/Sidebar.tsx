@@ -34,6 +34,8 @@ export type DashboardViewType =
   | 'qc-controls'
   | 'qc-results'
   | 'qc-levey-jennings'
+  | 'reagents'
+  | 'analyzers'
   | 'support';
 
 interface SidebarProps {
@@ -82,7 +84,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
         <aside className="bg-base-100 min-h-screen w-64 min-w-[16rem] max-w-[16rem] flex flex-col border-r border-base-200 overflow-x-hidden shrink-0">
           {/* Logo del Sistema */}
           <div className="p-6 border-b border-base-200 flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-md shadow-blue-500/20 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-xl shadow-md shadow-teal-500/20 shrink-0">
               L
             </div>
             <div className="overflow-hidden">
@@ -111,7 +113,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             <li>
               <details open={isLabsActive}>
                 <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isLabsActive ? 'bg-base-200 font-bold' : ''}`}>
-                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
                     <IconFlask className="w-4 h-4" />
                   </div>
                   <span className="truncate">Laboratorios</span>
@@ -153,7 +155,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
               <li>
                 <details open={isPatientsActive}>
                   <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isPatientsActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                    <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
                       <IconUsers className="w-4 h-4" />
                     </div>
                     <span className="truncate">Pacientes</span>
@@ -196,7 +198,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
               <li>
                 <details open={isOrdersActive}>
                   <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isOrdersActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
                       <IconClipboardList className="w-4 h-4" />
                     </div>
                     <span className="truncate">Órdenes de Trabajo</span>
@@ -278,6 +280,38 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
               </li>
             )}
 
+            {/* INVENTARIO DE REACTIVOS (ISO 15189) */}
+            {isOperationalUser && (
+              <li>
+                <button
+                  onClick={() => handleNav('reagents')}
+                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'reagents' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                >
+                  <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                    <IconFlask className="w-4 h-4" />
+                  </div>
+                  <span className="truncate flex-1 text-left">Reactivos e Insumos</span>
+                  <span className="badge badge-primary badge-xs font-bold text-[9px]">STOCK</span>
+                </button>
+              </li>
+            )}
+
+            {/* INTERFAZ DE ANALIZADORES CLÍNICOS (ASTM / HL7) */}
+            {isOperationalUser && (
+              <li>
+                <button
+                  onClick={() => handleNav('analyzers')}
+                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'analyzers' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                    <IconMicroscope className="w-4 h-4" />
+                  </div>
+                  <span className="truncate flex-1 text-left">Analizadores LIS</span>
+                  <span className="badge badge-success text-white badge-xs font-bold text-[9px]">ASTM/HL7</span>
+                </button>
+              </li>
+            )}
+
             {/* OPCIÓN DE MENÚ: SOPORTE TÉCNICO CON GETSTREAM CHAT */}
             <li>
               <button
@@ -295,7 +329,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             {isOperationalUser && (
               <li>
                 <a className="py-2.5 rounded-xl gap-3 text-base-content/85 hover:bg-base-200">
-                  <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
                     <IconFileText className="w-4 h-4" />
                   </div>
                   <span className="truncate">Resultados Clínicos</span>
@@ -312,7 +346,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                   onClick={() => handleNav('add-user')}
                   className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'add-user' ? 'active font-bold' : 'hover:bg-base-200'}`}
                 >
-                  <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                  <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
                     <IconSettings className="w-4 h-4" />
                   </div>
                   <span className="truncate">Gestión de Usuarios</span>

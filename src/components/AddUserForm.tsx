@@ -306,7 +306,7 @@ export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserForm
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-semibold flex items-center gap-1.5">
-                      <IconFlask className="w-4 h-4 text-blue-600" /> Laboratorio Asignado
+                      <IconFlask className="w-4 h-4 text-primary" /> Laboratorio Asignado
                     </span>
                   </label>
                   {isLoadingLabs ? (

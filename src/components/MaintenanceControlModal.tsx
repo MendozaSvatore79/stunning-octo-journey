@@ -60,12 +60,12 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
   };
 
   const moduleItems: { key: keyof MaintenanceModules; label: string; icon: any; color: string }[] = [
-    { key: 'patients', label: 'Módulo de Pacientes', icon: IconUsers, color: 'text-indigo-600' },
-    { key: 'catalog', label: 'Catálogo de Análisis', icon: IconFlask, color: 'text-teal-600' },
-    { key: 'workOrders', label: 'Órdenes de Trabajo', icon: IconClipboardList, color: 'text-amber-600' },
-    { key: 'qualityControl', label: 'Control de Calidad', icon: IconCertificate, color: 'text-rose-600' },
-    { key: 'labsDirectory', label: 'Directorio de Sedes', icon: IconBuilding, color: 'text-blue-600' },
-    { key: 'supportChat', label: 'Soporte Técnico Live', icon: IconHeadphones, color: 'text-purple-600 font-bold' },
+    { key: 'patients', label: 'Módulo de Pacientes', icon: IconUsers, color: 'text-secondary' },
+    { key: 'catalog', label: 'Catálogo de Análisis', icon: IconFlask, color: 'text-primary' },
+    { key: 'workOrders', label: 'Órdenes de Trabajo', icon: IconClipboardList, color: 'text-primary' },
+    { key: 'qualityControl', label: 'Control de Calidad', icon: IconCertificate, color: 'text-accent' },
+    { key: 'labsDirectory', label: 'Directorio de Sedes', icon: IconBuilding, color: 'text-primary' },
+    { key: 'supportChat', label: 'Soporte Técnico Live', icon: IconHeadphones, color: 'text-secondary font-bold' },
   ];
 
   return (
