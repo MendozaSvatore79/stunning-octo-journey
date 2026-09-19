@@ -15,6 +15,9 @@ import {
   IconCertificate,
   IconChartLine,
   IconHeadphones,
+  IconMicroscope,
+  IconClock,
+  IconCheckCircle,
 } from './icons';
 
 export type DashboardViewType =
@@ -97,7 +100,9 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                 onClick={() => handleNav('dashboard')}
                 className={`py-2.5 rounded-xl gap-3 text-base-content ${activeView === 'dashboard' ? 'active font-bold' : 'hover:bg-base-200'}`}
               >
-                <IconLayoutDashboard className="w-5 h-5 text-primary shrink-0" />
+                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                  <IconLayoutDashboard className="w-4 h-4" />
+                </div>
                 <span className="truncate">Dashboard</span>
               </button>
             </li>
@@ -105,35 +110,37 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             {/* Submenú Dropdown de Laboratorios */}
             <li>
               <details open={isLabsActive}>
-                <summary className={`py-2.5 rounded-xl gap-3 text-base-content/80 ${isLabsActive ? 'bg-base-200 font-bold' : ''}`}>
-                  <IconFlask className="w-5 h-5 text-blue-500 shrink-0" />
+                <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isLabsActive ? 'bg-base-200 font-bold' : ''}`}>
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                    <IconFlask className="w-4 h-4" />
+                  </div>
                   <span className="truncate">Laboratorios</span>
                 </summary>
-                <ul>
+                <ul className="mt-1 space-y-0.5">
                   <li>
                     <button
                       onClick={() => handleNav('labs')}
-                      className={`gap-2 text-xs ${activeView === 'labs' ? 'active font-bold' : ''}`}
+                      className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'labs' ? 'active font-bold' : ''}`}
                     >
-                      <IconBuilding className="w-4 h-4 text-blue-600 shrink-0" />
+                      <IconBuilding className="w-3.5 h-3.5 opacity-80 shrink-0" />
                       <span className="truncate">Directorio de Sedes</span>
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => handleNav('analysis-catalog')}
-                      className={`gap-2 text-xs ${activeView === 'analysis-catalog' ? 'active font-bold' : ''}`}
+                      className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'analysis-catalog' ? 'active font-bold' : ''}`}
                     >
-                      <IconFlask className="w-4 h-4 text-teal-600 shrink-0" />
+                      <IconMicroscope className="w-3.5 h-3.5 opacity-80 shrink-0" />
                       <span className="truncate">Catálogo de Servicios</span>
                     </button>
                   </li>
                   <li>
                     <button
                       onClick={() => handleNav('add-user')}
-                      className={`gap-2 text-xs ${activeView === 'add-user' ? 'active font-bold' : ''}`}
+                      className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-user' ? 'active font-bold' : ''}`}
                     >
-                      <IconUserPlus className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <IconUserPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
                       <span className="truncate">Agregar Usuarios</span>
                     </button>
                   </li>
@@ -145,35 +152,37 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             {isOperationalUser && (
               <li>
                 <details open={isPatientsActive}>
-                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/80 ${isPatientsActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <IconUsers className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isPatientsActive ? 'bg-base-200 font-bold' : ''}`}>
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                      <IconUsers className="w-4 h-4" />
+                    </div>
                     <span className="truncate">Pacientes</span>
                   </summary>
-                  <ul>
+                  <ul className="mt-1 space-y-0.5">
                     <li>
                       <button
                         onClick={() => handleNav('patients')}
-                        className={`gap-2 text-xs ${activeView === 'patients' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'patients' ? 'active font-bold' : ''}`}
                       >
-                        <IconUsers className="w-4 h-4 text-primary shrink-0" />
+                        <IconUsers className="w-3.5 h-3.5 opacity-80 shrink-0" />
                         <span className="truncate">Directorio de Pacientes</span>
                       </button>
                     </li>
                     <li>
                       <button
                         onClick={() => handleNav('add-patient')}
-                        className={`gap-2 text-xs ${activeView === 'add-patient' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-patient' ? 'active font-bold' : ''}`}
                       >
-                        <IconUserPlus className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <IconUserPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
                         <span className="truncate">Registrar Nuevo</span>
                       </button>
                     </li>
                     <li>
                       <button
                         onClick={() => handleNav('patient-history')}
-                        className={`gap-2 text-xs ${activeView === 'patient-history' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'patient-history' ? 'active font-bold' : ''}`}
                       >
-                        <IconFolder className="w-4 h-4 text-amber-600 shrink-0" />
+                        <IconFolder className="w-3.5 h-3.5 opacity-80 shrink-0" />
                         <span className="truncate">Historial Clínico</span>
                       </button>
                     </li>
@@ -186,35 +195,37 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             {isOperationalUser && (
               <li>
                 <details open={isOrdersActive}>
-                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/80 ${isOrdersActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <IconClipboardList className="w-5 h-5 text-teal-500 shrink-0" />
+                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isOrdersActive ? 'bg-base-200 font-bold' : ''}`}>
+                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                      <IconClipboardList className="w-4 h-4" />
+                    </div>
                     <span className="truncate">Órdenes de Trabajo</span>
                   </summary>
-                  <ul>
+                  <ul className="mt-1 space-y-0.5">
                     <li>
                       <button
                         onClick={() => handleNav('create-order')}
-                        className={`gap-2 text-xs ${activeView === 'create-order' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'create-order' ? 'active font-bold' : ''}`}
                       >
-                        <IconPlus className="w-4 h-4 text-teal-600 shrink-0" />
+                        <IconPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
                         <span className="truncate">Crear Orden</span>
                       </button>
                     </li>
                     <li>
                       <button
                         onClick={() => handleNav('pending-orders')}
-                        className={`gap-2 text-xs ${activeView === 'pending-orders' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'pending-orders' ? 'active font-bold' : ''}`}
                       >
-                        <IconClipboardList className="w-4 h-4 text-amber-600 shrink-0" />
+                        <IconClock className="w-3.5 h-3.5 text-warning shrink-0" />
                         <span className="truncate">Pendientes</span>
                       </button>
                     </li>
                     <li>
                       <button
                         onClick={() => handleNav('completed-orders')}
-                        className={`gap-2 text-xs ${activeView === 'completed-orders' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'completed-orders' ? 'active font-bold' : ''}`}
                       >
-                        <IconClipboardList className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <IconCheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
                         <span className="truncate">Completadas</span>
                       </button>
                     </li>
@@ -227,36 +238,38 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             {isOperationalUser && (
               <li>
                 <details open={isQCActive}>
-                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/80 ${isQCActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <IconCertificate className="w-5 h-5 text-amber-500 shrink-0" />
+                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isQCActive ? 'bg-base-200 font-bold' : ''}`}>
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                      <IconCertificate className="w-4 h-4" />
+                    </div>
                     <span className="truncate">Control de Calidad</span>
                   </summary>
-                  <ul>
+                  <ul className="mt-1 space-y-0.5">
                     <li>
                       <button
                         onClick={() => handleNav('qc-controls')}
-                        className={`gap-2 text-xs ${activeView === 'qc-controls' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'qc-controls' ? 'active font-bold' : ''}`}
                       >
-                        <IconFlask className="w-4 h-4 text-amber-600 shrink-0" />
+                        <IconFlask className="w-3.5 h-3.5 opacity-80 shrink-0" />
                         <span className="truncate">Controles</span>
                       </button>
                     </li>
                     <li>
                       <button
                         onClick={() => handleNav('qc-results')}
-                        className={`gap-2 text-xs ${activeView === 'qc-results' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'qc-results' ? 'active font-bold' : ''}`}
                       >
-                        <IconClipboardList className="w-4 h-4 text-indigo-600 shrink-0" />
+                        <IconClipboardList className="w-3.5 h-3.5 opacity-80 shrink-0" />
                         <span className="truncate">Resultados a Controles</span>
                       </button>
                     </li>
                     <li>
                       <button
                         onClick={() => handleNav('qc-levey-jennings')}
-                        className={`gap-2 text-xs leading-tight text-left ${activeView === 'qc-levey-jennings' ? 'active font-bold' : ''}`}
+                        className={`gap-2.5 text-xs py-2 rounded-lg leading-tight text-left ${activeView === 'qc-levey-jennings' ? 'active font-bold' : ''}`}
                         title="Gráfica de Levey Jennings"
                       >
-                        <IconChartLine className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <IconChartLine className="w-3.5 h-3.5 text-success shrink-0" />
                         <span className="truncate">Gráfica de Levey Jennings</span>
                       </button>
                     </li>
@@ -269,18 +282,22 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             <li>
               <button
                 onClick={() => handleNav('support')}
-                className={`py-2.5 rounded-xl gap-3 text-base-content/80 ${activeView === 'support' ? 'active font-bold' : ''}`}
+                className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'support' ? 'active font-bold' : 'hover:bg-base-200'}`}
               >
-                <IconHeadphones className="w-5 h-5 text-indigo-500 shrink-0" />
-                <span className="truncate">Soporte Técnico</span>
+                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                  <IconHeadphones className="w-4 h-4" />
+                </div>
+                <span className="truncate flex-1 text-left">Soporte Técnico</span>
                 <span className="badge badge-accent badge-xs font-bold font-mono">LIVE</span>
               </button>
             </li>
 
             {isOperationalUser && (
               <li>
-                <a className="py-2.5 rounded-xl gap-3 text-base-content/80">
-                  <IconFileText className="w-5 h-5 text-sky-500 shrink-0" />
+                <a className="py-2.5 rounded-xl gap-3 text-base-content/85 hover:bg-base-200">
+                  <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
+                    <IconFileText className="w-4 h-4" />
+                  </div>
                   <span className="truncate">Resultados Clínicos</span>
                 </a>
               </li>
@@ -293,9 +310,11 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                 </span>
                 <button
                   onClick={() => handleNav('add-user')}
-                  className={`py-2.5 rounded-xl gap-3 text-base-content/80 ${activeView === 'add-user' ? 'active font-bold' : ''}`}
+                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'add-user' ? 'active font-bold' : 'hover:bg-base-200'}`}
                 >
-                  <IconSettings className="w-5 h-5 text-indigo-600 shrink-0" />
+                  <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                    <IconSettings className="w-4 h-4" />
+                  </div>
                   <span className="truncate">Gestión de Usuarios</span>
                 </button>
               </li>

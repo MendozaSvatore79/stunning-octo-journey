@@ -462,9 +462,19 @@ export default function CaptureResultsModal({
               {/* Botón Copiar Mensaje */}
               <button
                 onClick={handleCopyMessage}
-                className="btn btn-sm btn-ghost w-full rounded-xl text-xs font-semibold text-base-content/70"
+                className="btn btn-sm btn-ghost w-full rounded-xl text-xs font-semibold text-base-content/70 inline-flex items-center justify-center gap-1.5"
               >
-                {copiedSuccess ? '✓ Mensaje Copiado al Portapapeles' : '📋 Copiar Texto del Mensaje'}
+                {copiedSuccess ? (
+                  <>
+                    <IconCheckCircle className="w-4 h-4 text-success" />
+                    <span>Mensaje Copiado al Portapapeles</span>
+                  </>
+                ) : (
+                  <>
+                    <IconClipboardList className="w-4 h-4 text-base-content/60" />
+                    <span>Copiar Texto del Mensaje</span>
+                  </>
+                )}
               </button>
             </div>
 

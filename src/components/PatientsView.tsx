@@ -14,6 +14,7 @@ import {
   IconCalendar,
   IconMail,
   IconPhone,
+  IconSearch,
 } from './icons';
 
 interface PatientsViewProps {
@@ -222,24 +223,16 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
           
           {/* Barra de Búsqueda y Estadísticas */}
           <div className="card bg-base-100 border border-base-200 p-4 sm:p-5 rounded-2xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative flex-1">
+            <label className="input input-bordered flex items-center gap-3 rounded-xl flex-1 focus-within:input-primary text-sm font-medium">
+              <IconSearch className="w-4.5 h-4.5 text-base-content/40 shrink-0" />
               <input
                 type="text"
                 placeholder="Buscar paciente por nombre, correo, teléfono o folio ID..."
-                className="input input-bordered w-full rounded-xl pl-11 focus:input-primary transition-all text-sm font-medium"
+                className="grow"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <svg
-                className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+            </label>
 
             <button
               onClick={() => setActiveTab('register')}

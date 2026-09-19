@@ -7,7 +7,8 @@ import {
   IconPlus,
   IconMapPin,
   IconTrash,
-  IconSparkles,
+  IconSearch,
+  IconFilter,
 } from './icons';
 import LabCard from './LabCard';
 
@@ -89,24 +90,16 @@ export default function LabsDirectoryView({
       <section className="card bg-base-100 border border-base-200 shadow-xs p-3.5 sm:p-4 rounded-2xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Búsqueda en Vivo */}
-          <div className="relative flex-1">
+          <label className="input input-bordered input-sm sm:input-md flex items-center gap-2.5 rounded-xl flex-1 focus-within:input-primary text-xs sm:text-sm font-medium">
+            <IconSearch className="w-4 h-4 text-base-content/40 shrink-0" />
             <input
               type="text"
               placeholder="Buscar sede por nombre, ciudad o dirección..."
-              className="input input-bordered input-sm sm:input-md w-full rounded-xl pl-10 focus:input-primary text-xs sm:text-sm font-medium"
+              className="grow"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <svg
-              className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+          </label>
 
           {/* Filtros y Conmutador de Vista */}
           <div className="flex items-center gap-2.5 shrink-0">
@@ -116,7 +109,7 @@ export default function LabsDirectoryView({
                 filterOwnerOnly ? 'btn-primary' : 'btn-outline border-base-300'
               }`}
             >
-              <IconSparkles className="w-3.5 h-3.5" />
+              <IconFilter className="w-3.5 h-3.5" />
               {filterOwnerOnly ? 'Mis Sedes' : 'Filtrar Mis Sedes'}
             </button>
 

@@ -18,6 +18,7 @@ import {
   IconCheckCircle,
   IconAlertCircle,
   IconX,
+  IconClock,
 } from './icons';
 
 interface WorkOrdersViewProps {
@@ -303,6 +304,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
             activeTab === 'pending' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
+          <IconClock className="w-4 h-4" />
           Pendientes ({pendingOrders.length})
         </button>
 
@@ -312,6 +314,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
             activeTab === 'completed' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
+          <IconCheckCircle className="w-4 h-4" />
           Completadas ({completedOrders.length})
         </button>
       </div>

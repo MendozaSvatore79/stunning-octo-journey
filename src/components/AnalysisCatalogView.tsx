@@ -9,6 +9,8 @@ import {
   IconCheckCircle,
   IconAlertCircle,
   IconX,
+  IconSearch,
+  IconMicroscope,
 } from './icons';
 
 interface AnalysisCatalogViewProps {
@@ -201,24 +203,16 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
 
       {/* Barra de Búsqueda */}
       <section className="card bg-base-100 border border-base-200 shadow-xs p-3.5 sm:p-4 rounded-2xl">
-        <div className="relative">
+        <label className="input input-bordered input-sm sm:input-md flex items-center gap-2.5 rounded-xl w-full focus-within:input-primary text-xs sm:text-sm font-medium">
+          <IconSearch className="w-4 h-4 text-base-content/40 shrink-0" />
           <input
             type="text"
             placeholder="Buscar estudio clínico por nombre, descripción o valores de referencia..."
-            className="input input-bordered input-sm sm:input-md w-full rounded-xl pl-10 focus:input-primary text-xs sm:text-sm font-medium"
+            className="grow"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <svg
-            className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/40"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
+        </label>
       </section>
 
       {/* Listado de Estudios en Tabla */}
@@ -228,7 +222,7 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
         ) : filteredStudies.length === 0 ? (
           <div className="card bg-base-100 border border-dashed border-base-200 p-8 sm:p-12 text-center rounded-2xl">
             <div className="mx-auto w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-3">
-              <IconFlask className="w-6 h-6" />
+              <IconMicroscope className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-base-content mb-1">
               No se encontraron estudios clínicos

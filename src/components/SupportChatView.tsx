@@ -23,6 +23,10 @@ import {
   IconCheck,
   IconSearch,
   IconPlus,
+  IconMessageSquare,
+  IconTicket,
+  IconEye,
+  IconDatabase,
 } from './icons';
 
 interface SupportChannelItem {
@@ -146,34 +150,34 @@ function runClinicalAIChatReply(queryText: string, senderName: string): string {
   const query = (queryText || '').toLowerCase();
 
   if (query.includes('calibr') || query.includes('levey') || query.includes('westgard') || query.includes('control de calidad') || query.includes('iso')) {
-    return `🔬 **Synova • Control de Calidad & Normativa:**\n\n` +
+    return `**Synova • Control de Calidad & Normativa:**\n\n` +
       `Para resolver anomalías en el Control de Calidad o lineamientos ISO 15189:\n` +
       `1. Verifica si la corrida infringió una regla de Westgard (1_3s o 2_2s suelen indicar error aleatorio o sistemático en reactivo).\n` +
       `2. Revisa la fecha de reconstitución y temperatura de almacenamiento del lote de control (2°C a 8°C).\n` +
       `3. Realiza un blanco de reactivo en tu analizador y registra la nueva corrida en el módulo de *Control de Calidad*.\n\n` +
       `Si el sesgo analítico persiste, te recomendamos radicar un **Ticket de Soporte** para escalarlo con el especialista.`;
   } else if (query.includes('fotomet') || query.includes('analizador') || query.includes('equipo') || query.includes('hematolog') || query.includes('alarma') || query.includes('falla')) {
-    return `⚙️ **Synova • Soporte de Equipos y Analizadores:**\n\n` +
+    return `**Synova • Soporte de Equipos y Analizadores:**\n\n` +
       `Recomendaciones para resolución de alertas de equipo:\n` +
       `• **Paso 1:** Ejecuta el ciclo de lavado diario y cebado (*prime*) de líneas fluídicas para descartar microcoágulos o burbujas.\n` +
       `• **Paso 2:** Comprueba los niveles de desecho y reactivos diluyente / lisante.\n` +
       `• **Paso 3:** Reinicia la interfaz de comunicación HL7 / ASTM con el puerto serial o TCP/IP.\n\n` +
       `¿Deseas que aperturemos un Ticket de Mantenimiento con prioridad Alta para tu sede?`;
   } else if (query.includes('orden') || query.includes('paciente') || query.includes('imprim') || query.includes('pdf') || query.includes('resultado')) {
-    return `📋 **Synova • Órdenes y Resultados:**\n\n` +
+    return `**Synova • Órdenes y Resultados:**\n\n` +
       `Para emitir o corregir órdenes de trabajo:\n` +
       `• En el módulo de *Órdenes de Trabajo*, busca la orden por folio o apellido del paciente.\n` +
       `• Para validar valores fuera de rango de referencia, pulsa en *Capturar Resultados*, verifica las unidades y haz clic en *Validar y Completar*.\n` +
       `• Los comprobantes térmicos y resultados PDF membretados se pueden reimprimir en cualquier momento desde la barra superior de acciones.`;
   } else if (query.includes('factur') || query.includes('licencia') || query.includes('pago') || query.includes('plan')) {
-    return `💳 **Synova • Facturación y Licenciamiento:**\n\n` +
+    return `**Synova • Facturación y Licenciamiento:**\n\n` +
       `Tu suscripción de laboratorio se encuentra sincronizada con soporte continuo. Si requieres añadir cupo para más sedes, emitir una factura fiscal o solicitar cotización de reactivos integrados, puedes radicar un Ticket seleccionando la categoría *Facturación y Licencias*.`;
   } else if (query.includes('hola') || query.includes('buenos') || query.includes('buenas') || query.includes('ayuda')) {
-    return `👋 ¡Hola ${senderName || ''}! Soy **Synova**, tu asistente clínica inteligente.\n\n` +
+    return `¡Hola ${senderName || ''}! Soy **Synova**, tu asistente clínica inteligente.\n\n` +
       `Estoy aquí para orientarte con analizadores automatizados, reglas de Westgard, órdenes de laboratorio y expedientes de pacientes.\n\n` +
       `¿En qué proceso o equipo requieres asistencia en este momento?`;
   } else {
-    return `✨ **Synova • Asistente Clínico:**\n\n` +
+    return `**Synova • Asistente Clínico:**\n\n` +
       `He recibido tu consulta: "${queryText}".\n\n` +
       `Para brindarte la mejor asistencia técnica, nuestro equipo de soporte clínico revisará tu caso. Si se trata de un analizador detenido o una urgencia analítica, te recomendamos crear un **Ticket de Soporte** en la pestaña superior para asignarle atención prioritaria inmediata.`;
   }
@@ -365,7 +369,7 @@ export default function SupportChatView() {
     const ticketNumber = `TCK-${randomCode}`;
     const diagnosis = aiDiagnosis || runClinicalAIDiagnosis(formSubject, formDescription, formCategory);
 
-    const aiFirstReply = `🤖 **Respuesta Automática Inicial del Asistente Técnico IA:**\n\n` +
+    const aiFirstReply = `**Respuesta Automática Inicial del Asistente Técnico Synova:**\n\n` +
       `Tu ticket con radicado **#${ticketNumber}** ha sido clasificado exitosamente en la categoría **${formCategory}** con prioridad **${formPriority}**.\n\n` +
       `• **Diagnóstico preliminar:** ${diagnosis.likelyCause}\n` +
       `• **Acción correctiva inmediata sugerida:** ${diagnosis.suggestedAction}\n\n` +
@@ -479,13 +483,17 @@ export default function SupportChatView() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-black text-base-content tracking-tight">Centro de Soporte Técnico Live</h1>
-              <span className="badge badge-primary badge-outline text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg gap-1">
+              <span className="badge badge-primary badge-outline text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg gap-1.5">
                 <IconSparkles className="w-3 h-3 text-primary" />
-                Asistido por IA • Neon DB
+                Asistido por IA
+              </span>
+              <span className="badge badge-secondary badge-outline text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg gap-1.5">
+                <IconDatabase className="w-3 h-3" />
+                Neon DB
               </span>
               {isAdmin && (
-                <span className="badge badge-warning text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg">
-                  <IconShield className="w-3 h-3 mr-1" />
+                <span className="badge badge-warning badge-outline text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg gap-1.5">
+                  <IconShield className="w-3 h-3" />
                   Panel Administrador
                 </span>
               )}
@@ -497,22 +505,24 @@ export default function SupportChatView() {
         </div>
 
         {/* Pestañas Principales en DaisyUI */}
-        <div className="tabs tabs-boxed bg-base-200 p-1.5 rounded-xl shrink-0 self-start md:self-auto">
+        <div className="tabs tabs-boxed bg-base-200 p-1.5 rounded-xl shrink-0 self-start md:self-auto flex items-center gap-1">
           <button
             onClick={() => setActiveTab('chat')}
-            className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 ${
-              activeTab === 'chat' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70'
+            className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 inline-flex items-center ${
+              activeTab === 'chat' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70 hover:text-base-content'
             }`}
           >
-            💬 Chat en Vivo
+            <IconMessageSquare className="w-4 h-4" />
+            <span>Chat en Vivo</span>
           </button>
           <button
             onClick={() => setActiveTab('tickets')}
-            className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 ${
-              activeTab === 'tickets' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70'
+            className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 inline-flex items-center ${
+              activeTab === 'tickets' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70 hover:text-base-content'
             }`}
           >
-            🎫 Tickets & Mesa de Ayuda
+            <IconTicket className="w-4 h-4" />
+            <span>Tickets & Mesa de Ayuda</span>
             {countOpen > 0 && (
               <span className="badge badge-xs badge-error text-white font-black px-1.5 py-0.5 ml-1">
                 {countOpen}
@@ -792,9 +802,10 @@ export default function SupportChatView() {
                         <td className="text-right">
                           <button
                             onClick={() => setSelectedTicket(t)}
-                            className="btn btn-xs btn-outline btn-primary rounded-lg font-bold"
+                            className="btn btn-xs btn-outline btn-primary rounded-lg font-bold inline-flex items-center gap-1.5"
                           >
-                            Ver Detalle
+                            <IconEye className="w-3.5 h-3.5" />
+                            <span>Ver Detalle</span>
                           </button>
                         </td>
                       </tr>
@@ -815,12 +826,14 @@ export default function SupportChatView() {
           <div className="modal-box max-w-2xl bg-base-100 rounded-2xl border border-base-200 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                   <IconSparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-base-content">Crear Ticket Asistido por IA</h3>
-                  <p className="text-xs text-base-content/60">Diagnóstico preliminar y guardado directo en Neon PostgreSQL</p>
+                  <h3 className="font-bold text-base text-base-content">Crear Nuevo Ticket Asistido por IA</h3>
+                  <p className="text-xs text-base-content/50">
+                    Tu caso se persistirá en Neon DB y Synova generará una propuesta de solución inicial
+                  </p>
                 </div>
               </div>
               <button
@@ -843,11 +856,11 @@ export default function SupportChatView() {
                     onChange={(e) => setFormCategory(e.target.value as TicketCategory)}
                     className="select select-bordered select-sm w-full rounded-xl text-xs"
                   >
-                    <option value="EQUIPOS">⚙️ Equipos y Analizadores</option>
-                    <option value="CALIDAD">🔬 Control de Calidad y Calibración</option>
-                    <option value="SISTEMA">💻 Software y Sistema LabSystem</option>
-                    <option value="FACTURACION">💳 Facturación y Licencias</option>
-                    <option value="URGENCIA">🚨 Urgencia Analítica Crítica</option>
+                    <option value="EQUIPOS">Equipos y Analizadores</option>
+                    <option value="CALIDAD">Control de Calidad y Calibración</option>
+                    <option value="SISTEMA">Software y Sistema LabSystem</option>
+                    <option value="FACTURACION">Facturación y Licencias</option>
+                    <option value="URGENCIA">Urgencia Analítica Crítica</option>
                   </select>
                 </div>
 
@@ -1218,7 +1231,7 @@ function AIChatSynchronizedWindow({
         const aiMessage: ChatMessageItem = {
           id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           channelId,
-          sender: '✨ Synova • Asistente Clínico IA',
+          sender: 'Synova • Asistente Clínico IA',
           text: aiReplyContent,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isAgent: true,
@@ -1345,7 +1358,7 @@ function AIChatSynchronizedWindow({
           <div className="chat chat-start">
             <div className="chat-header text-[11px] text-primary mb-1 font-bold flex items-center gap-1.5">
               <IconSparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
-              <span>✨ Synova • Asistente Clínico IA</span>
+              <span>Synova • Asistente Clínico IA</span>
               <span className="badge badge-xs badge-primary font-bold text-[9px]">Escribiendo</span>
             </div>
             <div className="chat-bubble bg-primary/10 text-primary border border-primary/20 rounded-2xl px-4 py-2.5 flex items-center gap-2">

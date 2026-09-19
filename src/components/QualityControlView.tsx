@@ -7,6 +7,9 @@ import {
   IconChartLine,
   IconClipboardList,
   IconFlask,
+  IconCheck,
+  IconAlertTriangle,
+  IconAlertCircle,
 } from './icons';
 
 export interface QualityControlLot {
@@ -487,7 +490,16 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                     }`}
                   >
                     <div className="flex items-center justify-between font-bold">
-                      <span>Resultado de Evaluación Westgard:</span>
+                      <div className="flex items-center gap-1.5">
+                        {lastEvaluatedRun.status === 'OK' ? (
+                          <IconCheck className="w-4 h-4 text-success" />
+                        ) : lastEvaluatedRun.status === 'WARNING' ? (
+                          <IconAlertTriangle className="w-4 h-4 text-warning" />
+                        ) : (
+                          <IconAlertCircle className="w-4 h-4 text-error" />
+                        )}
+                        <span>Resultado de Evaluación Westgard:</span>
+                      </div>
                       <span className="font-mono text-xs sm:text-sm">Z = {lastEvaluatedRun.zScore} SD</span>
                     </div>
                     <p className="font-bold text-sm">{lastEvaluatedRun.westgardRule}</p>
@@ -526,7 +538,7 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                             <td className="text-center font-mono font-bold">{res.zScore > 0 ? `+${res.zScore}` : res.zScore}</td>
                             <td>
                               <span
-                                className={`badge badge-xs font-bold text-[10px] ${
+                                className={`badge badge-xs font-bold text-[10px] gap-1 ${
                                   res.status === 'OK'
                                     ? 'badge-success text-white'
                                     : res.status === 'WARNING'
@@ -534,6 +546,13 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
                                     : 'badge-error text-white'
                                 }`}
                               >
+                                {res.status === 'OK' ? (
+                                  <IconCheck className="w-2.5 h-2.5" />
+                                ) : res.status === 'WARNING' ? (
+                                  <IconAlertTriangle className="w-2.5 h-2.5" />
+                                ) : (
+                                  <IconAlertCircle className="w-2.5 h-2.5" />
+                                )}
                                 {res.status}
                               </span>
                             </td>

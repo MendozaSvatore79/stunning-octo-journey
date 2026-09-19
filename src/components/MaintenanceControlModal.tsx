@@ -10,6 +10,10 @@ import {
   IconCertificate,
   IconBuilding,
   IconHeadphones,
+  IconAlertTriangle,
+  IconEye,
+  IconCheck,
+  IconWrench,
 } from './icons';
 
 interface MaintenanceControlModalProps {
@@ -94,7 +98,8 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-base-content text-sm">🚨 Mantenimiento Global (Todo el Sistema)</span>
+                  <IconAlertTriangle className="w-4 h-4 text-error shrink-0" />
+                  <span className="font-bold text-base-content text-sm">Mantenimiento Global (Todo el Sistema)</span>
                   {config.globalMaintenance && (
                     <span className="badge badge-error text-[10px] font-bold text-white uppercase px-2 py-0.5 animate-pulse">ACTIVO</span>
                   )}
@@ -118,9 +123,10 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
               </span>
               <button
                 onClick={handlePreviewMaintenanceLanding}
-                className="btn btn-xs btn-outline rounded-lg font-bold gap-1"
+                className="btn btn-xs btn-outline rounded-lg font-bold inline-flex items-center gap-1.5"
               >
-                👁️ Ver Pantalla de Mantenimiento
+                <IconEye className="w-3.5 h-3.5" />
+                <span>Ver Pantalla de Mantenimiento</span>
               </button>
             </div>
           </div>
@@ -135,9 +141,19 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
 
               <button
                 onClick={handleCopyVipLink}
-                className="btn btn-xs btn-primary text-primary-content font-bold rounded-lg gap-1 shadow-xs"
+                className="btn btn-xs btn-primary text-primary-content font-bold rounded-lg inline-flex items-center gap-1.5 shadow-xs"
               >
-                {copiedLink ? '✓ ¡URL VIP Copiada!' : '📋 Copiar URL VIP Segura'}
+                {copiedLink ? (
+                  <>
+                    <IconCheck className="w-3.5 h-3.5" />
+                    <span>¡URL VIP Copiada!</span>
+                  </>
+                ) : (
+                  <>
+                    <IconClipboardList className="w-3.5 h-3.5" />
+                    <span>Copiar URL VIP Segura</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -172,8 +188,9 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
 
           {/* MANTENIMIENTO POR MÓDULOS ESPECÍFICOS */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase text-base-content/60 tracking-wider">
-              🛠️ Inhabilitar Módulos Individuales
+            <h3 className="text-xs font-bold uppercase text-base-content/60 tracking-wider flex items-center gap-2">
+              <IconWrench className="w-4 h-4 text-base-content/70" />
+              <span>Inhabilitar Módulos Individuales</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
