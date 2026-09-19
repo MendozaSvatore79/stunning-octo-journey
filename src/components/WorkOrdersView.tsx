@@ -86,10 +86,34 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
   const [sendingWhatsAppOrderId, setSendingWhatsAppOrderId] = useState<string | null>(null);
 
+  // Sistema de Notificaciones Flotantes Tipo Toastify
+  interface ToastNotification {
+    id: number;
+    type: 'success' | 'error' | 'info';
+    title: string;
+    message: string;
+  }
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title?: string) => {
+    const id = Date.now() + Math.random();
+    const defaultTitle = type === 'success' ? 'Despacho UltraMsg' : type === 'error' ? 'Aviso del Sistema' : 'Información';
+    const newToast: ToastNotification = { id, type, title: title || defaultTitle, message };
+    setToasts((prev) => [...prev, newToast]);
+
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4500);
+  };
+
+  const removeToast = (id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
   // Despacho 100% Automático de WhatsApp en Segundo Plano (UltraMsg)
   const handleSendAutomatedWhatsApp = async (ord: WorkOrder) => {
     if (!ord.patient?.phone) {
-      alert('El paciente no tiene un número telefónico registrado.');
+      addToast('El paciente no cuenta con un número de celular registrado.', 'error', '⚠️ Sin Teléfono');
       return;
     }
     setSendingWhatsAppOrderId(ord.id);
@@ -99,13 +123,24 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       const res = await api.post<{ success: boolean; phone: string; folio: string | number; message: string }>(
         `/orders/${ord.id}/whatsapp`
       );
-      setSuccessMsg(
-        `✅ WhatsApp automático enviado con éxito al paciente +${res.data?.phone || ord.patient.phone} (Folio #${ord.folio || ord.id.slice(0, 6)}) vía UltraMsg.`
+      // Formateo higiénico de teléfono sin duplicar '+'
+      const rawDigits = (res.data?.phone || ord.patient.phone || '').replace(/[^\d]/g, '');
+      const cleanFormattedPhone = rawDigits.startsWith('52') ? `+${rawDigits}` : `+52${rawDigits}`;
+      const folioNumber = ord.folio || ord.id.slice(0, 6);
+
+      addToast(
+        `WhatsApp automático enviado con éxito al paciente ${cleanFormattedPhone} (Folio #${folioNumber}) vía UltraMsg.`,
+        'success',
+        '✅ Despacho Automático UltraMsg'
       );
     } catch (err: any) {
       console.error('Error al enviar WhatsApp automático:', err);
       const msg = err?.response?.data?.message || err?.message || 'Error de conexión con el servicio UltraMsg';
-      setErrorMsg(`No se pudo enviar WhatsApp automático: ${msg}.`);
+      addToast(
+        `No se pudo enviar WhatsApp automático: ${msg}.`,
+        'error',
+        '⚠️ Error UltraMsg'
+      );
       const fallbackUrl = getWhatsAppShareUrl(ord);
       if (confirm(`El servicio automático UltraMsg no respondió (${msg}). ¿Deseas abrir WhatsApp Web manualmente como respaldo?`)) {
         window.open(fallbackUrl, '_blank');
@@ -129,6 +164,14 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  // Convertir automáticamente mensajes de éxito en Toasts flotantes
+  useEffect(() => {
+    if (successMsg) {
+      addToast(successMsg, 'success', '✅ Notificación del Sistema');
+      setSuccessMsg(null);
+    }
+  }, [successMsg]);
 
   // Cargar catálogos completos desde el backend
   const loadInitialData = useCallback(async () => {
@@ -298,7 +341,63 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   const completedOrders = useMemo(() => orders.filter((o) => o.status === 'COMPLETED'), [orders]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in relative">
+      {/* NOTIFICACIONES FLOTANTES TIPO TOASTIFY */}
+      <div className="fixed top-5 right-5 z-[350] flex flex-col gap-3 max-w-sm sm:max-w-md w-full pointer-events-none px-4 sm:px-0">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto shadow-2xl rounded-2xl p-4 border flex items-start gap-3 backdrop-blur-md transition-all duration-300 transform translate-y-0 opacity-100 animate-in fade-in slide-in-from-top-4 ${
+              toast.type === 'success'
+                ? 'bg-slate-900/95 text-white border-emerald-500/50 shadow-emerald-950/40'
+                : toast.type === 'error'
+                ? 'bg-slate-900/95 text-white border-rose-500/50 shadow-rose-950/40'
+                : 'bg-slate-900/95 text-white border-slate-700/50 shadow-slate-950/40'
+            }`}
+          >
+            <div
+              className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                toast.type === 'success'
+                  ? 'bg-emerald-500/20 text-emerald-400'
+                  : toast.type === 'error'
+                  ? 'bg-rose-500/20 text-rose-400'
+                  : 'bg-primary/20 text-primary'
+              }`}
+            >
+              {toast.type === 'success' ? (
+                <IconCheckCircle className="w-5 h-5" />
+              ) : (
+                <IconAlertCircle className="w-5 h-5" />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0 pr-1">
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className={`font-black text-xs uppercase tracking-wider ${
+                    toast.type === 'success' ? 'text-emerald-400' : 'text-rose-400'
+                  }`}
+                >
+                  {toast.title}
+                </span>
+                <span className="text-[10px] text-white/50 font-mono">ahora</span>
+              </div>
+              <p className="text-xs font-semibold text-white/95 leading-relaxed mt-1 break-words">
+                {toast.message}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => removeToast(toast.id)}
+              className="btn btn-xs btn-circle btn-ghost text-white/60 hover:text-white hover:bg-white/10 shrink-0"
+              title="Cerrar notificación"
+            >
+              <IconX className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+      </div>
       
       {/* Barra de Acciones de Impresión Superior (Ficha de Paciente) */}
       <section className="card bg-base-100 border border-base-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -432,14 +531,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         </button>
       </div>
 
-      {/* ALERTAS */}
-      {successMsg && (
-        <div className="alert alert-success text-white shadow-md rounded-2xl py-3 animate-fade-in">
-          <IconCheckCircle className="w-6 h-6 shrink-0" />
-          <div className="font-semibold text-sm">{successMsg}</div>
-        </div>
-      )}
-
+      {/* ALERTAS ESTÁTICAS DE FORMULARIO */}
       {errorMsg && (
         <div className="alert alert-error text-white shadow-md rounded-2xl py-3 animate-fade-in">
           <IconAlertCircle className="w-6 h-6 shrink-0" />
