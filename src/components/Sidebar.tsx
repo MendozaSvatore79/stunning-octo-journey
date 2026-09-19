@@ -1,6 +1,7 @@
 // src/components/Sidebar.tsx
 import { type ReactNode } from 'react';
 import { useUserContext } from '../hooks/useUserContext';
+import { useLabBranding } from '../context/LabBrandingContext';
 import {
   IconLayoutDashboard,
   IconFlask,
@@ -36,7 +37,8 @@ export type DashboardViewType =
   | 'qc-levey-jennings'
   | 'reagents'
   | 'analyzers'
-  | 'support';
+  | 'support'
+  | 'general-settings';
 
 interface SidebarProps {
   children: ReactNode;
@@ -46,6 +48,7 @@ interface SidebarProps {
 
 export default function Sidebar({ children, activeView = 'dashboard', onSelectView }: SidebarProps) {
   const { role, isAdmin, isLoading } = useUserContext();
+  const { activeBranding } = useLabBranding();
 
   if (isLoading) {
     return (
@@ -82,15 +85,25 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
 
         {/* Sidebar con Ancho Fijo Rígido w-64 (16rem) Estricto para Evitar Deformaciones al Desplegar */}
         <aside className="bg-base-100 min-h-screen w-64 min-w-[16rem] max-w-[16rem] flex flex-col border-r border-base-200 overflow-x-hidden shrink-0">
-          {/* Logo del Sistema */}
-          <div className="p-6 border-b border-base-200 flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-xl shadow-md shadow-teal-500/20 shrink-0">
-              L
-            </div>
-            <div className="overflow-hidden">
-              <span className="text-xl font-black text-base-content tracking-tight block leading-none truncate">LabSystem</span>
-              <span className="text-[10px] uppercase font-bold text-primary tracking-widest block mt-1 truncate">
-                {isAdmin ? 'Panel Administrador' : 'Portal Clínico'}
+          {/* Logo del Sistema Dinámico por Sede */}
+          <div className="p-5 border-b border-base-200 flex items-center gap-3 shrink-0">
+            {activeBranding.logo ? (
+              <img
+                src={activeBranding.logo}
+                alt={activeBranding.name}
+                className="w-10 h-10 rounded-2xl object-cover border border-base-300 shadow-sm shrink-0 bg-white"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-xl shadow-md shadow-teal-500/20 shrink-0">
+                {activeBranding.name ? activeBranding.name.charAt(0).toUpperCase() : 'L'}
+              </div>
+            )}
+            <div className="overflow-hidden min-w-0">
+              <span className="text-lg font-black text-base-content tracking-tight block leading-tight truncate">
+                {activeBranding.name || 'LabSystem'}
+              </span>
+              <span className="text-[10px] uppercase font-bold text-primary tracking-widest block mt-0.5 truncate">
+                {activeBranding.subtitle || (isAdmin ? 'Panel Administrador' : 'Portal Clínico')}
               </span>
             </div>
           </div>
@@ -340,8 +353,19 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
             {isAdmin && (
               <li className="mt-2 pt-2 border-t border-base-200">
                 <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
-                  Administración Total
+                  Administración y Configuración
                 </span>
+                <button
+                  onClick={() => handleNav('general-settings')}
+                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                  title="Configurar logotipo, nombre comercial e identidad de la sede"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                    <IconBuilding className="w-4 h-4" />
+                  </div>
+                  <span className="truncate">Configuración General</span>
+                </button>
+
                 <button
                   onClick={() => handleNav('add-user')}
                   className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'add-user' ? 'active font-bold' : 'hover:bg-base-200'}`}

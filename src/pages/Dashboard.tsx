@@ -24,6 +24,8 @@ const SupportChatView = lazy(() => import('../components/SupportChatView'));
 const MaintenanceControlModal = lazy(() => import('../components/MaintenanceControlModal'));
 const ReagentsInventoryView = lazy(() => import('../components/ReagentsInventoryView'));
 const AnalyzerInterfaceView = lazy(() => import('../components/AnalyzerInterfaceView'));
+const GeneralSettingsView = lazy(() => import('../components/GeneralSettingsView'));
+import { useLabBranding } from '../context/LabBrandingContext';
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
 
@@ -31,6 +33,7 @@ export default function Dashboard() {
   const { user } = useUser();
   const { isAdmin, role, isLoading: isUserLoading } = useUserContext();
   const { config, isVipPassed } = useMaintenance();
+  const { activeBranding } = useLabBranding();
   const api = useApi();
 
   const [activeView, setActiveView] = useState<DashboardViewType>('dashboard');
@@ -129,8 +132,15 @@ export default function Dashboard() {
         </div>
 
         <div className="flex-1 items-center gap-3">
-          <a className="btn btn-ghost text-xl font-black text-primary normal-case lg:hidden">
-            LabSystem
+          <a className="btn btn-ghost text-lg font-black text-primary normal-case lg:hidden gap-2">
+            {activeBranding.logo ? (
+              <img src={activeBranding.logo} alt="Logo" className="w-7 h-7 rounded-lg object-contain bg-white" />
+            ) : (
+              <span className="w-7 h-7 rounded-lg bg-primary text-primary-content flex items-center justify-center font-bold text-xs">
+                {activeBranding.name?.charAt(0) || 'L'}
+              </span>
+            )}
+            <span className="truncate max-w-[140px]">{activeBranding.name || 'LabSystem'}</span>
           </a>
 
           <span className="hidden sm:inline-flex badge badge-ghost border border-base-200 py-2.5 px-3 text-xs font-semibold text-base-content/80 gap-2">
@@ -275,6 +285,8 @@ export default function Dashboard() {
               )
             ) : activeView === 'add-user' ? (
               <AddUserForm labs={labs} onCancel={() => setActiveView('dashboard')} />
+            ) : activeView === 'general-settings' ? (
+              <GeneralSettingsView labs={labs} />
             ) : isAdmin ? (
               <AdminDashboardView
                 userName={user?.firstName || undefined}

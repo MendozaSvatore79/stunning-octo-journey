@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard.tsx';
 import PublicReportView from './components/PublicReportView.tsx';
 import { UserProvider } from './context/UserContext.tsx';
 import { MaintenanceProvider, useMaintenance } from './context/MaintenanceContext.tsx';
+import { LabBrandingProvider } from './context/LabBrandingContext.tsx';
 import GlobalMaintenanceLanding from './components/GlobalMaintenanceLanding.tsx';
 
 function AppContent() {
@@ -131,7 +132,9 @@ export default function App() {
   return (
     <UserProvider>
       <MaintenanceProvider>
-        <AppContent />
+        <LabBrandingProvider>
+          <AppContent />
+        </LabBrandingProvider>
       </MaintenanceProvider>
     </UserProvider>
   );
