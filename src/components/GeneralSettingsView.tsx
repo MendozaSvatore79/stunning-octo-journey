@@ -18,8 +18,82 @@ interface GeneralSettingsViewProps {
   labs: Laboratory[];
 }
 
+/**
+ * Optimiza y comprime la imagen a través de HTML5 Canvas.
+ * Garantiza un tamaño ultraligero (~20KB - 50KB) en WebP/JPEG,
+ * lo que evita el límite HTTP 413 de Express y agiliza la persistencia en base de datos.
+ */
+const compressImage = (file: File, maxDim = 400, quality = 0.85): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (file.type === 'image/svg+xml') {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        try {
+          const webpData = canvas.toDataURL('image/webp', quality);
+          if (webpData.startsWith('data:image/webp')) {
+            resolve(webpData);
+            return;
+          }
+        } catch {
+          // Fallback a JPEG / PNG
+        }
+
+        const isPng = file.type === 'image/png';
+        resolve(canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) {
-  const { activeBranding, selectedLabId, setSelectedLabId, updateBranding, resetToDefault, canEditBranding } = useLabBranding();
+  const {
+    activeBranding,
+    selectedLabId,
+    setSelectedLabId,
+    updateBranding,
+    resetToDefault,
+    canEditBranding,
+    labs: contextLabs,
+  } = useLabBranding();
+
+  const availableLabs = labs && labs.length > 0 ? labs : contextLabs || [];
 
   const [name, setName] = useState(activeBranding.name);
   const [subtitle, setSubtitle] = useState(activeBranding.subtitle || '');
@@ -30,26 +104,52 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
   const [sanitaryLicense, setSanitaryLicense] = useState(activeBranding.sanitaryLicense || '');
   const [responsibleName, setResponsibleName] = useState(activeBranding.responsibleName || '');
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCompressingLogo, setIsCompressingLogo] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Sincronizar campos cuando cambia el branding activo o el laboratorio
-  useEffect(() => {
-    setName(activeBranding.name);
-    setSubtitle(activeBranding.subtitle || '');
-    setLogoPreview(activeBranding.logo || '');
-    setPhone(activeBranding.phone || '');
-    setEmail(activeBranding.email || '');
-    setAddress(activeBranding.address || '');
-    setSanitaryLicense(activeBranding.sanitaryLicense || '');
-    setResponsibleName(activeBranding.responsibleName || '');
-    setSuccessMsg(null);
-    setErrorMsg(null);
-  }, [activeBranding, selectedLabId]);
+  // Referencias para evitar que re-renders o peticiones en segundo plano borren la imagen subida
+  const isDirtyLogoRef = useRef(false);
+  const lastLoadedLabIdRef = useRef<string>(selectedLabId);
 
-  // Manejador de subida de imagen de logo (convertido a Base64 local)
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Sincronizar automáticamente selectedLabId si es 'default' pero ya existen laboratorios
+  useEffect(() => {
+    if (availableLabs.length > 0 && (!selectedLabId || selectedLabId === 'default')) {
+      setSelectedLabId(availableLabs[0].id);
+    }
+  }, [availableLabs, selectedLabId, setSelectedLabId]);
+
+  // Sincronizar campos cuando cambia el laboratorio seleccionado
+  useEffect(() => {
+    if (lastLoadedLabIdRef.current !== selectedLabId) {
+      lastLoadedLabIdRef.current = selectedLabId;
+      isDirtyLogoRef.current = false;
+      setName(activeBranding.name || '');
+      setSubtitle(activeBranding.subtitle || '');
+      setLogoPreview(activeBranding.logo || '');
+      setPhone(activeBranding.phone || '');
+      setEmail(activeBranding.email || '');
+      setAddress(activeBranding.address || '');
+      setSanitaryLicense(activeBranding.sanitaryLicense || '');
+      setResponsibleName(activeBranding.responsibleName || '');
+      setSuccessMsg(null);
+      setErrorMsg(null);
+      return;
+    }
+
+    // Si seguimos en el mismo laboratorio y el usuario no ha subido una imagen nueva sin guardar
+    if (!isDirtyLogoRef.current && activeBranding.logo && activeBranding.logo !== logoPreview) {
+      setLogoPreview(activeBranding.logo);
+    }
+    if (!name && activeBranding.name) {
+      setName(activeBranding.name);
+    }
+  }, [selectedLabId, activeBranding]);
+
+  // Manejador de subida de imagen de logo con compresión automática
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -58,28 +158,34 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setErrorMsg('El logotipo no debe superar los 2 MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('El archivo original no debe superar los 5 MB.');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setLogoPreview(result);
+    try {
+      setIsCompressingLogo(true);
       setErrorMsg(null);
-    };
-    reader.readAsDataURL(file);
+      const compressed = await compressImage(file, 400, 0.85);
+      setLogoPreview(compressed);
+      isDirtyLogoRef.current = true; // Protegido contra sobreescrituras automáticas
+    } catch (err) {
+      console.error('Error al procesar la imagen:', err);
+      setErrorMsg('No se pudo procesar la imagen seleccionada. Por favor prueba con otra imagen.');
+    } finally {
+      setIsCompressingLogo(false);
+    }
   };
 
   const handleRemoveLogo = () => {
     setLogoPreview('');
+    isDirtyLogoRef.current = true;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canEditBranding) {
       setErrorMsg('Solo el Administrador del laboratorio puede modificar la identidad y logotipo de esta sede.');
@@ -91,26 +197,55 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
       return;
     }
 
-    updateBranding(selectedLabId, {
-      name: name.trim(),
-      subtitle: subtitle.trim() || undefined,
-      logo: logoPreview || undefined,
-      phone: phone.trim() || undefined,
-      email: email.trim() || undefined,
-      address: address.trim() || undefined,
-      sanitaryLicense: sanitaryLicense.trim() || undefined,
-      responsibleName: responsibleName.trim() || undefined,
-    });
+    const effectiveLabId =
+      (!selectedLabId || selectedLabId === 'default') && availableLabs.length > 0
+        ? availableLabs[0].id
+        : selectedLabId;
 
-    setSuccessMsg('¡Configuración de identidad y logotipo actualizada con éxito para esta sede!');
-    setTimeout(() => {
-      setSuccessMsg(null);
-    }, 4000);
+    setIsSaving(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const result = await updateBranding(effectiveLabId, {
+        name: name.trim(),
+        subtitle: subtitle.trim() || undefined,
+        logo: logoPreview || undefined,
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+        address: address.trim() || undefined,
+        sanitaryLicense: sanitaryLicense.trim() || undefined,
+        responsibleName: responsibleName.trim() || undefined,
+      });
+
+      isDirtyLogoRef.current = false;
+
+      if (result.savedToDb) {
+        setSuccessMsg('¡Configuración de sede y logotipo guardados con éxito en la base de datos!');
+      } else if (result.error) {
+        setErrorMsg(`Guardado localmente, pero el servidor reportó: ${result.error}`);
+      } else {
+        setSuccessMsg('¡Configuración de identidad y logotipo actualizada con éxito!');
+      }
+    } catch (err: any) {
+      console.error('Error al guardar branding:', err);
+      setErrorMsg('Ocurrió un error inesperado al intentar guardar los cambios.');
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => {
+        setSuccessMsg(null);
+      }, 5000);
+    }
   };
 
   const handleReset = () => {
     if (confirm('¿Deseas restablecer la identidad y el logotipo de esta sede a sus valores iniciales?')) {
-      resetToDefault(selectedLabId);
+      const effectiveLabId =
+        (!selectedLabId || selectedLabId === 'default') && availableLabs.length > 0
+          ? availableLabs[0].id
+          : selectedLabId;
+      resetToDefault(effectiveLabId);
+      isDirtyLogoRef.current = false;
       setSuccessMsg('Se restableció la identidad a los valores de catálogo.');
       setTimeout(() => setSuccessMsg(null), 3000);
     }
@@ -149,12 +284,12 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                 onChange={(e) => setSelectedLabId(e.target.value)}
                 className="select select-xs select-bordered font-bold text-primary bg-base-100 rounded-xl focus:select-primary"
               >
-                {labs.map((l) => (
+                {availableLabs.map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.name} {l.city ? `(${l.city})` : ''}
                   </option>
                 ))}
-                {labs.length === 0 && <option value="default">LabSystem Central</option>}
+                {availableLabs.length === 0 && <option value="default">LabSystem Central</option>}
               </select>
             </div>
           </div>
@@ -197,12 +332,14 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
         <div className="lg:col-span-1 space-y-6">
           {/* Tarjeta de Previsualización en Barra Lateral (Sidebar) */}
           <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-base-200 pb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-base-content/60 flex items-center gap-1.5">
-                <IconSparkles className="w-3.5 h-3.5 text-primary" />
-                Vista Previa en Barra Lateral
+            <div className="flex items-center justify-between gap-2 border-b border-base-200/80 pb-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-base-content/70 flex items-center gap-1.5 min-w-0">
+                <IconSparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="truncate">Vista Previa Lateral</span>
               </span>
-              <span className="badge badge-xs badge-success text-success-content font-bold">En Vivo</span>
+              <span className="badge badge-sm badge-success text-success-content font-bold whitespace-nowrap shrink-0 px-2.5 py-0.5 text-[11px] shadow-xs">
+                ● En Vivo
+              </span>
             </div>
 
             {/* Simulación del Header del Sidebar */}
@@ -289,7 +426,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                     <button
                       type="button"
                       onClick={handleRemoveLogo}
-                      disabled={!canEditBranding}
+                      disabled={!canEditBranding || isSaving || isCompressingLogo}
                       className="absolute -top-2 -right-2 btn btn-circle btn-error btn-xs text-white shadow-md"
                       title="Eliminar Logotipo"
                     >
@@ -310,25 +447,34 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                       ref={fileInputRef}
                       accept="image/*"
                       onChange={handleLogoUpload}
-                      disabled={!canEditBranding}
+                      disabled={!canEditBranding || isSaving || isCompressingLogo}
                       className="hidden"
                       id="logo-file-input"
                     />
                     <label
                       htmlFor="logo-file-input"
-                      className={`btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-1.5 cursor-pointer ${
-                        !canEditBranding ? 'btn-disabled opacity-50' : ''
+                      className={`btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-1.5 cursor-pointer shadow-xs ${
+                        !canEditBranding || isSaving || isCompressingLogo ? 'btn-disabled opacity-50' : ''
                       }`}
                     >
-                      <IconSparkles className="w-3.5 h-3.5" />
-                      Subir Imagen / Logo
+                      {isCompressingLogo ? (
+                        <>
+                          <span className="loading loading-spinner loading-xs"></span>
+                          Optimizando...
+                        </>
+                      ) : (
+                        <>
+                          <IconSparkles className="w-3.5 h-3.5" />
+                          Subir Imagen / Logo
+                        </>
+                      )}
                     </label>
 
                     {logoPreview && (
                       <button
                         type="button"
                         onClick={handleRemoveLogo}
-                        disabled={!canEditBranding}
+                        disabled={!canEditBranding || isSaving || isCompressingLogo}
                         className="btn btn-sm btn-ghost text-error rounded-xl font-semibold"
                       >
                         Quitar
@@ -336,7 +482,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                     )}
                   </div>
                   <p className="text-[11px] text-base-content/60 leading-normal">
-                    Formatos recomendados: <strong>PNG transparente, JPG o SVG</strong>. Tamaño máximo de 2 MB. La imagen se optimiza automáticamente para pantallas y reportes PDF.
+                    Formatos: <strong>PNG transparente, JPG, WebP o SVG</strong>. La imagen se optimiza automáticamente a alta definición (~30 KB) para máxima rapidez y compatibilidad con base de datos y reportes clínicos.
                   </p>
                 </div>
               </div>
@@ -355,7 +501,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                   placeholder="Ej. LabSystem Central"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  disabled={!canEditBranding}
+                  disabled={!canEditBranding || isSaving}
                   className="input input-bordered input-sm rounded-xl font-bold text-sm focus:input-primary"
                   required
                 />
@@ -373,7 +519,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                   placeholder="Ej. Sede Matriz / Análisis Clínicos"
                   value={subtitle}
                   onChange={(e) => setSubtitle(e.target.value)}
-                  disabled={!canEditBranding}
+                  disabled={!canEditBranding || isSaving}
                   className="input input-bordered input-sm rounded-xl font-semibold text-xs focus:input-primary"
                 />
                 <span className="text-[10px] text-base-content/50 mt-1">
@@ -398,7 +544,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                   placeholder="Ej. SSA-24-COFEPRIS-00891"
                   value={sanitaryLicense}
                   onChange={(e) => setSanitaryLicense(e.target.value)}
-                  disabled={!canEditBranding}
+                  disabled={!canEditBranding || isSaving}
                   className="input input-bordered input-sm rounded-xl font-mono text-xs focus:input-primary"
                 />
               </div>
@@ -412,7 +558,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                   placeholder="Ej. Q.F.B. Juan Carlos Mendoza"
                   value={responsibleName}
                   onChange={(e) => setResponsibleName(e.target.value)}
-                  disabled={!canEditBranding}
+                  disabled={!canEditBranding || isSaving}
                   className="input input-bordered input-sm rounded-xl font-medium text-xs focus:input-primary"
                 />
               </div>
@@ -428,7 +574,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                   placeholder="Ej. +52 921 123 4567"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  disabled={!canEditBranding}
+                  disabled={!canEditBranding || isSaving}
                   className="input input-bordered input-sm rounded-xl font-medium text-xs focus:input-primary"
                 />
               </div>
@@ -444,7 +590,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                   placeholder="laboratorio@ejemplo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={!canEditBranding}
+                  disabled={!canEditBranding || isSaving}
                   className="input input-bordered input-sm rounded-xl font-medium text-xs focus:input-primary"
                 />
               </div>
@@ -459,7 +605,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
                 placeholder="Calle, Número, Colonia, Ciudad, Estado, C.P."
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                disabled={!canEditBranding}
+                disabled={!canEditBranding || isSaving}
                 className="textarea textarea-bordered rounded-xl text-xs font-medium focus:textarea-primary"
               />
             </div>
@@ -469,7 +615,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
               <button
                 type="button"
                 onClick={handleReset}
-                disabled={!canEditBranding}
+                disabled={!canEditBranding || isSaving}
                 className="btn btn-sm btn-ghost text-xs text-base-content/60 hover:text-error"
               >
                 Restablecer a Valores de Fábrica
@@ -477,11 +623,20 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
 
               <button
                 type="submit"
-                disabled={!canEditBranding}
+                disabled={!canEditBranding || isSaving}
                 className="btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-2 shadow-xs"
               >
-                <IconCheckCircle className="w-4 h-4" />
-                Guardar Configuración de Sede
+                {isSaving ? (
+                  <>
+                    <span className="loading loading-spinner loading-xs"></span>
+                    Guardando en Base de Datos...
+                  </>
+                ) : (
+                  <>
+                    <IconCheckCircle className="w-4 h-4" />
+                    Guardar Configuración de Sede
+                  </>
+                )}
               </button>
             </div>
           </div>
