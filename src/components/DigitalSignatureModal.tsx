@@ -47,6 +47,18 @@ export default function DigitalSignatureModal({ isOpen, onClose, onSaved }: Digi
   if (!isOpen) return null;
 
   // Manejo de trazo en Canvas (Mouse y Touch)
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e ? (e.touches[0] ? e.touches[0].clientX : 0) : e.clientX;
+    const clientY = 'touches' in e ? (e.touches[0] ? e.touches[0].clientY : 0) : e.clientY;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     setIsDrawing(true);
     setHasDrawn(true);
@@ -55,9 +67,7 @@ export default function DigitalSignatureModal({ isOpen, onClose, onSaved }: Digi
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const { x, y } = getCoordinates(e, canvas);
 
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -74,9 +84,7 @@ export default function DigitalSignatureModal({ isOpen, onClose, onSaved }: Digi
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+    const { x, y } = getCoordinates(e, canvas);
 
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -139,19 +147,19 @@ export default function DigitalSignatureModal({ isOpen, onClose, onSaved }: Digi
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in overflow-y-auto">
-      <div className="bg-base-100 rounded-3xl border border-base-200 shadow-2xl max-w-lg w-full overflow-hidden p-6 space-y-5">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-2.5 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in overflow-y-auto">
+      <div className="bg-base-100 rounded-3xl border border-base-200 shadow-2xl max-w-[95vw] sm:max-w-lg w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
         {/* Encabezado */}
         <div className="flex items-center justify-between border-b border-base-200 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
-              <IconAward className="w-5 h-5" />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shrink-0">
+              <IconAward className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-base-content leading-tight">
+              <h3 className="font-bold text-sm sm:text-base text-base-content leading-tight">
                 Firma Digital del Responsable Sanitario
               </h3>
-              <p className="text-xs text-base-content/60">
+              <p className="text-[11px] sm:text-xs text-base-content/60">
                 Aparecerá avalada con Cédula y Sello SHA-256 en cada informe PDF
               </p>
             </div>

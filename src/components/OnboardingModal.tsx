@@ -47,29 +47,29 @@ export default function OnboardingModal({
   };
 
   return (
-    <dialog className="modal modal-open backdrop-blur-md">
-      <div className="modal-box max-w-2xl border border-base-300 bg-base-100 p-6 sm:p-8 shadow-2xl rounded-3xl">
+    <dialog className="modal modal-open backdrop-blur-md p-2 sm:p-4">
+      <div className="modal-box w-full max-w-[95vw] sm:max-w-2xl border border-base-300 bg-base-100 p-4 sm:p-8 shadow-2xl rounded-3xl max-h-[90vh] overflow-y-auto">
         {/* Cabecera y botón omitir */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="badge badge-primary badge-outline px-3 py-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
-            <IconSparkles className="w-4 h-4 text-primary" />
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="badge badge-primary badge-outline px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
+            <IconSparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
             Guía de Inicio Rápido
           </div>
           <button
             onClick={onClose}
-            className="btn btn-sm btn-ghost text-base-content/60 hover:text-base-content"
+            className="btn btn-xs sm:btn-sm btn-ghost text-base-content/60 hover:text-base-content"
           >
-            Saltar guía <IconX className="w-4 h-4" />
+            <span className="hidden xs:inline">Saltar</span> <IconX className="w-4 h-4" />
           </button>
         </div>
 
         {/* Indicador de pasos con DaisyUI Steps */}
-        <div className="w-full mb-8">
-          <ul className="steps steps-horizontal w-full text-xs sm:text-sm font-semibold">
-            <li className={`step ${currentStep >= 1 ? 'step-primary' : ''}`}>Bienvenida</li>
-            <li className={`step ${currentStep >= 2 ? 'step-primary' : ''}`}>Laboratorio</li>
-            <li className={`step ${currentStep >= 3 ? 'step-primary' : ''}`}>Operaciones</li>
-            <li className={`step ${currentStep >= 4 ? 'step-primary' : ''}`}>¡Listo!</li>
+        <div className="w-full mb-6 sm:mb-8">
+          <ul className="steps steps-horizontal w-full text-[10px] sm:text-xs font-semibold">
+            <li className={`step ${currentStep >= 1 ? 'step-primary' : ''}`}>Inicio</li>
+            <li className={`step ${currentStep >= 2 ? 'step-primary' : ''}`}>Sedes</li>
+            <li className={`step ${currentStep >= 3 ? 'step-primary' : ''}`}>Módulos</li>
+            <li className={`step ${currentStep >= 4 ? 'step-primary' : ''}`}>Listo</li>
           </ul>
         </div>
 

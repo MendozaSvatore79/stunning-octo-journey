@@ -291,8 +291,8 @@ export default function CaptureResultsModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-        <div className="bg-base-100 text-base-content max-w-5xl w-full rounded-2xl p-5 sm:p-7 shadow-2xl border border-base-200 relative my-auto max-h-[94vh] flex flex-col">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
+        <div className="bg-base-100 text-base-content max-w-5xl w-full max-w-[96vw] rounded-2xl p-3.5 sm:p-7 shadow-2xl border border-base-200 relative my-auto max-h-[94vh] flex flex-col">
           
           {/* ENCABEZADO SUPERIOR */}
           <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-4 shrink-0">
@@ -514,9 +514,9 @@ export default function CaptureResultsModal({
       {/* MODAL DE CONTROL Y DESPACHO MANUAL DE NOTIFICACIONES */}
       {showNotificationModal && savedOrderData && (
         <dialog className="modal modal-open backdrop-blur-md z-[120]">
-          <div className="modal-box max-w-lg bg-base-100 rounded-3xl p-6 sm:p-8 border border-base-200 shadow-2xl text-center space-y-5 animate-fade-in">
-            <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center mx-auto shadow-inner">
-              <IconCheckCircle className="w-10 h-10" />
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-lg bg-base-100 rounded-3xl p-4 sm:p-8 border border-base-200 shadow-2xl text-center space-y-4 sm:space-y-5 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center mx-auto shadow-inner shrink-0">
+              <IconCheckCircle className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
 
             <div>
@@ -618,10 +618,10 @@ export default function CaptureResultsModal({
       {/* MODAL DE CONFIRMACIÓN DE VALORES DE PÁNICO (ISO 15189) */}
       {isPanicConfirmOpen && (
         <dialog className="modal modal-open z-[65]">
-          <div className="modal-box max-w-lg bg-base-100 rounded-3xl p-6 border-2 border-error/40 shadow-2xl space-y-5">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-error/15 text-error flex items-center justify-center shrink-0">
-                <IconAlertTriangle className="w-7 h-7 animate-pulse" />
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-lg bg-base-100 rounded-3xl p-4 sm:p-6 border-2 border-error/40 shadow-2xl space-y-4 sm:space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-error/15 text-error flex items-center justify-center shrink-0">
+                <IconAlertTriangle className="w-6 h-6 sm:w-7 sm:h-7 animate-pulse" />
               </div>
               <div>
                 <div className="badge badge-error text-white font-bold text-xs uppercase tracking-wider mb-1">

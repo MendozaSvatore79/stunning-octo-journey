@@ -191,20 +191,20 @@ export default function CreateLabModal({
   };
 
   return (
-    <dialog className="modal modal-open backdrop-blur-xs">
-      <div className="modal-box max-w-xl border border-base-200 bg-base-100 p-5 sm:p-6 shadow-xl rounded-2xl">
+    <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
+      <div className="modal-box w-full max-w-[95vw] sm:max-w-xl border border-base-200 bg-base-100 p-4 sm:p-6 shadow-xl rounded-2xl max-h-[90vh] overflow-y-auto">
         
         {/* Cabecera del Modal */}
         <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-              <IconFlask className="w-5 h-5" />
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+              <IconFlask className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h3 className="font-bold text-lg text-base-content tracking-tight">
+            <div className="min-w-0">
+              <h3 className="font-bold text-base sm:text-lg text-base-content tracking-tight truncate">
                 Crear Nueva Sede de Laboratorio
               </h3>
-              <p className="text-xs text-base-content/60">
+              <p className="text-xs text-base-content/60 truncate">
                 Selecciona país, estado y ciudad para dar de alta la sucursal.
               </p>
             </div>

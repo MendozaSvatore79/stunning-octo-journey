@@ -124,23 +124,23 @@ export default function Dashboard() {
   return (
     <Sidebar activeView={activeView} onSelectView={setActiveView}>
       {/* Navbar Superior */}
-      <header className="navbar bg-base-100 shadow-sm border-b border-base-200 px-4 lg:px-8 sticky top-0 z-30">
+      <header className="navbar bg-base-100 shadow-sm border-b border-base-200 px-2 sm:px-4 lg:px-8 sticky top-0 z-30 min-h-[3.5rem]">
         <div className="flex-none lg:hidden">
-          <label htmlFor="main-drawer" className="btn btn-square btn-ghost">
+          <label htmlFor="main-drawer" className="btn btn-square btn-ghost btn-sm sm:btn-md" aria-label="Abrir menú">
             <IconMenu className="w-5 h-5" />
           </label>
         </div>
 
-        <div className="flex-1 items-center gap-3">
-          <a className="btn btn-ghost text-lg font-black text-primary normal-case lg:hidden gap-2">
+        <div className="flex-1 items-center gap-1.5 sm:gap-3 min-w-0">
+          <a className="btn btn-ghost btn-sm sm:btn-md text-base sm:text-lg font-black text-primary normal-case lg:hidden gap-1.5 sm:gap-2 px-1 sm:px-3 max-w-[180px] sm:max-w-xs">
             {activeBranding.logo ? (
-              <img src={activeBranding.logo} alt="Logo" className="w-7 h-7 rounded-lg object-contain bg-white" />
+              <img src={activeBranding.logo} alt="Logo" className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg object-contain bg-white shrink-0" />
             ) : (
-              <span className="w-7 h-7 rounded-lg bg-primary text-primary-content flex items-center justify-center shadow-xs">
-                <IconFlask className="w-4 h-4 text-primary-content" />
+              <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary text-primary-content flex items-center justify-center shadow-xs shrink-0">
+                <IconFlask className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-content" />
               </span>
             )}
-            <span className="truncate max-w-[140px]">{activeBranding.name || 'LabSystem'}</span>
+            <span className="truncate max-w-[95px] sm:max-w-[140px] text-xs sm:text-sm font-bold">{activeBranding.name || 'LabSystem'}</span>
           </a>
 
           <span className="hidden sm:inline-flex badge badge-ghost border border-base-200 py-2.5 px-3 text-xs font-semibold text-base-content/80 gap-2">
@@ -149,19 +149,19 @@ export default function Dashboard() {
           </span>
 
           {isVipPassed && !isAdmin && (
-            <span className="badge badge-accent badge-outline badge-sm font-bold gap-1.5 px-3 py-2 rounded-xl">
-              <IconSparkles className="w-3.5 h-3.5" />
-              <span>Acceso VIP</span>
+            <span className="badge badge-accent badge-outline badge-xs sm:badge-sm font-bold gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl">
+              <IconSparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden xs:inline">Acceso VIP</span>
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           {/* Botón exclusivo de Administrador para Control de Mantenimiento */}
           {isAdmin && (
             <button
               onClick={() => setIsMaintenanceControlOpen(true)}
-              className={`btn btn-sm text-xs font-semibold rounded-xl gap-1.5 transition-all ${
+              className={`btn btn-xs sm:btn-sm text-xs font-semibold rounded-xl gap-1 sm:gap-1.5 transition-all px-2 sm:px-3 ${
                 config.globalMaintenance
                   ? 'btn-error text-error-content shadow-xs animate-pulse font-bold'
                   : 'btn-ghost border border-base-200 hover:bg-base-200 text-base-content/80'
@@ -169,35 +169,37 @@ export default function Dashboard() {
               title="Gestor de Mantenimiento y Acceso VIP"
             >
               <IconSettings className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Mantenimiento</span>
+              <span className="hidden md:inline">Mantenimiento</span>
             </button>
           )}
 
           <button
             onClick={() => setIsOnboardingOpen(true)}
-            className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 gap-1.5 text-xs text-base-content/80 rounded-xl"
+            className="btn btn-xs sm:btn-sm btn-ghost border border-base-200 hover:bg-base-200 gap-1 sm:gap-1.5 text-xs text-base-content/80 rounded-xl px-2 sm:px-3"
             title="Ver Guía de Inicio Rápido"
           >
             <IconSparkles className="w-3.5 h-3.5 text-primary" />
             <span className="hidden md:inline">Guía</span>
           </button>
 
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                userButtonAvatarBox: {
-                  width: '2.5rem',
-                  height: '2.5rem',
+          <div className="shrink-0 flex items-center">
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  userButtonAvatarBox: {
+                    width: '2.1rem',
+                    height: '2.1rem',
+                  },
                 },
-              },
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
       </header>
 
       {/* Contenido Principal condicional por Vista, Rol y Mantenimiento con React Suspense */}
-      <main className={`w-full px-4 py-6 sm:px-6 lg:px-8 mx-auto transition-all ${
+      <main className={`w-full px-2.5 py-4 sm:px-6 lg:px-8 mx-auto transition-all max-w-full overflow-x-hidden ${
         activeView === 'support' ? 'max-w-none' : 'max-w-7xl'
       }`}>
         {isUserLoading ? (

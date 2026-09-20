@@ -185,35 +185,35 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
         </div>
 
         {/* Control de Pestañas DaisyUI */}
-        <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl">
+        <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl w-full flex-nowrap overflow-x-auto max-w-full scrollbar-none">
           <button
             onClick={() => setActiveTab('directory')}
-            className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+            className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
               activeTab === 'directory' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
-            <IconUsers className="w-4 h-4" />
-            Directorio
+            <IconUsers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Directorio</span>
           </button>
 
           <button
             onClick={() => setActiveTab('register')}
-            className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+            className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
               activeTab === 'register' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
-            <IconUserPlus className="w-4 h-4" />
-            Registrar Paciente
+            <IconUserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Registrar <span className="hidden xs:inline">Paciente</span></span>
           </button>
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+            className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
               activeTab === 'history' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
             }`}
           >
-            <IconFolder className="w-4 h-4" />
-            Historial Clínico
+            <IconFolder className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Historial <span className="hidden xs:inline">Clínico</span></span>
           </button>
         </div>
       </section>
@@ -368,7 +368,7 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
       {/* CONTENIDO 2: REGISTRAR NUEVO PACIENTE */}
       {activeTab === 'register' && (
-        <section className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto">
+        <section className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-4 sm:p-8 max-w-4xl mx-auto">
           <div className="border-b border-base-200 pb-4 mb-6">
             <h2 className="text-xl font-black text-base-content flex items-center gap-2">
               <IconUserPlus className="w-5 h-5 text-primary" />

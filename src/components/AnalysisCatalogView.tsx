@@ -316,8 +316,8 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
 
       {/* MODAL DE CREAR / EDITAR ESTUDIO CLÍNICO */}
       {isModalOpen && (
-        <dialog className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box max-w-lg rounded-2xl p-6 border border-base-200 shadow-xl">
+        <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-lg rounded-2xl p-4 sm:p-6 border border-base-200 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-base-200 pb-3.5 mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-primary/10 text-primary rounded-xl">

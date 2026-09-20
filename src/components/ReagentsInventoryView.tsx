@@ -541,8 +541,8 @@ export default function ReagentsInventoryView() {
 
       {/* Modal para Registrar Nuevo Lote */}
       {isAddModalOpen && (
-        <dialog className="modal modal-open z-50">
-          <div className="modal-box max-w-lg bg-base-100 rounded-3xl p-6 border border-base-200 shadow-2xl space-y-4">
+        <dialog className="modal modal-open z-50 p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-lg bg-base-100 rounded-3xl p-4 sm:p-6 border border-base-200 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <div className="flex items-center gap-2">
                 <IconFlask className="w-5 h-5 text-primary" />
@@ -684,8 +684,8 @@ export default function ReagentsInventoryView() {
 
       {/* Modal para Ajustar o Descontar Determinaciones */}
       {selectedForAdjust && (
-        <dialog className="modal modal-open z-50">
-          <div className="modal-box max-w-sm bg-base-100 rounded-3xl p-6 border border-base-200 shadow-2xl space-y-4">
+        <dialog className="modal modal-open z-50 p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-sm bg-base-100 rounded-3xl p-4 sm:p-6 border border-base-200 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <h3 className="font-bold text-sm text-base-content">
                 Descuento de Determinaciones

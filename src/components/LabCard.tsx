@@ -109,7 +109,7 @@ export default function LabCard({ lab, onDeleteSuccess }: LabCardProps) {
       {/* Modal de confirmación para eliminar */}
       {showConfirmDelete && (
         <dialog className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box max-w-sm rounded-2xl p-6 border border-base-200">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-sm rounded-2xl p-4 sm:p-6 border border-base-200">
             <div className="flex items-center gap-2 text-error font-bold text-base mb-2">
               <IconAlertCircle className="w-5 h-5 shrink-0" />
               <span>¿Eliminar laboratorio?</span>

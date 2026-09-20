@@ -742,8 +742,8 @@ export default function QualityControlView({ initialSubView = 'controls' }: Qual
 
       {/* MODAL PARA AGREGAR NUEVO LOTE DE CONTROL */}
       {isAddLotModalOpen && (
-        <dialog className="modal modal-open backdrop-blur-xs z-50">
-          <div className="modal-box max-w-lg bg-base-100 rounded-2xl p-6 border border-base-200 shadow-xl">
+        <dialog className="modal modal-open backdrop-blur-xs z-50 p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-lg bg-base-100 rounded-2xl p-4 sm:p-6 border border-base-200 shadow-xl max-h-[90vh] overflow-y-auto">
             <h3 className="font-bold text-base text-base-content mb-1">Agregar Lote de Control</h3>
             <p className="text-xs text-base-content/60 mb-4">Define los parámetros de referencia de fábrica para el control clínico</p>
 

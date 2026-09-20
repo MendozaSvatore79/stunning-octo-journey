@@ -69,23 +69,23 @@ export default function BarcodeThermalLabelModal({
 
   return (
     <dialog className="modal modal-open z-50">
-      <div className="modal-box max-w-4xl bg-base-100 rounded-3xl p-6 md:p-8 border border-base-300 shadow-2xl space-y-6">
+      <div className="modal-box w-full max-w-[95vw] sm:max-w-4xl bg-base-100 rounded-3xl p-4 sm:p-6 md:p-8 border border-base-300 shadow-2xl space-y-4 sm:space-y-6 max-h-[90vh] overflow-y-auto">
         {/* Encabezado */}
         <div className="flex items-center justify-between border-b border-base-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
-              <IconFileText className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
+              <IconFileText className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black text-base-content tracking-tight">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-black text-base-content tracking-tight">
                   Etiquetas Térmicas de Muestra (50x25 mm)
                 </h3>
                 <span className="badge badge-primary badge-sm font-mono font-bold">
                   Folio #{folio}
                 </span>
               </div>
-              <p className="text-xs text-base-content/60">
+              <p className="text-[11px] sm:text-xs text-base-content/60">
                 Guía de extracción Vacutainer (CLSI H3-A6) y códigos de barras Code-128
               </p>
             </div>
@@ -259,25 +259,25 @@ export default function BarcodeThermalLabelModal({
         </div>
 
         {/* Acciones */}
-        <div className="flex items-center justify-between pt-2 border-t border-base-200">
-          <p className="text-xs text-base-content/60 flex items-center gap-1.5">
-            <IconCheckCircle className="w-4 h-4 text-success" />
-            Listo para enviar a la impresora térmica predeterminada
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-base-200">
+          <p className="text-xs text-base-content/60 flex items-center gap-1.5 text-center sm:text-left">
+            <IconCheckCircle className="w-4 h-4 text-success shrink-0" />
+            <span>Listo para enviar a la impresora térmica predeterminada</span>
           </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
             <button
               onClick={onClose}
-              className="btn btn-ghost rounded-2xl text-xs font-semibold"
+              className="btn btn-ghost rounded-2xl text-xs font-semibold flex-1 sm:flex-initial"
             >
               Cerrar
             </button>
             <button
               onClick={handlePrint}
-              className="btn btn-primary text-white font-bold rounded-2xl text-xs gap-2 shadow-lg hover:scale-[1.01] transition-transform"
+              className="btn btn-primary text-white font-bold rounded-2xl text-xs gap-2 shadow-lg hover:scale-[1.01] transition-transform flex-1 sm:flex-initial"
             >
               <IconPrinter className="w-4 h-4" />
-              Imprimir Etiquetas Térmicas
+              Imprimir Etiquetas
             </button>
           </div>
         </div>

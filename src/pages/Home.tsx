@@ -72,34 +72,34 @@ export default function Home() {
           </div>
 
           {/* Panel Derecho: Acceso Limpio de Clerk */}
-          <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 bg-base-100 min-h-screen">
+          <div className="w-full lg:w-1/2 flex flex-col justify-between p-3.5 sm:p-8 lg:p-14 bg-base-100 min-h-screen">
             
             {/* Cabecera Móvil (solo visible en pantallas pequeñas) */}
-            <div className="lg:hidden flex items-center justify-between pb-6 border-b border-base-200">
-              <div className="flex items-center gap-3">
+            <div className="lg:hidden flex items-center justify-between pb-4 border-b border-base-200">
+              <div className="flex items-center gap-2.5 min-w-0">
                 {activeBranding?.logo ? (
                   <img
                     src={activeBranding.logo}
                     alt={brandName}
-                    className="w-10 h-10 rounded-xl object-contain bg-white border border-base-300 p-1 shrink-0"
+                    className="w-9 h-9 rounded-xl object-contain bg-white border border-base-300 p-1 shrink-0"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-600 text-white flex items-center justify-center shadow-sm shrink-0">
-                    <IconFlask className="w-5 h-5 text-white" />
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                    <IconFlask className="w-4 h-4 text-white" />
                   </div>
                 )}
-                <div>
-                  <span className="font-black text-lg text-base-content block leading-tight">
+                <div className="min-w-0">
+                  <span className="font-black text-base sm:text-lg text-base-content block leading-tight truncate">
                     {brandName}
                   </span>
-                  <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">
+                  <span className="text-[9px] sm:text-[10px] text-primary font-bold uppercase tracking-wider block truncate">
                     Diagnóstico Clínico LIS
                   </span>
                 </div>
               </div>
               <a
                 href="mailto:soporte@synovalab.com"
-                className="text-xs font-semibold text-base-content/60 hover:text-primary"
+                className="text-xs font-semibold text-base-content/60 hover:text-primary shrink-0 pl-2"
               >
                 Soporte
               </a>
@@ -116,9 +116,9 @@ export default function Home() {
             </div>
 
             {/* Contenedor Centrado del Formulario de Clerk */}
-            <div className="w-full max-w-md mx-auto my-auto py-8">
-              <div className="mb-6 space-y-1 text-center lg:text-left">
-                <h2 className="text-2xl font-bold tracking-tight text-base-content">
+            <div className="w-full max-w-md mx-auto my-auto py-4 sm:py-8">
+              <div className="mb-4 sm:mb-6 space-y-1 text-center lg:text-left">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-base-content">
                   Iniciar Sesión
                 </h2>
                 <p className="text-xs text-base-content/60">
@@ -132,7 +132,7 @@ export default function Home() {
                   afterSignInUrl="/dashboard"
                   appearance={{
                     elements: {
-                      card: "shadow-none border border-base-200 bg-base-100 rounded-2xl p-6 sm:p-7 w-full",
+                      card: "shadow-none border border-base-200 bg-base-100 rounded-2xl p-3.5 sm:p-7 w-full max-w-full",
                       headerTitle: "hidden",
                       headerSubtitle: "hidden",
                       socialButtonsBlockButton:

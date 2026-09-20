@@ -520,35 +520,35 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       </section>
 
       {/* Control de Pestañas */}
-      <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl max-w-md">
+      <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl w-full max-w-md flex-nowrap overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab('create')}
-          className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+          className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
             activeTab === 'create' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
-          <IconClipboardList className="w-4 h-4" />
-          Crear Orden de Trabajo
+          <IconClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Crear <span className="hidden sm:inline">Orden de Trabajo</span></span>
         </button>
 
         <button
           onClick={() => setActiveTab('pending')}
-          className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+          className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
             activeTab === 'pending' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
-          <IconClock className="w-4 h-4" />
-          Pendientes ({pendingOrders.length})
+          <IconClock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Pendientes ({pendingOrders.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('completed')}
-          className={`tab rounded-lg font-bold gap-2 text-xs sm:text-sm ${
+          className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
             activeTab === 'completed' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
           }`}
         >
-          <IconCheckCircle className="w-4 h-4" />
-          Completadas ({completedOrders.length})
+          <IconCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Completadas ({completedOrders.length})</span>
         </button>
       </div>
 
@@ -657,10 +657,11 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                   />
                   <button
                     onClick={() => setDoctorName('Dr. Sanatorio Particular')}
-                    className="btn btn-outline rounded-xl font-bold gap-1 shrink-0"
+                    className="btn btn-outline rounded-xl font-bold gap-1 shrink-0 px-2 sm:px-4 text-xs sm:text-sm"
                   >
-                    <IconPlus className="w-4 h-4" />
-                    Predeterminado
+                    <IconPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Predeterminado</span>
+                    <span className="sm:hidden">Defecto</span>
                   </button>
                 </div>
               </div>
@@ -1183,8 +1184,8 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
       {/* MODAL / COMPROBANTE DE TICKET SIMPLE */}
       {createdOrderTicket && (
-        <dialog className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box max-w-lg rounded-2xl p-6 border border-base-200 shadow-xl">
+        <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-lg rounded-2xl p-4 sm:p-6 border border-base-200 shadow-xl max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
               <div className="flex items-center gap-2 text-primary font-bold text-base">
@@ -1296,8 +1297,8 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
       {/* MODAL INLINE DE ALTA RÁPIDA DE PACIENTE */}
       {isQuickPatientOpen && (
-        <dialog className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box max-w-md rounded-2xl p-5 sm:p-6 border border-base-200 shadow-xl">
+        <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-md rounded-2xl p-4 sm:p-6 border border-base-200 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
               <h3 className="font-bold text-base text-base-content flex items-center gap-2">
                 <IconUserPlus className="w-5 h-5 text-primary" />

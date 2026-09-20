@@ -275,9 +275,9 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto w-full max-w-full">
       {/* Encabezado Principal */}
-      <section className="card bg-base-100 border border-base-200 p-5 sm:p-6 shadow-xs rounded-2xl">
+      <section className="card bg-base-100 border border-base-200 p-4 sm:p-6 shadow-xs rounded-2xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -634,12 +634,12 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
             </div>
 
             {/* Barra de Acciones */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-base-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-base-200">
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={!canEditBranding || isSaving}
-                className="btn btn-sm btn-ghost text-xs text-base-content/60 hover:text-error"
+                className="btn btn-sm btn-ghost text-xs text-base-content/60 hover:text-error w-full sm:w-auto order-2 sm:order-1"
               >
                 Restablecer a Valores de Fábrica
               </button>
@@ -647,7 +647,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
               <button
                 type="submit"
                 disabled={!canEditBranding || isSaving}
-                className="btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-2 shadow-xs"
+                className="btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-2 shadow-xs w-full sm:w-auto order-1 sm:order-2"
               >
                 {isSaving ? (
                   <>

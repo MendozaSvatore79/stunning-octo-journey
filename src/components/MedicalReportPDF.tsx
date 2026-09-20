@@ -396,37 +396,38 @@ export default function MedicalReportPDF({
     <>
       {/* VISTA PREVIA EN PANTALLA DENTRO DEL MODAL WEB */}
       <dialog className="modal modal-open backdrop-blur-xs z-[150]">
-        <div className="modal-box max-w-4xl w-full bg-white text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl overflow-y-auto max-h-[92vh]">
+        <div className="modal-box w-full max-w-[96vw] sm:max-w-4xl bg-white text-slate-900 rounded-3xl p-3.5 sm:p-8 border border-slate-200 shadow-2xl overflow-y-auto max-h-[92vh]">
           {/* Barra de Acciones Superior */}
-          <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4 print:hidden gap-3 flex-wrap">
-            <div className="flex items-center gap-2 text-primary font-black text-lg">
-              <span>Reporte Oficial de Resultados Clínicos</span>
-              <span className="badge badge-success text-white font-mono text-xs">FOLIO #{currentOrder.folio || currentOrder.id.slice(0, 6)}</span>
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-3 sm:pb-4 sm:mb-4 print:hidden gap-2 sm:gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-primary font-black text-sm sm:text-lg flex-wrap">
+              <span>Reporte de Resultados Clínicos</span>
+              <span className="badge badge-success text-white font-mono text-[11px] sm:text-xs">FOLIO #{currentOrder.folio || currentOrder.id.slice(0, 6)}</span>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {/* Botón restringido únicamente al personal clínico autenticado */}
               {canConfigureSignature && (
                 <button
                   type="button"
                   onClick={() => setIsSignatureModalOpen(true)}
-                  className="btn btn-sm btn-outline btn-primary rounded-xl gap-1.5 font-bold"
+                  className="btn btn-xs sm:btn-sm btn-outline btn-primary rounded-xl gap-1 sm:gap-1.5 font-bold"
                   title="Configurar o dibujar la firma del Químico Responsable"
                 >
-                  <IconAward className="w-4 h-4" />
-                  <span>Firma Q.F.B.</span>
+                  <IconAward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline">Firma Q.F.B.</span>
+                  <span className="xs:hidden">Firma</span>
                 </button>
               )}
               <button
                 onClick={() => window.print()}
-                className="btn btn-primary text-white font-bold rounded-xl gap-2 shadow-md btn-sm"
+                className="btn btn-primary text-white font-bold rounded-xl gap-1.5 sm:gap-2 shadow-md btn-xs sm:btn-sm"
               >
-                <IconPrinter className="w-4 h-4" />
-                Imprimir PDF
+                <IconPrinter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Imprimir PDF</span>
               </button>
               {onClose && (
-                <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost text-slate-500">
-                  <IconX className="w-5 h-5" />
+                <button onClick={onClose} className="btn btn-xs sm:btn-sm btn-circle btn-ghost text-slate-500">
+                  <IconX className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               )}
             </div>

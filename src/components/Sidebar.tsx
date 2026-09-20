@@ -65,6 +65,11 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
     if (onSelectView) {
       onSelectView(view);
     }
+    // Cerrar automáticamente el drawer en pantallas móviles (Samsung S21, iPhone, etc.)
+    const drawerCheckbox = document.getElementById('main-drawer') as HTMLInputElement | null;
+    if (drawerCheckbox && drawerCheckbox.checked) {
+      drawerCheckbox.checked = false;
+    }
   };
 
   const isLabsActive = ['labs', 'analysis-catalog', 'add-user'].includes(activeView);
@@ -76,15 +81,15 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
     <div className="drawer lg:drawer-open">
       <input id="main-drawer" type="checkbox" className="drawer-toggle" />
 
-      <div className="drawer-content flex flex-col bg-base-200 min-h-screen overflow-x-hidden">
+      <div className="drawer-content flex flex-col bg-base-200 min-h-screen overflow-x-hidden w-full max-w-full">
         {children}
       </div>
 
       <div className="drawer-side z-50">
         <label htmlFor="main-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
 
-        {/* Sidebar con Ancho Fijo Rígido w-64 (16rem) Estricto para Evitar Deformaciones al Desplegar */}
-        <aside className="bg-base-100 min-h-screen w-64 min-w-[16rem] max-w-[16rem] flex flex-col border-r border-base-200 overflow-x-hidden shrink-0">
+        {/* Sidebar responsivo para móviles pequeños hasta pantallas grandes */}
+        <aside className="bg-base-100 min-h-screen w-64 max-w-[82vw] flex flex-col border-r border-base-200 overflow-x-hidden shrink-0">
           {/* Logo del Sistema Dinámico por Sede */}
           <div className="p-5 border-b border-base-200 flex items-center gap-3 shrink-0">
             {activeBranding.logo ? (

@@ -362,7 +362,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
     <div className="space-y-6 max-w-6xl mx-auto animate-fade-in pb-10">
       
       {/* Encabezado Principal y Selector de Sede */}
-      <section className="card bg-base-100 border border-base-200 p-5 sm:p-6 shadow-xs rounded-2xl">
+      <section className="card bg-base-100 border border-base-200 p-4 sm:p-6 shadow-xs rounded-2xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
           {/* Título de la Sección */}
@@ -386,16 +386,16 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
 
           {/* Selector de Laboratorio / Sede a Consultar */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 bg-base-200/70 p-2 rounded-2xl border border-base-300/60">
+            <div className="flex items-center gap-2 bg-base-200/70 p-2 rounded-2xl border border-base-300/60 max-w-full">
               <IconBuilding className="w-4 h-4 text-primary shrink-0 ml-1" />
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wider">
                   Sede a Consultar
                 </span>
                 <select
                   value={filterLabId}
                   onChange={(e) => setFilterLabId(e.target.value)}
-                  className="select select-xs select-bordered font-bold text-primary bg-base-100 rounded-xl focus:select-primary"
+                  className="select select-xs select-bordered font-bold text-primary bg-base-100 rounded-xl focus:select-primary max-w-[180px] sm:max-w-none"
                 >
                   <option value="ALL">Todas las Sedes ({users.length})</option>
                   {localLabs.map((l) => (
@@ -443,29 +443,29 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
       )}
 
       {/* Tarjetas de Métricas de Personal para la Sede */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
           <span className="text-[10px] uppercase font-bold text-base-content/50 block">Personal Total</span>
-          <div className="text-xl sm:text-2xl font-black text-base-content mt-1">{labMetrics.total}</div>
+          <div className="text-xl sm:text-2xl font-black text-base-content mt-0.5">{labMetrics.total}</div>
           <span className="text-[10px] text-base-content/60 truncate block mt-0.5">{currentLabName}</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
-          <span className="text-[10px] uppercase font-bold text-primary block">Químicos / Técnicos</span>
-          <div className="text-xl sm:text-2xl font-black text-primary mt-1">{labMetrics.techs}</div>
-          <span className="text-[10px] text-base-content/60 block mt-0.5">Operación analítica</span>
+        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold text-primary block">Químicos / Analistas</span>
+          <div className="text-xl sm:text-2xl font-black text-primary mt-0.5">{labMetrics.techs}</div>
+          <span className="text-[10px] text-base-content/60 block mt-0.5">Operación técnica</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
           <span className="text-[10px] uppercase font-bold text-secondary block">Recepcionistas</span>
-          <div className="text-xl sm:text-2xl font-black text-secondary mt-1">{labMetrics.receptionists}</div>
-          <span className="text-[10px] text-base-content/60 block mt-0.5">Ingreso de pacientes</span>
+          <div className="text-xl sm:text-2xl font-black text-secondary mt-0.5">{labMetrics.receptionists}</div>
+          <span className="text-[10px] text-base-content/60 block mt-0.5">Atención a pacientes</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+        <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
           <span className="text-[10px] uppercase font-bold text-accent block">Administradores</span>
-          <div className="text-xl sm:text-2xl font-black text-accent mt-1">{labMetrics.admins}</div>
-          <span className="text-[10px] text-base-content/60 block mt-0.5">Gestión y control</span>
+          <div className="text-xl sm:text-2xl font-black text-accent mt-0.5">{labMetrics.admins}</div>
+          <span className="text-[10px] text-base-content/60 block mt-0.5">Gestión de sede</span>
         </div>
       </div>
 
@@ -664,8 +664,8 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
       {/* MODAL: REGISTRAR NUEVO USUARIO                              */}
       {/* ============================================================ */}
       {isCreateModalOpen && (
-        <div className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box rounded-2xl max-w-lg border border-base-200 shadow-2xl p-6">
+        <div className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
+          <div className="modal-box rounded-2xl w-full max-w-[95vw] sm:max-w-lg border border-base-200 shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -822,8 +822,8 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
       {/* MODAL: EDITAR USUARIO                                       */}
       {/* ============================================================ */}
       {editingUser && (
-        <div className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box rounded-2xl max-w-lg border border-base-200 shadow-2xl p-6">
+        <div className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
+          <div className="modal-box rounded-2xl w-full max-w-[95vw] sm:max-w-lg border border-base-200 shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -956,8 +956,8 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
       {/* MODAL: CONFIRMAR ELIMINACIÓN                                 */}
       {/* ============================================================ */}
       {deletingUser && (
-        <div className="modal modal-open backdrop-blur-xs">
-          <div className="modal-box rounded-2xl max-w-md border border-base-200 shadow-2xl p-6">
+        <div className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
+          <div className="modal-box rounded-2xl w-full max-w-[95vw] sm:max-w-md border border-base-200 shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center gap-3 text-error mb-3">
               <div className="w-10 h-10 rounded-2xl bg-error/10 flex items-center justify-center shrink-0">
                 <IconTrash className="w-5 h-5" />

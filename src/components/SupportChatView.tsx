@@ -825,8 +825,8 @@ export default function SupportChatView() {
       {/* MODAL: CREAR NUEVO TICKET CON ASISTENCIA IA */}
       {/* ========================================================================= */}
       {isCreateModalOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-2xl bg-base-100 rounded-2xl border border-base-200 shadow-2xl p-6 space-y-4">
+        <div className="modal modal-open p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-2xl bg-base-100 rounded-2xl border border-base-200 shadow-2xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-base-200 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -977,8 +977,8 @@ export default function SupportChatView() {
       {/* MODAL: VER DETALLE Y RESPUESTA IA DEL TICKET */}
       {/* ========================================================================= */}
       {selectedTicket && (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-2xl bg-base-100 rounded-2xl border border-base-200 shadow-2xl p-6 space-y-4">
+        <div className="modal modal-open p-2 sm:p-4">
+          <div className="modal-box w-full max-w-[95vw] sm:max-w-2xl bg-base-100 rounded-2xl border border-base-200 shadow-2xl p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between border-b border-base-200 pb-3 gap-3">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
