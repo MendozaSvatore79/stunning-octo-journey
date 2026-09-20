@@ -153,16 +153,8 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
       const fallbackMsg: BotMessage = {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: 'He registrado tu comentario. ¿Deseas que levantemos un ticket de soporte técnico formal para que nuestro equipo lo revise de inmediato?',
+        text: 'Te escucho atentamente. ¿Podrías darme un poco más de detalle sobre lo que sucede en el equipo o en pantalla? Cuéntame con confianza para orientarte de inmediato.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        suggestedTicket: {
-          subject: `Solicitud de Asistencia: ${text.slice(0, 45)}...`,
-          description: text,
-          category: 'SISTEMA',
-          priority: 'MEDIA',
-          likelyCause: 'Reporte del usuario de laboratorio.',
-          suggestedAction: 'Seguimiento por mesa técnica.',
-        },
       };
       setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
@@ -528,10 +520,10 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
 
                 <button
                   type="button"
-                  onClick={() => handleSendMessage('Deseo levantar un ticket de soporte técnico')}
+                  onClick={() => handleSendMessage('Quiero levantar un reporte técnico')}
                   className="btn btn-xs btn-primary text-white rounded-full shrink-0 font-bold gap-1 text-[10px]"
                 >
-                  <IconTicket className="w-3 h-3" /> Levantar Ticket
+                  <IconTicket className="w-3 h-3" /> Reporte Técnico
                 </button>
               </div>
 
@@ -546,7 +538,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Describe tu falla o escribe 'levantar ticket'..."
+                  placeholder="Escribe tu consulta o describe la falla..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   disabled={isSubmittingTicket}

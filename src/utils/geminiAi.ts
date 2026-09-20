@@ -69,38 +69,63 @@ export function runLocalClinicalDiagnosis(
     text.includes('crear ticket') ||
     text.includes('genera ticket') ||
     text.includes('sí levanta') ||
-    text.includes('si levanta')
+    text.includes('si levanta') ||
+    text.includes('abrir un reporte') ||
+    text.includes('levantar reporte')
   ) {
-    // Buscar contexto en los últimos mensajes para hacer un asunto preciso
-    const lastUserIssue =
-      history
-        .filter((h) => h.sender === 'user' && !h.text.toLowerCase().includes('ticket'))
-        .pop()?.text || input;
+    // Buscar si en los mensajes previos el usuario ya describió un problema real
+    const previousIssues = history.filter(
+      (h) =>
+        h.sender === 'user' &&
+        !h.text.toLowerCase().includes('ticket') &&
+        !h.text.toLowerCase().includes('reporte') &&
+        !h.text.toLowerCase().includes('hola') &&
+        !h.text.toLowerCase().includes('buenos') &&
+        h.text.trim().length > 8
+    );
+
+    const hasSpecificPriorIssue = previousIssues.length > 0;
+    const lastUserIssue = hasSpecificPriorIssue ? previousIssues[previousIssues.length - 1].text : '';
+
+    // Si NO hay descripción previa de la falla, entablar diálogo para indagar antes de levantar el ticket
+    if (!hasSpecificPriorIssue) {
+      return {
+        reply:
+          'Con gusto te ayudo a registrar tu ticket formal ante nuestro equipo de ingeniería técnica.\n\nPara canalizarlo con la prioridad adecuada, por favor cuéntame brevemente:\n1. ¿Cuál es la falla o síntoma que estás experimentando?\n2. ¿Ocurre en algún analizador clínico (marca/modelo) o en un módulo del sistema (órdenes, resultados, catálogo)?\n3. ¿Aparece algún código de error o alarma en pantalla?\n\nEn cuanto me des estos detalles, te estructuro la propuesta de ticket al instante.',
+        source: 'clinical_engine',
+      };
+    }
 
     let category: TicketCategory = 'SISTEMA';
     let priority: TicketPriority = 'ALTA';
-    let likelyCause = 'Incidencia operativa reportada para atención por mesa técnica.';
+    let likelyCause = 'Incidencia técnica reportada para atención especializada.';
     let suggestedAction = 'Revisión prioritaria por el departamento de soporte e ingeniería.';
+    let subject = 'Incidencia operativa en laboratorio';
 
     const lowerIssue = lastUserIssue.toLowerCase();
     if (lowerIssue.includes('analizador') || lowerIssue.includes('equipo') || lowerIssue.includes('alarma') || lowerIssue.includes('aguja')) {
       category = 'EQUIPOS';
       priority = 'CRITICA';
-      likelyCause = 'Alarma o bloqueo mecánico en analizador analítico.';
-      suggestedAction = 'Inspección electromecánica y revisión de sensor por ingeniería biomédica.';
+      subject = 'Alarma o detención en analizador analítico';
+      likelyCause = 'Alarma de sensor o bloqueo mecánico en analizador analítico.';
+      suggestedAction = 'Inspección electromecánica y verificación de sensores por ingeniería biomédica.';
     } else if (lowerIssue.includes('reactivo') || lowerIssue.includes('calibr') || lowerIssue.includes('westgard') || lowerIssue.includes('lote')) {
       category = 'CALIDAD';
       priority = 'ALTA';
+      subject = 'Desvío en calibración o lote de reactivo';
       likelyCause = 'Desvío en control de calidad o lote de reactivo fuera de tolerancia.';
-      suggestedAction = 'Auditoría de lote, verificación de blancos y recalibración.';
+      suggestedAction = 'Auditoría de lote, verificación de blancos y recalibración técnica.';
+    } else {
+      subject = `Falla reportada: ${lastUserIssue.slice(0, 45)}...`;
+      likelyCause = 'Inconsistencia en módulo del sistema reportada por laboratorista.';
     }
 
     return {
       reply:
-        'Con gusto. He estructurado los detalles para abrir formalmente tu ticket de soporte técnico ante nuestro equipo de ingeniería. Por favor revisa la tarjeta a continuación y confirma para enviarlo a la cola de atención inmediata:',
+        'He recopilado los detalles de la falla reportada para estructurar tu ticket ante el equipo de ingeniería. Por favor revisa la tarjeta a continuación y confirma para enviarlo a la cola de atención inmediata:',
       suggestedTicket: {
-        subject: `Incidencia: ${lastUserIssue.slice(0, 50)}...`,
-        description: lastUserIssue,
+        subject,
+        description: `${lastUserIssue}\n\n[Instrucción de usuario]: ${input}`,
         category,
         priority,
         likelyCause,
@@ -114,7 +139,7 @@ export function runLocalClinicalDiagnosis(
   if (text === 'hola' || text === 'buenos días' || text === 'buenas tardes' || text === 'buenas noches' || text === 'que tal' || text === 'buenas') {
     return {
       reply:
-        '¡Hola! Qué gusto saludarte. ¿Cómo está marchando la jornada en tu laboratorio? Cuéntame con qué equipo, reactivo o módulo del sistema necesitas apoyo hoy.',
+        '¡Hola! Qué gusto saludarte. ¿Cómo está marchando la jornada en tu laboratorio? Cuéntame si presentas alguna falla con analizadores, calibraciones, reactivos, folios o el sistema y te apoyo de inmediato.',
       source: 'clinical_engine',
     };
   }
@@ -134,7 +159,7 @@ export function runLocalClinicalDiagnosis(
   ) {
     return {
       reply:
-        'Las alertas en analizadores clínicos son de máxima prioridad para no detener la corrida de pacientes.\n\n¿Qué marca o modelo de equipo tienes (por ejemplo Mindray, Cobas, Beckman Coulter) y qué código o mensaje de alarma exacto te muestra en la pantalla?\n\nMientras me comentas, te sugiero verificar:\n1. Si la aguja de aspiración tiene algún obstáculo físico o coágulo de fibrina.\n2. Si los frascos de desecho y diluyente están en sus niveles correctos.\n3. Si la presión de vacío es normal.',
+        'Las alertas en analizadores clínicos son de máxima prioridad para no detener la corrida de pacientes.\n\n¿Qué marca o modelo de equipo tienes (por ejemplo Mindray, Cobas, Beckman Coulter, Sysmex) y qué código o mensaje de alarma exacto te muestra en la pantalla?\n\nMientras me comentas, te sugiero verificar:\n1. Si la aguja de aspiración tiene algún obstáculo físico o coágulo de fibrina.\n2. Si los frascos de desecho y diluyente están en sus niveles correctos.\n3. Si la presión de vacío está dentro del rango seguro.\n\nCuéntame qué observas para guiarte o coordinar la asistencia técnica.',
       source: 'clinical_engine',
     };
   }
@@ -151,7 +176,7 @@ export function runLocalClinicalDiagnosis(
   ) {
     return {
       reply:
-        'Lamento mucho el inconveniente con el sistema. Para apoyarte a solucionarlo de inmediato:\n\n¿En qué módulo o pantalla específica te está ocurriendo? (Por ejemplo: ¿en Recepción de Órdenes, en Captura de Resultados, en Catálogo o al imprimir PDF?)\n\n¿Te aparece algún mensaje de error en color rojo o la pantalla se queda congelada?',
+        'Lamento mucho el inconveniente con el sistema. Para apoyarte a solucionarlo de inmediato:\n\n1. ¿En qué módulo o pantalla específica te está ocurriendo? (¿En Recepción de Órdenes, en Captura de Resultados, en Catálogo o al generar PDF?)\n2. ¿Te aparece algún mensaje de error en color rojo o la pantalla se queda congelada?\n3. ¿Sucede solo en tu equipo o en todas las computadoras del laboratorio?\n\nCuéntame qué notas y te oriento con los pasos de solución.',
       source: 'clinical_engine',
     };
   }
@@ -167,7 +192,7 @@ export function runLocalClinicalDiagnosis(
   ) {
     return {
       reply:
-        'Entendido. Ese tipo de incidencia suele presentarse cuando algún valor contiene un carácter inesperado, o cuando hubo una micro-interrupción momentánea con la base de datos central.\n\n¿Te ocurre con un paciente o folio en particular, o con todas las órdenes? Si recargas la página (F5) e intentas guardar de nuevo, ¿persiste el error? Si persiste, dime y abrimos un ticket prioritario para que desarrollo revise los registros.',
+        'Entendido. Si el sistema no te permite guardar resultados o folios:\n\n1. ¿Te ocurre con una orden o paciente específico, o con todas las órdenes de la sesión?\n2. Si presionas Ctrl+F5 (o Command+Shift+R) para forzar la recarga limpia, ¿persiste el mensaje?\n\nIndícame si te muestra algún aviso en pantalla para indicarte la solución o escalar el reporte técnico a desarrollo.',
       source: 'clinical_engine',
     };
   }
@@ -185,7 +210,7 @@ export function runLocalClinicalDiagnosis(
   ) {
     return {
       reply:
-        'En temas de calibración y control de calidad:\n\n¿Qué analito o prueba específica está mostrando desvío (por ejemplo Glucosa, Colesterol, TGO/TGP) y qué regla de Westgard infringió (1:3s o 2:2s)?\n\nTe recomiendo revisar la fecha de reconstitución del calibrador, verificar que esté a temperatura ambiente (22°C) y hacer un blanco con agua desionizada antes de repetir la corrida.',
+        'En temas de calibración y control de calidad:\n\n¿Qué analito o prueba específica está mostrando desvío (por ejemplo Glucosa, Colesterol, TGO/TGP) y qué regla de Westgard infringió (1:3s o 2:2s)?\n\nTe recomiendo verificar:\n- La fecha de reconstitución y temperatura del calibrador (debe estar atemperado a 20-25°C antes de leer).\n- Realizar una corrida previa con blanco de agua desionizada.\n\nSi tras esto continúa el desvío, confírmame y gestionamos soporte de aplicaciones.',
       source: 'clinical_engine',
     };
   }
@@ -194,7 +219,7 @@ export function runLocalClinicalDiagnosis(
   if (text.includes('impres') || text.includes('pdf') || text.includes('etiqueta') || text.includes('termica') || text.includes('térmica')) {
     return {
       reply:
-        'Respecto a la impresión:\n\n¿El problema se presenta con las etiquetas térmicas de tubos (50x25 mm) o con el reporte clínico oficial membretado en PDF?\n\nVerifica que la impresora predeterminada esté encendida y conectada. Si el PDF no genera el membrete o la firma digital, podemos revisarlo de inmediato.',
+        'Respecto a la impresión:\n\n¿El problema se presenta con las etiquetas térmicas de tubos (50x25 mm) o con el reporte clínico oficial membretado en PDF?\n\nVerifica que la impresora predeterminada esté encendida y conectada. Si el PDF no genera el membrete o la firma digital, avísame para revisarlo de inmediato.',
       source: 'clinical_engine',
     };
   }
@@ -202,7 +227,7 @@ export function runLocalClinicalDiagnosis(
   // 8. Respuesta conversacional general
   return {
     reply:
-      'Te escucho atentamente. Para darte la orientación más precisa, ¿podrías darme un poco más de detalle sobre lo que sucede o qué observas en el equipo o en pantalla? También puedes indicarme si prefieres que levantemos un ticket formal para que el área técnica te contacte.',
+      'Te escucho atentamente. Para brindarte la mejor orientación clínica o técnica, ¿podrías darme un poco más de detalle sobre lo que sucede o qué observas en el equipo o en pantalla? Cuéntame con confianza.',
     source: 'clinical_engine',
   };
 }
@@ -224,45 +249,68 @@ export async function querySynovaGemini(
   // CASO 1: Hay API Key en el Frontend
   if (apiKey) {
     const systemInstruction = `
-Eres Synova, la especialista de soporte técnico clínico de LabSystem Clinique.
-Estás conversando directamente con ${userName}, profesional del laboratorio clínico.
-Tu función principal es entablar una conversación de soporte técnico real, empática, indagatoria y resolutiva.
-DIRECTRICES ESENCIALES:
-1. NUNCA digas que eres una inteligencia artificial, IA o modelo de lenguaje. Comunícate con calidez y seguridad técnica como una especialista de soporte humano.
-2. ENTABLA UNA CONVERSACIÓN REAL: Haz preguntas de diagnóstico pertinentes (ej. marca/modelo de equipo, código de error en pantalla, reactivo, o módulo del sistema donde ocurre la falla).
-3. Da sugerencias prácticas de contingencia inmediata según aplique.
-4. NO ofrezcas levantar tickets en cada respuesta ni uses textos robóticos o repetitivos.
-5. ÚNICAMENTE cuando el usuario pida explícitamente "levantar ticket", "crear ticket", "reportar problema", o cuando la conversación confirme una avería física/mecánica grave que requiera visita técnica, añade AL FINAL de tu respuesta el bloque delimitado exactamente por \`\`\`ticket_json y \`\`\`:
+Eres Synova, la especialista de soporte técnico clínico del sistema y analizadores de LabSystem Clinique.
+Estás conversando directamente con ${userName}, profesional de laboratorio clínico.
+
+OBJETIVO PRINCIPAL:
+Tu misión es brindar soporte técnico clínico empático, especializado, indagatorio y resolutivo. Mantén siempre una conversación humana y técnica fluida.
+
+DIRECTRICES CRÍTICAS:
+1. IDENTIDAD: Comunícate con calidez y seguridad técnica como especialista de soporte. NUNCA digas que eres una inteligencia artificial, bot o modelo de lenguaje.
+2. CONVERSACIÓN E INDAGACIÓN: Si el usuario te saluda, indica una falla genérica ("falla el sistema", "problemas con analizador", "error", etc.) o escribe "levantar ticket" SIN detallar la avería, NO generes un ticket todavía. Pregúntale cordialmente:
+   - ¿Qué analizador (marca/modelo) o módulo del sistema está involucrado?
+   - ¿Qué código de alarma o síntoma específico observa en pantalla?
+   - Si es software: ¿es en recepción de órdenes, captura de resultados o catálogo?
+3. ASISTENCIA TÉCNICA GUIADA: Brinda recomendaciones prácticas de contingencia inmediata según corresponda.
+4. GENERACIÓN DE TICKETS: ÚNICAMENTE cuando el usuario ya haya detallado el problema y confirme que desea abrir un ticket formal ("sí, levanta el ticket", "crea el ticket"), incluye AL FINAL de tu respuesta el bloque delimitado por \`\`\`ticket_json:
 \`\`\`ticket_json
 {
-  "subject": "Título conciso y claro de la incidencia",
+  "subject": "Título conciso y profesional del problema reportado",
   "category": "EQUIPOS" | "CALIDAD" | "SISTEMA" | "FACTURACION",
   "priority": "BAJA" | "MEDIA" | "ALTA" | "CRITICA",
-  "likelyCause": "Causa preliminar detectada",
-  "suggestedAction": "Acción inmediata recomendada"
+  "likelyCause": "Diagnóstico preliminar",
+  "suggestedAction": "Acción técnica recomendada"
 }
 \`\`\`
-Si es una consulta normal, saludo o diálogo indagatorio, NO agregues el bloque ticket_json.
+Si es una charla de soporte en curso, diagnóstico preliminar o preguntas de ayuda, NUNCA incluyas el bloque ticket_json.
 Responde siempre en español.
 `.trim();
 
-    const contents: any[] = [];
-    const recentHistory = history.slice(-8);
+    // Sanear y alternar roles estrictamente para Gemini API
+    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+    const recentHistory = history
+      .filter((h) => typeof h.text === 'string' && h.text.trim().length > 0)
+      .slice(-10);
+
     for (const h of recentHistory) {
-      contents.push({
-        role: h.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: h.text }],
-      });
+      const role: 'user' | 'model' = h.sender === 'user' ? 'user' : 'model';
+      if (contents.length === 0) {
+        if (role === 'user') {
+          contents.push({ role: 'user', parts: [{ text: h.text.trim() }] });
+        }
+        continue;
+      }
+
+      const prev = contents[contents.length - 1];
+      if (prev.role === role) {
+        prev.parts[0].text += `\n${h.text.trim()}`;
+      } else {
+        contents.push({ role, parts: [{ text: h.text.trim() }] });
+      }
     }
-    contents.push({
-      role: 'user',
-      parts: [{ text: userInput }],
-    });
+
+    const currentMsg = userInput.trim();
+    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+      contents[contents.length - 1].parts[0].text += `\n${currentMsg}`;
+    } else {
+      contents.push({ role: 'user', parts: [{ text: currentMsg }] });
+    }
 
     const modelCandidates = [
       'gemini-2.0-flash',
       'gemini-1.5-flash-latest',
       'gemini-1.5-flash',
+      'gemini-2.0-flash-lite',
       'gemini-2.5-flash',
     ];
 
@@ -270,14 +318,17 @@ Responde siempre en español.
       let res: Response | null = null;
       for (const modelName of modelCandidates) {
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
           const attempt = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey,
+            },
             body: JSON.stringify({
               system_instruction: { parts: [{ text: systemInstruction }] },
               contents,
-              generationConfig: { temperature: 0.5, maxOutputTokens: 900 },
+              generationConfig: { temperature: 0.6, maxOutputTokens: 950 },
             }),
           });
           if (attempt.ok) {
@@ -286,6 +337,42 @@ Responde siempre en español.
           } else if (attempt.status !== 404) {
             res = attempt;
             break;
+          }
+        } catch {}
+      }
+
+      // Si todos dieron 404, consultar la lista dinámica de modelos autorizados
+      if (!res || res.status === 404) {
+        try {
+          const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
+          const listRes = await fetch(listUrl, {
+            headers: { 'x-goog-api-key': apiKey },
+          });
+          if (listRes.ok) {
+            const listData = (await listRes.json()) as any;
+            const availableModel = listData?.models?.find(
+              (m: any) =>
+                Array.isArray(m.supportedGenerationMethods) &&
+                m.supportedGenerationMethods.includes('generateContent') &&
+                (m.name.includes('flash') || m.name.includes('pro'))
+            );
+
+            if (availableModel && availableModel.name) {
+              const dynamicName = availableModel.name.replace('models/', '');
+              const dynamicUrl = `https://generativelanguage.googleapis.com/v1beta/models/${dynamicName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+              res = await fetch(dynamicUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-goog-api-key': apiKey,
+                },
+                body: JSON.stringify({
+                  system_instruction: { parts: [{ text: systemInstruction }] },
+                  contents,
+                  generationConfig: { temperature: 0.6, maxOutputTokens: 950 },
+                }),
+              });
+            }
           }
         } catch {}
       }
@@ -300,12 +387,16 @@ Responde siempre en español.
           if (match && match[1]) {
             try {
               const parsed = JSON.parse(match[1]);
+              const previousContext = history
+                .filter((h) => h.sender === 'user' && !h.text.toLowerCase().includes('ticket') && h.text.trim().length > 10)
+                .pop()?.text;
+              const fullDescription = previousContext ? `${previousContext}\n\n[Nota de usuario]: ${userInput}` : userInput;
               suggestedTicket = {
-                subject: parsed.subject || `Incidencia: ${userInput.slice(0, 45)}...`,
-                description: userInput,
+                subject: parsed.subject || 'Incidencia de soporte técnico clínico',
+                description: fullDescription,
                 category: parsed.category || 'SISTEMA',
                 priority: parsed.priority || 'MEDIA',
-                likelyCause: parsed.likelyCause || 'Diagnóstico de Synova.',
+                likelyCause: parsed.likelyCause || 'Diagnóstico preliminar de soporte.',
                 suggestedAction: parsed.suggestedAction || 'Atención por mesa de ayuda.',
               };
               cleanReply = rawText.replace(/```ticket_json\s*([\s\S]*?)\s*```/, '').trim();
