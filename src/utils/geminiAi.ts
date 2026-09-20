@@ -259,20 +259,38 @@ Responde siempre en español.
       parts: [{ text: userInput }],
     });
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const modelCandidates = [
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-2.5-flash',
+    ];
 
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents,
-          generationConfig: { temperature: 0.5, maxOutputTokens: 900 },
-        }),
-      });
+      let res: Response | null = null;
+      for (const modelName of modelCandidates) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const attempt = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: systemInstruction }] },
+              contents,
+              generationConfig: { temperature: 0.5, maxOutputTokens: 900 },
+            }),
+          });
+          if (attempt.ok) {
+            res = attempt;
+            break;
+          } else if (attempt.status !== 404) {
+            res = attempt;
+            break;
+          }
+        } catch {}
+      }
 
-      if (res.ok) {
+      if (res && res.ok) {
         const data = (await res.json()) as any;
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (rawText) {
