@@ -11,16 +11,9 @@ import {
   IconWrench,
   IconFlask,
   IconRefresh,
-  IconKey,
-  IconSettings,
 } from './icons';
 import type { TicketCategory, TicketPriority, TicketStatus, SupportTicket } from './SupportChatView';
-import {
-  querySynovaGemini,
-  getGeminiApiKey,
-  saveGeminiApiKey,
-  hasGeminiApiKey,
-} from '../utils/geminiAi';
+import { querySynovaGemini } from '../utils/geminiAi';
 
 interface BotMessage {
   id: string;
@@ -59,9 +52,6 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [ticketsList, setTicketsList] = useState<SupportTicket[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-  const [customApiKey, setCustomApiKey] = useState(getGeminiApiKey());
-  const [apiKeySavedSuccess, setApiKeySavedSuccess] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -77,13 +67,13 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
     {
       id: 'welcome-1',
       sender: 'bot',
-      text: `¡Hola ${userName}! 👋 Soy **Synova**, tu especialista de soporte técnico y operaciones clínicas.`,
+      text: `¡Hola ${userName}! 👋 Soy **Synova**, tu especialista de soporte técnico clínico.`,
       timestamp: 'Ahora',
     },
     {
       id: 'welcome-2',
       sender: 'bot',
-      text: 'Estoy aquí para ayudarte con cualquier incidencia en analizadores, lotes de reactivos, calibraciones o dudas con tus órdenes. Si lo requieres, puedo **levantar un ticket de soporte técnico automáticamente** en segundos.',
+      text: '¿En qué puedo apoyarte hoy en tu laboratorio? Cuéntame si presentas alguna falla con analizadores, calibraciones, reactivos, folios o el sistema. Si se requiere intervención de ingeniería, puedo levantar un ticket de soporte de inmediato.',
       timestamp: 'Ahora',
     },
   ]);
@@ -258,16 +248,6 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
     }
   };
 
-  // Guardar configuración de API Key de Gemini
-  const handleSaveApiKey = () => {
-    saveGeminiApiKey(customApiKey);
-    setApiKeySavedSuccess(true);
-    setTimeout(() => {
-      setApiKeySavedSuccess(false);
-      setIsApiKeyModalOpen(false);
-    }, 1200);
-  };
-
   return (
     <>
       {/* ========================================================================= */}
@@ -348,15 +328,6 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Botón de Ajustes / Gemini API Key */}
-              <button
-                onClick={() => setIsApiKeyModalOpen(!isApiKeyModalOpen)}
-                className="btn btn-ghost btn-circle btn-xs text-white/80 hover:text-white hover:bg-white/10"
-                title="Configuración de Google Gemini"
-              >
-                <IconSettings className="w-4 h-4" />
-              </button>
-
               {/* Botón opcional de pantalla completa */}
               {onNavigateToFullSupport && (
                 <button
@@ -381,41 +352,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
             </div>
           </div>
 
-          {/* Mini-panel desplegable para configurar Google AI Gemini */}
-          {isApiKeyModalOpen && (
-            <div className="bg-base-200/90 border-b border-base-300 p-3 space-y-2 text-xs animate-fade-in">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-base-content flex items-center gap-1.5">
-                  <IconKey className="w-3.5 h-3.5 text-primary" />
-                  Motor Google Gemini (Gratuito)
-                </span>
-                <span className="text-[10px] text-base-content/60">
-                  {hasGeminiApiKey() ? 'API Conectada' : 'Modo Estándar'}
-                </span>
-              </div>
-              <p className="text-[10.5px] text-base-content/70 leading-normal">
-                Usa el modelo gratuito <strong>gemini-1.5-flash</strong> de Google AI Studio para respuestas médicas generativas avanzadas.
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={customApiKey}
-                  onChange={(e) => setCustomApiKey(e.target.value)}
-                  placeholder="Pega tu API Key de Gemini..."
-                  className="input input-xs input-bordered flex-1 rounded-lg text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={handleSaveApiKey}
-                  className="btn btn-xs btn-primary text-white rounded-lg font-bold"
-                >
-                  {apiKeySavedSuccess ? '¡Guardada!' : 'Guardar'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Barra de Pestañas: Chat con Synova vs Mis Tickets */}
+          {/* Barra de Pestañas: Chat de Soporte vs Mis Tickets */}
           <div className="flex border-b border-base-200 bg-base-200/50 p-1 shrink-0">
             <button
               onClick={() => setActiveTab('chat')}
@@ -426,7 +363,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
               }`}
             >
               <IconSparkles className="w-3.5 h-3.5 text-primary" />
-              <span>Chat con Synova</span>
+              <span>Chat de Soporte</span>
             </button>
 
             <button
