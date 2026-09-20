@@ -17,12 +17,16 @@ export interface SynovaAnalysisResult {
 const STORAGE_KEY = 'synova_gemini_api_key';
 
 /**
- * Obtiene la API Key de Gemini configurada (desde .env o localStorage)
+ * Obtiene la API Key de Gemini configurada (desde .env con VITE_, o localStorage)
  */
 export function getGeminiApiKey(): string {
-  const envKey = import.meta.env.GEMINI_API_KEY;
-  if (typeof envKey === 'string' && envKey.trim().length > 0) {
-    return envKey.trim();
+  const envVite = import.meta.env.VITE_GEMINI_API_KEY;
+  if (typeof envVite === 'string' && envVite.trim().length > 0) {
+    return envVite.trim();
+  }
+  const envRaw = (import.meta.env as any).GEMINI_API_KEY;
+  if (typeof envRaw === 'string' && envRaw.trim().length > 0) {
+    return envRaw.trim();
   }
   return localStorage.getItem(STORAGE_KEY)?.trim() || '';
 }
@@ -47,41 +51,128 @@ export function hasGeminiApiKey(): boolean {
 }
 
 /**
- * Motor clínico de respaldo por si no hay API Key o falla la conexión con Google AI
+ * Motor clínico conversacional de respaldo por si no hay API Key o falla la conexión
+ * Entabla diálogo real con preguntas e instrucciones de contingencia.
+ * NUNCA adjunta tarjeta de ticket a menos que el usuario lo solicite expresamente.
  */
-export function runLocalClinicalDiagnosis(input: string): SynovaAnalysisResult {
-  const text = input.toLowerCase();
+export function runLocalClinicalDiagnosis(
+  input: string,
+  history: Array<{ sender: 'user' | 'bot'; text: string }> = []
+): SynovaAnalysisResult {
+  const text = input.toLowerCase().trim();
 
+  // 1. Solicitud directa de levantar ticket
   if (
-    text.includes('analizador') ||
-    text.includes('equipo') ||
-    text.includes('alarma') ||
-    text.includes('aspiracion') ||
-    text.includes('aspiración') ||
-    text.includes('aguja') ||
-    text.includes('motor') ||
-    text.includes('bloqueo') ||
-    text.includes('no enciende') ||
-    text.includes('quimica') ||
-    text.includes('química') ||
-    text.includes('hematologia') ||
-    text.includes('hematología')
+    text.includes('levantar ticket') ||
+    text.includes('levantar un ticket') ||
+    text.includes('abrir ticket') ||
+    text.includes('crear ticket') ||
+    text.includes('genera ticket') ||
+    text.includes('sí levanta') ||
+    text.includes('si levanta')
   ) {
+    // Buscar contexto en los últimos mensajes para hacer un asunto preciso
+    const lastUserIssue =
+      history
+        .filter((h) => h.sender === 'user' && !h.text.toLowerCase().includes('ticket'))
+        .pop()?.text || input;
+
+    let category: TicketCategory = 'SISTEMA';
+    let priority: TicketPriority = 'ALTA';
+    let likelyCause = 'Incidencia operativa reportada para atención por mesa técnica.';
+    let suggestedAction = 'Revisión prioritaria por el departamento de soporte e ingeniería.';
+
+    const lowerIssue = lastUserIssue.toLowerCase();
+    if (lowerIssue.includes('analizador') || lowerIssue.includes('equipo') || lowerIssue.includes('alarma') || lowerIssue.includes('aguja')) {
+      category = 'EQUIPOS';
+      priority = 'CRITICA';
+      likelyCause = 'Alarma o bloqueo mecánico en analizador analítico.';
+      suggestedAction = 'Inspección electromecánica y revisión de sensor por ingeniería biomédica.';
+    } else if (lowerIssue.includes('reactivo') || lowerIssue.includes('calibr') || lowerIssue.includes('westgard') || lowerIssue.includes('lote')) {
+      category = 'CALIDAD';
+      priority = 'ALTA';
+      likelyCause = 'Desvío en control de calidad o lote de reactivo fuera de tolerancia.';
+      suggestedAction = 'Auditoría de lote, verificación de blancos y recalibración.';
+    }
+
     return {
       reply:
-        'He revisado la situación con el analizador. Te aconsejo inspeccionar la aguja de aspiración, verificar el circuito de fluidos y purgar el sistema. Si la alarma persiste por más de 60 segundos tras el reinicio, generemos un ticket de soporte técnico.\n\n¿Deseas que levante el ticket oficial ahora mismo para que el equipo de ingeniería atienda el equipo prioritariamente?',
+        'Con gusto. He estructurado los detalles para abrir formalmente tu ticket de soporte técnico ante nuestro equipo de ingeniería. Por favor revisa la tarjeta a continuación y confirma para enviarlo a la cola de atención inmediata:',
       suggestedTicket: {
-        subject: `Alarma o Falla en Analizador: ${input.slice(0, 50)}...`,
-        description: input,
-        category: 'EQUIPOS',
-        priority: 'CRITICA',
-        likelyCause: 'Obstrucción en sonda de aspiración o descalibración en motor de movimiento.',
-        suggestedAction: '1. Desconectar y purgar línea hidráulica.\n2. Limpiar aguja con solución desproteinizante.\n3. Ejecutar ciclo de autoprueba.',
+        subject: `Incidencia: ${lastUserIssue.slice(0, 50)}...`,
+        description: lastUserIssue,
+        category,
+        priority,
+        likelyCause,
+        suggestedAction,
       },
       source: 'clinical_engine',
     };
   }
 
+  // 2. Saludos e introducciones
+  if (text === 'hola' || text === 'buenos días' || text === 'buenas tardes' || text === 'buenas noches' || text === 'que tal' || text === 'buenas') {
+    return {
+      reply:
+        '¡Hola! Qué gusto saludarte. ¿Cómo está marchando la jornada en tu laboratorio? Cuéntame con qué equipo, reactivo o módulo del sistema necesitas apoyo hoy.',
+      source: 'clinical_engine',
+    };
+  }
+
+  // 3. Alarmas o fallas en analizadores
+  if (
+    text.includes('analizador') ||
+    text.includes('alarma') ||
+    text.includes('falla mecanica') ||
+    text.includes('falla mecánica') ||
+    text.includes('aspiracion') ||
+    text.includes('aspiración') ||
+    text.includes('aguja') ||
+    text.includes('motor') ||
+    text.includes('bloqueo') ||
+    text.includes('no enciende')
+  ) {
+    return {
+      reply:
+        'Las alertas en analizadores clínicos son de máxima prioridad para no detener la corrida de pacientes.\n\n¿Qué marca o modelo de equipo tienes (por ejemplo Mindray, Cobas, Beckman Coulter) y qué código o mensaje de alarma exacto te muestra en la pantalla?\n\nMientras me comentas, te sugiero verificar:\n1. Si la aguja de aspiración tiene algún obstáculo físico o coágulo de fibrina.\n2. Si los frascos de desecho y diluyente están en sus niveles correctos.\n3. Si la presión de vacío es normal.',
+      source: 'clinical_engine',
+    };
+  }
+
+  // 4. Fallas generales en el sistema
+  if (
+    text.includes('fallas en el sistema') ||
+    text.includes('falla en el sistema') ||
+    text.includes('el sistema falla') ||
+    text.includes('no funciona el sistema') ||
+    text.includes('se trabó') ||
+    text.includes('se trabo') ||
+    text.includes('no carga')
+  ) {
+    return {
+      reply:
+        'Lamento mucho el inconveniente con el sistema. Para apoyarte a solucionarlo de inmediato:\n\n¿En qué módulo o pantalla específica te está ocurriendo? (Por ejemplo: ¿en Recepción de Órdenes, en Captura de Resultados, en Catálogo o al imprimir PDF?)\n\n¿Te aparece algún mensaje de error en color rojo o la pantalla se queda congelada?',
+      source: 'clinical_engine',
+    };
+  }
+
+  // 5. Errores al guardar, captura o resultados
+  if (
+    text.includes('guardar') ||
+    text.includes('error 500') ||
+    text.includes('no me deja') ||
+    text.includes('capturar') ||
+    text.includes('resultados') ||
+    text.includes('folio')
+  ) {
+    return {
+      reply:
+        'Entendido. Ese tipo de incidencia suele presentarse cuando algún valor contiene un carácter inesperado, o cuando hubo una micro-interrupción momentánea con la base de datos central.\n\n¿Te ocurre con un paciente o folio en particular, o con todas las órdenes? Si recargas la página (F5) e intentas guardar de nuevo, ¿persiste el error? Si persiste, dime y abrimos un ticket prioritario para que desarrollo revise los registros.',
+      source: 'clinical_engine',
+    };
+  }
+
+  // 6. Reactivos, calibraciones y control de calidad
   if (
     text.includes('reactivo') ||
     text.includes('lote') ||
@@ -94,186 +185,143 @@ export function runLocalClinicalDiagnosis(input: string): SynovaAnalysisResult {
   ) {
     return {
       reply:
-        'Parece ser un problema con reactivos o calibración analítica. Si los controles violan las reglas de Westgard (1:3s o 2:2s), te recomiendo atemperar un vial nuevo a 22°C y repetir el blanco de calibración.\n\n¿Gustas que levante un ticket de soporte para auditar este lote y calibración?',
-      suggestedTicket: {
-        subject: `Incidencia en Reactivos o Calibración: ${input.slice(0, 50)}...`,
-        description: input,
-        category: 'CALIDAD',
-        priority: 'ALTA',
-        likelyCause: 'Pérdida de estabilidad en reactivo a bordo o desvío fotométrico sistemático.',
-        suggestedAction: '1. Verificar lote y fecha de vencimiento.\n2. Reconstituir nuevo frasco de calibrador.\n3. Validar blanco con agua desionizada.',
-      },
+        'En temas de calibración y control de calidad:\n\n¿Qué analito o prueba específica está mostrando desvío (por ejemplo Glucosa, Colesterol, TGO/TGP) y qué regla de Westgard infringió (1:3s o 2:2s)?\n\nTe recomiendo revisar la fecha de reconstitución del calibrador, verificar que esté a temperatura ambiente (22°C) y hacer un blanco con agua desionizada antes de repetir la corrida.',
       source: 'clinical_engine',
     };
   }
 
-  if (
-    text.includes('orden') ||
-    text.includes('folio') ||
-    text.includes('paciente') ||
-    text.includes('resultado') ||
-    text.includes('pdf') ||
-    text.includes('impresion') ||
-    text.includes('impresión') ||
-    text.includes('ultramsg') ||
-    text.includes('whatsapp')
-  ) {
+  // 7. Impresiones, PDF o etiquetas
+  if (text.includes('impres') || text.includes('pdf') || text.includes('etiqueta') || text.includes('termica') || text.includes('térmica')) {
     return {
       reply:
-        'Entiendo tu consulta sobre folios, pacientes o reportes de laboratorio. Puedo ayudarte a sincronizar el estado o podemos levantar un ticket de soporte técnico si requieres una corrección directa en el sistema.\n\n¿Te gustaría que levante un ticket para que el personal técnico le dé seguimiento?',
-      suggestedTicket: {
-        subject: `Consulta sobre Folio / Resultados: ${input.slice(0, 50)}...`,
-        description: input,
-        category: 'SISTEMA',
-        priority: 'MEDIA',
-        likelyCause: 'Ajuste de datos o estado en módulo de recepción y resultados.',
-        suggestedAction: 'Revisar folios generados y sincronizar con base de datos central.',
-      },
+        'Respecto a la impresión:\n\n¿El problema se presenta con las etiquetas térmicas de tubos (50x25 mm) o con el reporte clínico oficial membretado en PDF?\n\nVerifica que la impresora predeterminada esté encendida y conectada. Si el PDF no genera el membrete o la firma digital, podemos revisarlo de inmediato.',
       source: 'clinical_engine',
     };
   }
 
+  // 8. Respuesta conversacional general
   return {
     reply:
-      'He tomado nota de lo que necesitas. Puedo ofrecerte una solución guiada o podemos levantar un ticket de soporte técnico oficial para que nuestro equipo lo resuelva de inmediato.\n\n¿Deseas que levante el ticket con estos detalles?',
-    suggestedTicket: {
-      subject: `Solicitud de Soporte: ${input.slice(0, 50)}...`,
-      description: input,
-      category: 'SISTEMA',
-      priority: 'MEDIA',
-      likelyCause: 'Requerimiento o incidencia operativa reportada por el personal de la sede.',
-      suggestedAction: 'Asignar a un asesor técnico para atención directa.',
-    },
+      'Te escucho atentamente. Para darte la orientación más precisa, ¿podrías darme un poco más de detalle sobre lo que sucede o qué observas en el equipo o en pantalla? También puedes indicarme si prefieres que levantemos un ticket formal para que el área técnica te contacte.',
     source: 'clinical_engine',
   };
 }
 
 /**
- * Consulta a la API de Google Gemini (modelo gratuito gemini-1.5-flash / gemini-2.0-flash)
+ * Consulta unificada a Synova:
+ * 1. Intenta Google Gemini en el cliente (si hay API Key en frontend).
+ * 2. Si no, intenta consultar al backend /support/ai-chat (donde Render tiene las variables de entorno).
+ * 3. Si no hay conexión con Gemini, utiliza el motor conversacional clínico local de Synova.
  */
 export async function querySynovaGemini(
   userInput: string,
   history: Array<{ sender: 'user' | 'bot'; text: string }>,
-  userName: string
+  userName: string,
+  apiClient?: { post: (url: string, data: any) => Promise<any> }
 ): Promise<SynovaAnalysisResult> {
   const apiKey = getGeminiApiKey();
 
-  // Si no hay API Key configurada, usar el motor clínico local
-  if (!apiKey) {
-    return runLocalClinicalDiagnosis(userInput);
-  }
-
-  const systemInstruction = `
+  // CASO 1: Hay API Key en el Frontend
+  if (apiKey) {
+    const systemInstruction = `
 Eres Synova, la especialista de soporte técnico clínico de LabSystem Clinique.
-Estás conversando directamente con ${userName}, personal del laboratorio.
-Tu función es exclusiva: brindar soporte técnico y operativo experto sobre el sistema de laboratorio, analizadores clínicos (química, hematología, electrolitos), reactivos, curvas de calibración, control de calidad (Westgard, Levey-Jennings), órdenes y resultados.
-
-DIRECTRICES:
-1. Conversa de manera natural, empática, profesional y concisa, como una ingeniera o especialista de mesa de ayuda clínica de primer nivel.
-2. NUNCA menciones que eres una inteligencia artificial, modelo de lenguaje o IA. Habla como una compañera especialista de soporte.
-3. Brinda recomendaciones prácticas y directas (pasos de reinicio, lavado con desproteinizante, verificación de blancos, control de temperatura, verificación de folios).
-4. Si el usuario reporta una falla o problema técnico que requiera seguimiento formal, o solicita "levantar ticket":
-   - Explícale brevemente el diagnóstico o contingencia y proponle levantar un ticket de soporte oficial.
-   - Incluye al final de tu respuesta el bloque delimitado exactamente por \`\`\`ticket_json y \`\`\` con la estructura:
+Estás conversando directamente con ${userName}, profesional del laboratorio clínico.
+Tu función principal es entablar una conversación de soporte técnico real, empática, indagatoria y resolutiva.
+DIRECTRICES ESENCIALES:
+1. NUNCA digas que eres una inteligencia artificial, IA o modelo de lenguaje. Comunícate con calidez y seguridad técnica como una especialista de soporte humano.
+2. ENTABLA UNA CONVERSACIÓN REAL: Haz preguntas de diagnóstico pertinentes (ej. marca/modelo de equipo, código de error en pantalla, reactivo, o módulo del sistema donde ocurre la falla).
+3. Da sugerencias prácticas de contingencia inmediata según aplique.
+4. NO ofrezcas levantar tickets en cada respuesta ni uses textos robóticos o repetitivos.
+5. ÚNICAMENTE cuando el usuario pida explícitamente "levantar ticket", "crear ticket", "reportar problema", o cuando la conversación confirme una avería física/mecánica grave que requiera visita técnica, añade AL FINAL de tu respuesta el bloque delimitado exactamente por \`\`\`ticket_json y \`\`\`:
 \`\`\`ticket_json
 {
-  "subject": "Título conciso y claro del problema",
+  "subject": "Título conciso y claro de la incidencia",
   "category": "EQUIPOS" | "CALIDAD" | "SISTEMA" | "FACTURACION",
   "priority": "BAJA" | "MEDIA" | "ALTA" | "CRITICA",
-  "likelyCause": "Causa probable según los datos proporcionados",
+  "likelyCause": "Causa preliminar detectada",
   "suggestedAction": "Acción inmediata recomendada"
 }
 \`\`\`
-5. Si es un saludo, una pregunta general o una consulta sin fallo, responde cálidamente y no agregues el bloque ticket_json.
-Responde siempre en español de forma directa y profesional.
+Si es una consulta normal, saludo o diálogo indagatorio, NO agregues el bloque ticket_json.
+Responde siempre en español.
 `.trim();
 
-  // Armar historial de conversación para Gemini
-  const contents = [];
-
-  // Agregar últimos turnos de contexto (máximo 6 para agilidad)
-  const recentHistory = history.slice(-6);
-  for (const h of recentHistory) {
+    const contents: any[] = [];
+    const recentHistory = history.slice(-8);
+    for (const h of recentHistory) {
+      contents.push({
+        role: h.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: h.text }],
+      });
+    }
     contents.push({
-      role: h.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: h.text }],
-    });
-  }
-
-  // Turno actual del usuario
-  contents.push({
-    role: 'user',
-    parts: [{ text: userInput }],
-  });
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemInstruction }],
-        },
-        contents,
-        generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 800,
-        },
-      }),
+      role: 'user',
+      parts: [{ text: userInput }],
     });
 
-    if (!res.ok) {
-      console.warn('Google Gemini API respondió con código:', res.status);
-      return runLocalClinicalDiagnosis(userInput);
-    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    const data = await res.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents,
+          generationConfig: { temperature: 0.5, maxOutputTokens: 900 },
+        }),
+      });
 
-    if (!rawText || typeof rawText !== 'string') {
-      return runLocalClinicalDiagnosis(userInput);
-    }
-
-    // Extraer bloque ticket_json si viene incluido
-    let cleanReply = rawText;
-    let suggestedTicket: SynovaAnalysisResult['suggestedTicket'] | undefined;
-
-    const ticketBlockRegex = /```ticket_json\s*([\s\S]*?)\s*```/;
-    const match = rawText.match(ticketBlockRegex);
-
-    if (match && match[1]) {
-      try {
-        const parsed = JSON.parse(match[1]);
-        suggestedTicket = {
-          subject: parsed.subject || `Incidencia: ${userInput.slice(0, 45)}...`,
-          description: userInput,
-          category: (['EQUIPOS', 'CALIDAD', 'SISTEMA', 'FACTURACION'].includes(parsed.category)
-            ? parsed.category
-            : 'SISTEMA') as TicketCategory,
-          priority: (['BAJA', 'MEDIA', 'ALTA', 'CRITICA'].includes(parsed.priority)
-            ? parsed.priority
-            : 'MEDIA') as TicketPriority,
-          likelyCause: parsed.likelyCause || 'Análisis preliminar de Synova.',
-          suggestedAction: parsed.suggestedAction || 'Revisar por soporte técnico.',
-        };
-        // Quitar el bloque JSON del texto visible al usuario
-        cleanReply = rawText.replace(ticketBlockRegex, '').trim();
-      } catch (err) {
-        console.warn('Error al parsear bloque ticket_json de Gemini:', err);
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (rawText) {
+          let cleanReply = rawText;
+          let suggestedTicket: any = undefined;
+          const match = rawText.match(/```ticket_json\s*([\s\S]*?)\s*```/);
+          if (match && match[1]) {
+            try {
+              const parsed = JSON.parse(match[1]);
+              suggestedTicket = {
+                subject: parsed.subject || `Incidencia: ${userInput.slice(0, 45)}...`,
+                description: userInput,
+                category: parsed.category || 'SISTEMA',
+                priority: parsed.priority || 'MEDIA',
+                likelyCause: parsed.likelyCause || 'Diagnóstico de Synova.',
+                suggestedAction: parsed.suggestedAction || 'Atención por mesa de ayuda.',
+              };
+              cleanReply = rawText.replace(/```ticket_json\s*([\s\S]*?)\s*```/, '').trim();
+            } catch {}
+          }
+          return { reply: cleanReply, suggestedTicket, source: 'gemini' };
+        }
       }
+    } catch (err) {
+      console.warn('Error llamando a Gemini desde frontend:', err);
     }
-
-    return {
-      reply: cleanReply,
-      suggestedTicket,
-      source: 'gemini',
-    };
-  } catch (err) {
-    console.error('Error al conectar con Google Gemini:', err);
-    return runLocalClinicalDiagnosis(userInput);
   }
+
+  // CASO 2: Consultar al Backend (donde Render tiene las variables de entorno como GEMINI_API_KEY)
+  if (apiClient) {
+    try {
+      const backendRes = await apiClient.post('/support/ai-chat', {
+        message: userInput,
+        history,
+        userName,
+      });
+
+      if (backendRes?.data && backendRes.data.source === 'gemini' && backendRes.data.reply) {
+        return {
+          reply: backendRes.data.reply,
+          suggestedTicket: backendRes.data.suggestedTicket,
+          source: 'gemini',
+        };
+      }
+    } catch (err) {
+      console.warn('Backend ai-chat no disponible o sin API key, usando motor clínico local.');
+    }
+  }
+
+  // CASO 3: Motor conversacional clínico local de Synova (respuestas naturales, indagatorias y resolutivas)
+  return runLocalClinicalDiagnosis(userInput, history);
 }

@@ -137,7 +137,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
         text: m.text,
       }));
 
-      const analysis = await querySynovaGemini(text, conversationHistory, userName);
+      const analysis = await querySynovaGemini(text, conversationHistory, userName, api);
 
       const botMsg: BotMessage = {
         id: `bot-${Date.now()}`,
