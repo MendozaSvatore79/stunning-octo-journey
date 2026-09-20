@@ -20,7 +20,7 @@ const STORAGE_KEY = 'synova_gemini_api_key';
  * Obtiene la API Key de Gemini configurada (desde .env o localStorage)
  */
 export function getGeminiApiKey(): string {
-  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const envKey = import.meta.env.GEMINI_API_KEY;
   if (typeof envKey === 'string' && envKey.trim().length > 0) {
     return envKey.trim();
   }
