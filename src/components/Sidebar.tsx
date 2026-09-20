@@ -88,7 +88,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
         <label htmlFor="main-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
 
         {/* Sidebar responsivo para móviles pequeños hasta pantallas grandes */}
-        <aside className="bg-base-100 min-h-screen w-64 max-w-[82vw] flex flex-col border-r border-base-200 overflow-x-hidden shrink-0">
+        <aside className="bg-base-100 min-h-screen w-72 max-w-[85vw] flex flex-col border-r border-base-200 overflow-x-hidden shrink-0">
           {/* Logo del Sistema Dinámico por Sede */}
           <div className="p-5 border-b border-base-200 flex items-center gap-3 shrink-0">
             {activeBranding.logo ? (
@@ -236,7 +236,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                         className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'pending-orders' ? 'active font-bold' : ''}`}
                       >
                         <IconClock className="w-3.5 h-3.5 text-warning shrink-0" />
-                        <span className="truncate">Pendientes</span>
+                        <span className="whitespace-nowrap font-medium">Pendientes</span>
                       </button>
                     </li>
                     <li>
@@ -245,7 +245,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                         className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'completed-orders' ? 'active font-bold' : ''}`}
                       >
                         <IconCheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
-                        <span className="truncate">Completadas</span>
+                        <span className="whitespace-nowrap font-medium">Completadas</span>
                       </button>
                     </li>
                   </ul>

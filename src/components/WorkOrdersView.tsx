@@ -519,36 +519,55 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         </div>
       </section>
 
-      {/* Control de Pestañas */}
-      <div className="tabs tabs-boxed bg-base-200 p-1 rounded-xl w-full max-w-md flex-nowrap overflow-x-auto scrollbar-none">
+      {/* Control de Pestañas Responsivo sin Desbordamiento */}
+      <div className="tabs tabs-boxed bg-base-200/80 p-1 rounded-2xl w-full sm:max-w-lg grid grid-cols-3 gap-1 border border-base-300/50 shadow-xs">
         <button
           onClick={() => setActiveTab('create')}
-          className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
-            activeTab === 'create' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
+          className={`tab h-auto py-2.5 px-1 sm:px-3 rounded-xl font-bold gap-1 sm:gap-2 text-xs sm:text-sm w-full flex items-center justify-center transition-all ${
+            activeTab === 'create'
+              ? 'tab-active bg-primary text-primary-content shadow-xs'
+              : 'text-base-content/70 hover:text-base-content hover:bg-base-100/50'
           }`}
         >
-          <IconClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Crear <span className="hidden sm:inline">Orden de Trabajo</span></span>
+          <IconClipboardList className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="whitespace-nowrap">
+            Crear <span className="hidden sm:inline">Orden</span>
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('pending')}
-          className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
-            activeTab === 'pending' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
+          className={`tab h-auto py-2.5 px-1 sm:px-3 rounded-xl font-bold gap-1 sm:gap-2 text-xs sm:text-sm w-full flex items-center justify-center transition-all ${
+            activeTab === 'pending'
+              ? 'tab-active bg-primary text-primary-content shadow-xs'
+              : 'text-base-content/70 hover:text-base-content hover:bg-base-100/50'
           }`}
         >
-          <IconClock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Pendientes ({pendingOrders.length})</span>
+          <IconClock className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'pending' ? 'text-primary-content' : 'text-warning'}`} />
+          <span className="whitespace-nowrap inline-flex items-center gap-0.5 sm:gap-1">
+            <span>Pendientes</span>
+            <span className="text-[10px] sm:text-xs font-semibold opacity-90">
+              ({pendingOrders.length})
+            </span>
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('completed')}
-          className={`tab rounded-lg font-bold gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0 ${
-            activeTab === 'completed' ? 'tab-active bg-primary text-primary-content shadow-xs' : ''
+          className={`tab h-auto py-2.5 px-1 sm:px-3 rounded-xl font-bold gap-1 sm:gap-2 text-xs sm:text-sm w-full flex items-center justify-center transition-all ${
+            activeTab === 'completed'
+              ? 'tab-active bg-primary text-primary-content shadow-xs'
+              : 'text-base-content/70 hover:text-base-content hover:bg-base-100/50'
           }`}
         >
-          <IconCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Completadas ({completedOrders.length})</span>
+          <IconCheckCircle className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeTab === 'completed' ? 'text-primary-content' : 'text-success'}`} />
+          <span className="whitespace-nowrap inline-flex items-center gap-0.5 sm:gap-1">
+            <span className="inline sm:hidden">Completas</span>
+            <span className="hidden sm:inline">Completadas</span>
+            <span className="text-[10px] sm:text-xs font-semibold opacity-90">
+              ({completedOrders.length})
+            </span>
+          </span>
         </button>
       </div>
 
