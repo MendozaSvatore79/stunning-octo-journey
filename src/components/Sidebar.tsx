@@ -15,7 +15,6 @@ import {
   IconPlus,
   IconCertificate,
   IconChartLine,
-  IconHeadphones,
   IconMicroscope,
   IconClock,
   IconCheckCircle,
@@ -329,20 +328,6 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                 </button>
               </li>
             )}
-
-            {/* OPCIÓN DE MENÚ: SOPORTE TÉCNICO CON GETSTREAM CHAT */}
-            <li>
-              <button
-                onClick={() => handleNav('support')}
-                className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'support' ? 'active font-bold' : 'hover:bg-base-200'}`}
-              >
-                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                  <IconHeadphones className="w-4 h-4" />
-                </div>
-                <span className="truncate flex-1 text-left">Soporte Técnico</span>
-                <span className="badge badge-accent badge-xs font-bold font-mono">LIVE</span>
-              </button>
-            </li>
 
             {isOperationalUser && (
               <li>

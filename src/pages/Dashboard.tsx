@@ -25,6 +25,7 @@ const MaintenanceControlModal = lazy(() => import('../components/MaintenanceCont
 const ReagentsInventoryView = lazy(() => import('../components/ReagentsInventoryView'));
 const AnalyzerInterfaceView = lazy(() => import('../components/AnalyzerInterfaceView'));
 const GeneralSettingsView = lazy(() => import('../components/GeneralSettingsView'));
+const SupportBotBubble = lazy(() => import('../components/SupportBotBubble'));
 import { useLabBranding } from '../context/LabBrandingContext';
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
@@ -339,6 +340,9 @@ export default function Dashboard() {
             onClose={() => setIsMaintenanceControlOpen(false)}
           />
         )}
+
+        {/* Bot Flotante de Soporte Técnico y Levantamiento de Tickets */}
+        <SupportBotBubble onNavigateToFullSupport={() => setActiveView('support')} />
       </Suspense>
     </Sidebar>
   );
