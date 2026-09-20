@@ -183,6 +183,17 @@ export default function Dashboard() {
             <span className="hidden md:inline">Guía</span>
           </button>
 
+          {/* Botón de Acceso Directo a Synova Soporte Clínico */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-synova-bot'))}
+            className="btn btn-xs sm:btn-sm btn-ghost border border-teal-600/30 text-teal-700 dark:text-teal-400 hover:bg-teal-500/10 gap-1 sm:gap-1.5 text-xs rounded-xl px-2 sm:px-3 font-bold"
+            title="Abrir Asistente Synova y Mesa de Ayuda"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="font-serif italic font-black text-xs sm:text-sm">S</span>
+            <span className="hidden sm:inline">Synova</span>
+          </button>
+
           <div className="shrink-0 flex items-center">
             <UserButton
               afterSignOutUrl="/"

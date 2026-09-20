@@ -76,6 +76,12 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
     });
   };
 
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-synova-bot', handleOpen);
+    return () => window.removeEventListener('open-synova-bot', handleOpen);
+  }, []);
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -269,10 +275,10 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
       {/* 1. BURBUJA FLOTANTE SYNOVA (SIEMPRE VISIBLE, SEGURA Y REPOSICIONABLE)     */}
       {/* ========================================================================= */}
       <div
-        className={`fixed z-50 flex flex-col group select-none transition-all duration-300 ${
+        className={`fixed z-[100] flex flex-col group select-none transition-all duration-300 ${
           positionSide === 'left'
-            ? 'bottom-5 left-5 items-start'
-            : 'bottom-5 right-5 items-end'
+            ? 'bottom-5 left-4 sm:left-6 lg:left-[20rem] items-start'
+            : 'bottom-5 right-4 sm:right-6 items-end'
         }`}
       >
         {/* Tooltip moderno que SOLO aparece al hacer HOVER (NO tapa texto ni datos) */}
@@ -361,9 +367,9 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
       {/* ========================================================================= */}
       {isOpen && (
         <div
-          className={`fixed z-50 w-[calc(100vw-1.5rem)] sm:w-[410px] md:w-[430px] max-w-[95vw] h-[560px] max-h-[82vh] bg-base-100 border border-base-300 shadow-2xl rounded-3xl flex flex-col overflow-hidden animate-scale-in ${
+          className={`fixed z-[100] w-[calc(100vw-1.5rem)] sm:w-[410px] md:w-[430px] max-w-[95vw] h-[560px] max-h-[82vh] bg-base-100 border border-base-300 shadow-2xl rounded-3xl flex flex-col overflow-hidden animate-scale-in ${
             positionSide === 'left'
-              ? 'bottom-20 left-3 sm:bottom-24 sm:left-6'
+              ? 'bottom-20 left-3 sm:bottom-24 sm:left-6 lg:left-[20rem]'
               : 'bottom-20 right-3 sm:bottom-24 sm:right-6'
           }`}
         >
