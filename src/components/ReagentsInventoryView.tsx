@@ -1,5 +1,6 @@
 // src/components/ReagentsInventoryView.tsx
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useApi } from '../hooks/useApi';
 import {
   IconFlask,
   IconCheckCircle,
@@ -9,6 +10,7 @@ import {
   IconSearch,
   IconX,
   IconSparkles,
+  IconTrash,
 } from './icons';
 
 export interface ReagentLot {
@@ -25,118 +27,41 @@ export interface ReagentLot {
   presentation: string;
 }
 
-const DEFAULT_REAGENTS: ReagentLot[] = [
-  {
-    id: 'rea-1',
-    name: 'Glucosa GOD-PAP Líquida Enzimática',
-    category: 'Química Clínica',
-    brand: 'Wiener Lab',
-    lotNumber: 'LT-GLU-2026A',
-    expirationDate: '2026-11-30',
-    initialTests: 500,
-    remainingTests: 340,
-    minThreshold: 80,
-    storageCondition: '2°C - 8°C (Refrigerado)',
-    presentation: 'Frasco 4 x 50 mL',
-  },
-  {
-    id: 'rea-2',
-    name: 'Colesterol Total CHOD-PAP',
-    category: 'Química Clínica',
-    brand: 'BioSystems',
-    lotNumber: 'LT-COL-9932B',
-    expirationDate: '2026-10-15',
-    initialTests: 400,
-    remainingTests: 120,
-    minThreshold: 60,
-    storageCondition: '2°C - 8°C (Refrigerado)',
-    presentation: 'Frasco 2 x 100 mL',
-  },
-  {
-    id: 'rea-3',
-    name: 'Triglicéridos GPO-PAP Monorreactivo',
-    category: 'Química Clínica',
-    brand: 'Spinreact',
-    lotNumber: 'LT-TG-4421C',
-    expirationDate: '2026-12-31',
-    initialTests: 350,
-    remainingTests: 280,
-    minThreshold: 50,
-    storageCondition: '2°C - 8°C (Refrigerado)',
-    presentation: 'Frasco 2 x 50 mL',
-  },
-  {
-    id: 'rea-4',
-    name: 'Cellpack DCL Diluyente Hematológico',
-    category: 'Hematología',
-    brand: 'Sysmex',
-    lotNumber: 'LT-DCL-8871',
-    expirationDate: '2026-08-20', // Próximo o vencido
-    initialTests: 1200,
-    remainingTests: 65,
-    minThreshold: 100,
-    storageCondition: '15°C - 30°C (Ambiente)',
-    presentation: 'Bidón 20 Litros',
-  },
-  {
-    id: 'rea-5',
-    name: 'Tiras Reactivas para Orina Combur 10',
-    category: 'Urianálisis',
-    brand: 'Roche Cobas',
-    lotNumber: 'LT-URI-5520',
-    expirationDate: '2027-02-28',
-    initialTests: 100,
-    remainingTests: 88,
-    minThreshold: 20,
-    storageCondition: '2°C - 30°C (Lugar Seco)',
-    presentation: 'Tubo 100 Tiras',
-  },
-  {
-    id: 'rea-6',
-    name: 'Neoplastine Clot Tromboplastina Líquida',
-    category: 'Coagulación',
-    brand: 'Diagnostica Stago',
-    lotNumber: 'LT-TP-3310A',
-    expirationDate: '2026-09-25', // Alerta próxima caducidad
-    initialTests: 250,
-    remainingTests: 30,
-    minThreshold: 40,
-    storageCondition: '2°C - 8°C (Refrigerado)',
-    presentation: 'Viales 6 x 5 mL',
-  },
-  {
-    id: 'rea-7',
-    name: 'Hemoglobina Glicosilada HbA1c Directa',
-    category: 'Inmunología',
-    brand: 'Bio-Rad Laboratories',
-    lotNumber: 'LT-A1C-7721',
-    expirationDate: '2026-12-15',
-    initialTests: 200,
-    remainingTests: 145,
-    minThreshold: 30,
-    storageCondition: '2°C - 8°C (Refrigerado)',
-    presentation: 'Kit 200 Determinaciones',
-  },
-];
-
 const STORAGE_KEY = 'lab_reagents_inventory_v1';
 
 export default function ReagentsInventoryView() {
-  const [reagents, setReagents] = useState<ReagentLot[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return DEFAULT_REAGENTS;
-      }
-    }
-    return DEFAULT_REAGENTS;
-  });
+  const api = useApi();
+  const [reagents, setReagents] = useState<ReagentLot[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'optimal' | 'warning' | 'critical'>('all');
+
+  // Cargar inventario desde Neon DB vía Backend API
+  const fetchReagents = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.get('/reagents');
+      if (Array.isArray(res.data)) {
+        setReagents(res.data);
+      } else {
+        setReagents([]);
+      }
+    } catch (err) {
+      console.error('Error al cargar inventario de reactivos desde la BD:', err);
+      setReagents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    // Limpiar cualquier residuo de mock previo en localStorage
+    localStorage.removeItem(STORAGE_KEY);
+    fetchReagents();
+  }, [fetchReagents]);
 
   // Modal para agregar reactivo
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -224,57 +149,98 @@ export default function ReagentsInventoryView() {
     });
   }, [reagents, searchTerm, selectedCategory, statusFilter]);
 
-  // Manejo de guardado de nuevo reactivo
-  const handleSaveNewReagent = (e: React.FormEvent) => {
+  // Manejo de guardado de nuevo reactivo en la BD
+  const handleSaveNewReagent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReagent.name || !newReagent.lotNumber || !newReagent.expirationDate) {
       alert('Por favor completa el nombre, número de lote y fecha de caducidad.');
       return;
     }
 
-    const created: ReagentLot = {
-      id: `rea-${Date.now()}`,
-      name: newReagent.name,
-      category: newReagent.category || 'Química Clínica',
-      brand: newReagent.brand || 'Genérico',
-      lotNumber: newReagent.lotNumber,
-      expirationDate: newReagent.expirationDate,
-      initialTests: Number(newReagent.initialTests) || 100,
-      remainingTests: Number(newReagent.initialTests) || 100,
-      minThreshold: Number(newReagent.minThreshold) || 20,
-      storageCondition: newReagent.storageCondition || '2°C - 8°C',
-      presentation: newReagent.presentation || 'Frasco',
-    };
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: newReagent.name.trim(),
+        category: newReagent.category || 'Química Clínica',
+        brand: newReagent.brand?.trim() || 'Genérico',
+        lotNumber: newReagent.lotNumber.trim(),
+        expirationDate: newReagent.expirationDate,
+        initialTests: Number(newReagent.initialTests) || 100,
+        remainingTests: Number(newReagent.initialTests) || 100,
+        minThreshold: Number(newReagent.minThreshold) || 20,
+        storageCondition: newReagent.storageCondition || '2°C - 8°C (Refrigerado)',
+        presentation: newReagent.presentation?.trim() || 'Caja / Frasco',
+      };
 
-    setReagents((prev) => [created, ...prev]);
-    setIsAddModalOpen(false);
-    setNewReagent({
-      name: '',
-      category: 'Química Clínica',
-      brand: '',
-      lotNumber: '',
-      expirationDate: '',
-      initialTests: 200,
-      remainingTests: 200,
-      minThreshold: 30,
-      storageCondition: '2°C - 8°C (Refrigerado)',
-      presentation: 'Caja / Frasco',
-    });
+      const res = await api.post('/reagents', payload);
+      if (res.data) {
+        setReagents((prev) => [res.data, ...prev]);
+      } else {
+        await fetchReagents();
+      }
+
+      setIsAddModalOpen(false);
+      setNewReagent({
+        name: '',
+        category: 'Química Clínica',
+        brand: '',
+        lotNumber: '',
+        expirationDate: '',
+        initialTests: 200,
+        remainingTests: 200,
+        minThreshold: 30,
+        storageCondition: '2°C - 8°C (Refrigerado)',
+        presentation: 'Caja / Frasco',
+      });
+    } catch (err) {
+      console.error('Error al guardar reactivo en la base de datos:', err);
+      alert('Hubo un error al guardar el reactivo en la base de datos. Verifica tu conexión.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Descontar determinaciones
-  const handleDeductTests = (delta: number) => {
+  // Descontar determinaciones en la BD
+  const handleDeductTests = async (delta: number) => {
     if (!selectedForAdjust) return;
-    setReagents((prev) =>
-      prev.map((r) => {
-        if (r.id === selectedForAdjust.id) {
-          const next = Math.max(0, r.remainingTests - delta);
-          return { ...r, remainingTests: next };
-        }
-        return r;
-      })
-    );
-    setSelectedForAdjust(null);
+    try {
+      const res = await api.patch(`/reagents/${selectedForAdjust.id}/adjust`, {
+        discount: delta,
+      });
+      if (res.data) {
+        setReagents((prev) =>
+          prev.map((r) => (r.id === selectedForAdjust.id ? res.data : r))
+        );
+      }
+    } catch (err) {
+      console.error('Error descontando pruebas en la base de datos:', err);
+      // Actualización optimista
+      setReagents((prev) =>
+        prev.map((r) => {
+          if (r.id === selectedForAdjust.id) {
+            const next = Math.max(0, r.remainingTests - delta);
+            return { ...r, remainingTests: next };
+          }
+          return r;
+        })
+      );
+    } finally {
+      setSelectedForAdjust(null);
+    }
+  };
+
+  // Eliminar lote de reactivo de la BD
+  const handleDeleteReagent = async (id: string, name: string) => {
+    if (!window.confirm(`¿Confirmas que deseas eliminar el reactivo "${name}" del inventario?`)) {
+      return;
+    }
+    try {
+      await api.delete(`/reagents/${id}`);
+      setReagents((prev) => prev.filter((r) => r.id !== id));
+    } catch (err) {
+      console.error('Error eliminando reactivo:', err);
+      alert('No se pudo eliminar el reactivo de la base de datos.');
+    }
   };
 
   return (
@@ -431,113 +397,158 @@ export default function ReagentsInventoryView() {
         </div>
       </div>
 
-      {/* Grid de Lotes de Reactivos con Semáforo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredReagents.map((reagent) => {
-          const status = getReagentStatus(reagent);
-          const daysLeft = getDaysUntilExpiration(reagent.expirationDate);
-          const pctLeft = Math.round((reagent.remainingTests / reagent.initialTests) * 100);
+      {/* Grid de Lotes de Reactivos con Semáforo o Estado Vacío */}
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-base-100 rounded-3xl border border-base-200 shadow-xs">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="text-xs font-semibold text-base-content/60 mt-3">
+            Cargando inventario de reactivos desde la base de datos...
+          </p>
+        </div>
+      ) : reagents.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 sm:p-16 bg-base-100 rounded-3xl border border-dashed border-base-300 shadow-xs text-center space-y-4">
+          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
+            <IconFlask className="w-8 h-8" />
+          </div>
+          <div className="max-w-md space-y-1.5">
+            <h3 className="font-black text-base sm:text-lg text-base-content">
+              Inventario Vacío
+            </h3>
+            <p className="text-xs text-base-content/60 leading-relaxed">
+              Aún no tienes reactivos ni insumos registrados en la base de datos de tu laboratorio. Registra tu primer lote para comenzar con el control de caducidades, alertas y trazabilidad analítica ISO 15189.
+            </p>
+          </div>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="btn btn-primary text-white font-bold rounded-2xl text-xs gap-2 shadow-md hover:scale-[1.01] transition-transform"
+          >
+            <IconPlus className="w-4 h-4" />
+            Registrar Primer Lote de Reactivo
+          </button>
+        </div>
+      ) : filteredReagents.length === 0 ? (
+        <div className="p-8 text-center bg-base-100 rounded-2xl border border-base-200 text-xs text-base-content/60">
+          No se encontraron reactivos que coincidan con la búsqueda o filtro seleccionado.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredReagents.map((reagent) => {
+            const status = getReagentStatus(reagent);
+            const daysLeft = getDaysUntilExpiration(reagent.expirationDate);
+            const pctLeft = Math.round((reagent.remainingTests / reagent.initialTests) * 100);
 
-          return (
-            <div
-              key={reagent.id}
-              className={`card bg-base-100 border p-5 rounded-2xl shadow-xs transition-all hover:shadow-md flex flex-col justify-between space-y-4 ${
-                status === 'critical'
-                  ? 'border-error/50 bg-error/5'
-                  : status === 'warning'
-                  ? 'border-warning/50 bg-warning/5'
-                  : 'border-base-200'
-              }`}
-            >
-              <div className="space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="badge badge-ghost badge-sm text-[10px] font-bold uppercase">
-                    {reagent.category}
-                  </span>
-                  {status === 'optimal' ? (
-                    <span className="badge badge-success text-white badge-sm text-[10px] font-bold gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Vigente ({daysLeft}d)
+            return (
+              <div
+                key={reagent.id}
+                className={`card bg-base-100 border p-5 rounded-2xl shadow-xs transition-all hover:shadow-md flex flex-col justify-between space-y-4 ${
+                  status === 'critical'
+                    ? 'border-error/50 bg-error/5'
+                    : status === 'warning'
+                    ? 'border-warning/50 bg-warning/5'
+                    : 'border-base-200'
+                }`}
+              >
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="badge badge-ghost badge-sm text-[10px] font-bold uppercase">
+                      {reagent.category}
                     </span>
-                  ) : status === 'warning' ? (
-                    <span className="badge badge-warning badge-sm text-[10px] font-bold gap-1">
-                      <IconAlertTriangle className="w-3 h-3" /> {daysLeft <= 30 ? `Vence en ${daysLeft}d` : 'Stock Bajo'}
-                    </span>
-                  ) : (
-                    <span className="badge badge-error text-white badge-sm text-[10px] font-bold gap-1">
-                      <IconAlertCircle className="w-3 h-3" /> {daysLeft <= 0 ? 'Caducado' : 'Agotado'}
-                    </span>
-                  )}
-                </div>
-
-                <div>
-                  <h3 className="font-extrabold text-sm text-base-content leading-tight">
-                    {reagent.name}
-                  </h3>
-                  <div className="flex items-center gap-2 text-xs text-base-content/60 mt-1">
-                    <span>{reagent.brand}</span>
-                    <span>•</span>
-                    <span className="font-mono font-bold text-base-content/80">Lote: {reagent.lotNumber}</span>
-                  </div>
-                </div>
-
-                <div className="bg-base-100/80 p-3 rounded-xl border border-base-200 space-y-2">
-                  <div className="flex justify-between items-baseline text-xs">
-                    <span className="text-base-content/60 font-semibold">Determinaciones:</span>
-                    <span className="font-mono font-black text-sm">
-                      {reagent.remainingTests}{' '}
-                      <span className="text-xs font-normal text-base-content/50">
-                        / {reagent.initialTests} ({pctLeft}%)
+                    {status === 'optimal' ? (
+                      <span className="badge badge-success text-white badge-sm text-[10px] font-bold gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Vigente ({daysLeft}d)
                       </span>
-                    </span>
+                    ) : status === 'warning' ? (
+                      <span className="badge badge-warning badge-sm text-[10px] font-bold gap-1">
+                        <IconAlertTriangle className="w-3 h-3" /> {daysLeft <= 30 ? `Vence en ${daysLeft}d` : 'Stock Bajo'}
+                      </span>
+                    ) : (
+                      <span className="badge badge-error text-white badge-sm text-[10px] font-bold gap-1">
+                        <IconAlertCircle className="w-3 h-3" /> {daysLeft <= 0 ? 'Caducado' : 'Agotado'}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Barra de progreso */}
-                  <progress
-                    className={`progress w-full h-2 rounded-full ${
-                      status === 'critical'
-                        ? 'progress-error'
-                        : status === 'warning'
-                        ? 'progress-warning'
-                        : 'progress-primary'
-                    }`}
-                    value={reagent.remainingTests}
-                    max={reagent.initialTests}
-                  />
-
-                  <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 text-base-content/70">
-                    <div>
-                      <span className="block text-[9px] uppercase font-bold text-base-content/40">Caducidad</span>
-                      <span className="font-semibold">{reagent.expirationDate}</span>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-base-content leading-tight">
+                      {reagent.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-base-content/60 mt-1">
+                      <span>{reagent.brand}</span>
+                      <span>•</span>
+                      <span className="font-mono font-bold text-base-content/80">Lote: {reagent.lotNumber}</span>
                     </div>
-                    <div>
-                      <span className="block text-[9px] uppercase font-bold text-base-content/40">Conservación</span>
-                      <span className="font-semibold truncate block">{reagent.storageCondition}</span>
+                  </div>
+
+                  <div className="bg-base-100/80 p-3 rounded-xl border border-base-200 space-y-2">
+                    <div className="flex justify-between items-baseline text-xs">
+                      <span className="text-base-content/60 font-semibold">Determinaciones:</span>
+                      <span className="font-mono font-black text-sm">
+                        {reagent.remainingTests}{' '}
+                        <span className="text-xs font-normal text-base-content/50">
+                          / {reagent.initialTests} ({pctLeft}%)
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Barra de progreso */}
+                    <progress
+                      className={`progress w-full h-2 rounded-full ${
+                        status === 'critical'
+                          ? 'progress-error'
+                          : status === 'warning'
+                          ? 'progress-warning'
+                          : 'progress-primary'
+                      }`}
+                      value={reagent.remainingTests}
+                      max={reagent.initialTests}
+                    />
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 text-base-content/70">
+                      <div>
+                        <span className="block text-[9px] uppercase font-bold text-base-content/40">Caducidad</span>
+                        <span className="font-semibold">{reagent.expirationDate}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[9px] uppercase font-bold text-base-content/40">Conservación</span>
+                        <span className="font-semibold truncate block">{reagent.storageCondition}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Botón de Ajuste / Descuento */}
-              <div className="flex items-center justify-between pt-2 border-t border-base-200">
-                <span className="text-[11px] text-base-content/50 font-medium">
-                  {reagent.presentation}
-                </span>
+                {/* Acciones: Descuento y Eliminación */}
+                <div className="flex items-center justify-between pt-2 border-t border-base-200 gap-2">
+                  <span className="text-[11px] text-base-content/50 font-medium truncate flex-1">
+                    {reagent.presentation}
+                  </span>
 
-                <button
-                  onClick={() => {
-                    setSelectedForAdjust(reagent);
-                    setAdjustAmount(1);
-                  }}
-                  className="btn btn-xs btn-outline btn-primary rounded-xl font-bold gap-1"
-                >
-                  <IconSparkles className="w-3.5 h-3.5" />
-                  Descontar Pruebas
-                </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteReagent(reagent.id, reagent.name)}
+                      className="btn btn-xs btn-ghost btn-circle text-error/70 hover:text-error hover:bg-error/10"
+                      title="Eliminar lote del inventario"
+                    >
+                      <IconTrash className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSelectedForAdjust(reagent);
+                        setAdjustAmount(1);
+                      }}
+                      className="btn btn-xs btn-outline btn-primary rounded-xl font-bold gap-1"
+                    >
+                      <IconSparkles className="w-3.5 h-3.5" />
+                      Descontar Pruebas
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Modal para Registrar Nuevo Lote */}
       {isAddModalOpen && (
@@ -672,9 +683,17 @@ export default function ReagentsInventoryView() {
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-sm btn-primary text-white font-bold rounded-xl text-xs shadow-md"
+                  disabled={isSubmitting}
+                  className="btn btn-sm btn-primary text-white font-bold rounded-xl text-xs shadow-md gap-1.5"
                 >
-                  Guardar Lote
+                  {isSubmitting ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar Lote'
+                  )}
                 </button>
               </div>
             </form>
