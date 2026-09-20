@@ -1,17 +1,38 @@
-// src/components/AddUserForm.tsx componente user
-import { useState, useEffect } from 'react';
+// src/components/AddUserForm.tsx
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useApi } from '../hooks/useApi';
 import { useUserContext } from '../hooks/useUserContext';
+import { useLabBranding } from '../context/LabBrandingContext';
 import type { Laboratory } from '../types/lab';
+import type { UserRole } from '../types/user';
 import {
   IconUserPlus,
+  IconUsers,
   IconFlask,
+  IconBuilding,
   IconCheckCircle,
   IconAlertCircle,
-  IconBuilding,
-  IconUsers,
+  IconSearch,
+  IconRefresh,
+  IconTrash,
+  IconEdit,
+  IconShield,
+  IconMicroscope,
 } from './icons';
+
+export interface UserRecord {
+  id: string;
+  clerkId?: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  role: UserRole;
+  laboratoryId?: string | null;
+  laboratory?: Laboratory | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 interface AddUserFormProps {
   labs: Laboratory[];
@@ -19,12 +40,38 @@ interface AddUserFormProps {
   onCancel?: () => void;
 }
 
-export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserFormProps) {
-  const { user } = useUser();
+export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
   const api = useApi();
+  const { user } = useUser();
   const { userProfile, isAdmin } = useUserContext();
+  const { selectedLabId } = useLabBranding();
 
-  const [formData, setFormData] = useState({
+  // Lista general de usuarios y laboratorios
+  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [localLabs, setLocalLabs] = useState<Laboratory[]>(labs || []);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  // Filtro de sede seleccionada: por defecto el laboratorio activo
+  const [filterLabId, setFilterLabId] = useState<string>(() => {
+    return selectedLabId && selectedLabId !== 'default' ? selectedLabId : 'ALL';
+  });
+
+  // Filtros adicionales: búsqueda y rol
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
+
+  // Notificaciones en pantalla
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Estados para Modales de CRUD
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UserRecord | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Formulario de Creación
+  const [createForm, setCreateForm] = useState({
     email: '',
     password: '',
     firstName: '',
@@ -32,66 +79,134 @@ export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserForm
     role: 'TECH',
     laboratoryId: '',
   });
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [localLabs, setLocalLabs] = useState<Laboratory[]>(labs || []);
-  const [isLoadingLabs, setIsLoadingLabs] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Formulario de Edición
+  const [editForm, setEditForm] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    role: 'TECH',
+    laboratoryId: '',
+  });
 
-  // Cargar laboratorios si la lista viene vacía
+  // Cargar laboratorios si vienen vacíos
+  const fetchLabs = useCallback(async () => {
+    try {
+      const res = await api.get<Laboratory[]>('/lab');
+      if (res.data) {
+        setLocalLabs(res.data);
+      }
+    } catch (err) {
+      console.warn('Error al cargar laboratorios:', err);
+    }
+  }, [api]);
+
   useEffect(() => {
     if (!labs || labs.length === 0) {
-      setIsLoadingLabs(true);
-      api.get<Laboratory[]>('/lab')
-        .then((res) => {
-          setLocalLabs(res.data || []);
-        })
-        .catch((err) => console.error('Error al cargar laboratorios:', err))
-        .finally(() => setIsLoadingLabs(false));
+      fetchLabs();
     } else {
       setLocalLabs(labs);
     }
-  }, [labs, api]);
+  }, [labs, fetchLabs]);
 
-  // Filtrar únicamente los laboratorios creados por el usuario propietario actualmente logueado
-  const ownerLabs = localLabs.filter((lab) => {
-    // Si la estructura del laboratorio no posee creador aún, mostrarlo por defecto
-    if (!lab.createdById && !lab.createdBy) return true;
+  // Cargar lista de usuarios desde la Base de Datos
+  const fetchUsers = useCallback(async () => {
+    setIsLoadingUsers(true);
+    setErrorMsg(null);
+    try {
+      const res = await api.get<UserRecord[]>('/users');
+      setUsers(res.data || []);
+    } catch (err: any) {
+      console.error('Error al cargar usuarios:', err);
+      setErrorMsg('No se pudo cargar la lista de personal. Verifica la conexión con el servidor.');
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  }, [api]);
 
-    const currentUserId = userProfile?.id;
-    const currentClerkId = userProfile?.clerkId || user?.id;
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
-    return (
-      (lab.createdById && (lab.createdById === currentUserId || lab.createdById === currentClerkId)) ||
-      (lab.createdBy?.id && lab.createdBy.id === currentUserId) ||
-      (lab.createdBy?.clerkId && lab.createdBy.clerkId === currentClerkId)
-    );
-  });
+  // Sincronizar filtro si cambia el laboratorio activo
+  useEffect(() => {
+    if (selectedLabId && selectedLabId !== 'default') {
+      setFilterLabId(selectedLabId);
+    }
+  }, [selectedLabId]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // Filtrado de usuarios por laboratorio, búsqueda y rol
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      // Filtro por Laboratorio
+      if (filterLabId !== 'ALL') {
+        if (filterLabId === 'UNASSIGNED') {
+          if (u.laboratoryId) return false;
+        } else if (u.laboratoryId !== filterLabId) {
+          return false;
+        }
+      }
+
+      // Filtro por Rol
+      if (roleFilter !== 'ALL' && u.role !== roleFilter) {
+        return false;
+      }
+
+      // Búsqueda por texto (nombre, apellido o email)
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        if (!fullName.includes(q) && !email.includes(q)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [users, filterLabId, roleFilter, searchQuery]);
+
+  // Contadores para métricas
+  const currentLabName = useMemo(() => {
+    if (filterLabId === 'ALL') return 'Todas las Sedes';
+    if (filterLabId === 'UNASSIGNED') return 'Sin Sede Asignada';
+    const found = localLabs.find((l) => l.id === filterLabId);
+    return found ? `${found.name} ${found.city ? `(${found.city})` : ''}` : 'Sede Seleccionada';
+  }, [filterLabId, localLabs]);
+
+  const labMetrics = useMemo(() => {
+    const list = filterLabId === 'ALL'
+      ? users
+      : users.filter((u) => u.laboratoryId === filterLabId);
+
+    return {
+      total: list.length,
+      techs: list.filter((u) => u.role === 'TECH' || u.role === 'LAB_TECHNICIAN').length,
+      receptionists: list.filter((u) => u.role === 'RECEPTIONIST').length,
+      admins: list.filter((u) => u.role === 'ADMIN').length,
+    };
+  }, [users, filterLabId]);
+
+  // Abrir modal de creación preconfigurado con la sede seleccionada
+  const handleOpenCreateModal = () => {
+    setCreateForm({
+      email: '',
+      password: '',
+      firstName: '',
+      lastName: '',
+      role: 'TECH',
+      laboratoryId: filterLabId !== 'ALL' && filterLabId !== 'UNASSIGNED' ? filterLabId : (localLabs[0]?.id || ''),
+    });
+    setShowCreatePassword(false);
+    setIsCreateModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Enviar Creación de Usuario
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email.trim()) {
-      setErrorMsg('El correo electrónico es obligatorio.');
-      return;
-    }
-
-    if (!formData.password.trim()) {
-      setErrorMsg('Debes ingresar una contraseña para la cuenta del usuario.');
-      return;
-    }
-
-    // Validación de seguridad: restringir la asignación del rol ADMIN a solo administradores
-    if (!isAdmin && formData.role === 'ADMIN') {
-      setErrorMsg('Solo los usuarios con rol de Administrador pueden asignar el rol de Administrador.');
+    if (!createForm.email.trim() || !createForm.password.trim()) {
+      setErrorMsg('El correo y la contraseña son obligatorios.');
       return;
     }
 
@@ -100,276 +215,778 @@ export default function AddUserForm({ labs, onUserAdded, onCancel }: AddUserForm
     setSuccessMsg(null);
 
     try {
-      // Preparar payload para la API POST /users
       const payload = {
-        email: formData.email.trim(),
-        password: formData.password.trim(),
-        firstName: formData.firstName.trim() || undefined,
-        lastName: formData.lastName.trim() || undefined,
-        role: formData.role,
-        laboratoryId: formData.laboratoryId || undefined,
+        email: createForm.email.trim(),
+        password: createForm.password.trim(),
+        firstName: createForm.firstName.trim() || undefined,
+        lastName: createForm.lastName.trim() || undefined,
+        role: createForm.role,
+        laboratoryId: createForm.laboratoryId || undefined,
       };
 
       await api.post('/users', payload);
-
-      setSuccessMsg('¡Usuario registrado exitosamente en Clerk y en la base de datos!');
-      
-      // Limpiar formulariosss
-      setFormData({
-        email: '',
-        password: '',
-        firstName: '',
-        lastName: '',
-        role: 'TECH',
-        laboratoryId: '',
-      });
-
-      if (onUserAdded) {
-        onUserAdded();
-      }
+      setSuccessMsg('¡Personal registrado exitosamente en el sistema y asignado a la sede!');
+      setIsCreateModalOpen(false);
+      fetchUsers();
     } catch (err: any) {
       console.error('Error al registrar usuario:', err);
-      const rawMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message;
-      let displayMsg = 'Ocurrió un error al registrar el usuario. Revisa los datos e intenta nuevamente.';
-      if (typeof rawMsg === 'string') {
-        displayMsg = rawMsg;
-      } else if (Array.isArray(rawMsg)) {
-        displayMsg = rawMsg.map((m) => (typeof m === 'object' ? (m.message || JSON.stringify(m)) : String(m))).join(', ');
-      } else if (typeof rawMsg === 'object' && rawMsg !== null) {
-        displayMsg = rawMsg.message || JSON.stringify(rawMsg);
-      }
-      setErrorMsg(displayMsg);
+      const rawMsg = err?.response?.data?.message || err?.message || 'Error al registrar el usuario';
+      setErrorMsg(typeof rawMsg === 'string' ? rawMsg : JSON.stringify(rawMsg));
     } finally {
       setIsSubmitting(false);
+      setTimeout(() => setSuccessMsg(null), 4000);
+    }
+  };
+
+  // Abrir modal de edición
+  const handleOpenEditModal = (u: UserRecord) => {
+    setEditingUser(u);
+    setEditForm({
+      email: u.email || '',
+      firstName: u.firstName || '',
+      lastName: u.lastName || '',
+      role: u.role || 'TECH',
+      laboratoryId: u.laboratoryId || '',
+    });
+  };
+
+  // Enviar Edición de Usuario
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const payload = {
+        email: editForm.email.trim() || undefined,
+        firstName: editForm.firstName.trim() || undefined,
+        lastName: editForm.lastName.trim() || undefined,
+        role: editForm.role,
+        laboratoryId: editForm.laboratoryId || null,
+      };
+
+      await api.patch(`/users/${editingUser.id}`, payload);
+      setSuccessMsg('¡Información del usuario actualizada con éxito!');
+      setEditingUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Error al actualizar usuario:', err);
+      const rawMsg = err?.response?.data?.message || err?.message || 'Error al actualizar usuario';
+      setErrorMsg(typeof rawMsg === 'string' ? rawMsg : JSON.stringify(rawMsg));
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setSuccessMsg(null), 4000);
+    }
+  };
+
+  // Eliminar Usuario
+  const handleDeleteConfirm = async () => {
+    if (!deletingUser) return;
+
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      await api.delete(`/users/${deletingUser.id}`);
+      setSuccessMsg(`El usuario ${deletingUser.email} ha sido eliminado del sistema.`);
+      setDeletingUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      console.error('Error al eliminar usuario:', err);
+      const rawMsg = err?.response?.data?.message || err?.message || 'Error al eliminar usuario';
+      setErrorMsg(typeof rawMsg === 'string' ? rawMsg : JSON.stringify(rawMsg));
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setSuccessMsg(null), 4000);
+    }
+  };
+
+  // Formato de rol amigable con insignia DaisyUI
+  const renderRoleBadge = (role: UserRole) => {
+    switch (role) {
+      case 'ADMIN':
+        return (
+          <span className="badge badge-accent badge-sm font-bold gap-1 shadow-2xs">
+            <IconShield className="w-3 h-3" /> Administrador
+          </span>
+        );
+      case 'LAB_TECHNICIAN':
+        return (
+          <span className="badge badge-primary badge-sm font-bold gap-1 shadow-2xs">
+            <IconFlask className="w-3 h-3" /> Químico / Técnico
+          </span>
+        );
+      case 'TECH':
+        return (
+          <span className="badge badge-info badge-sm font-bold gap-1 shadow-2xs">
+            <IconMicroscope className="w-3 h-3" /> Analista Operativo
+          </span>
+        );
+      case 'RECEPTIONIST':
+        return (
+          <span className="badge badge-secondary badge-sm font-bold gap-1 shadow-2xs">
+            <IconUsers className="w-3 h-3" /> Recepcionista
+          </span>
+        );
+      default:
+        return <span className="badge badge-ghost badge-sm font-medium">{role}</span>;
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-      {/* Banner / Encabezado de la Sección */}
-      <div className="card bg-base-100 border border-base-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-            <IconUserPlus className="w-6 h-6" />
-          </div>
-          <div>
-            <span className="badge badge-primary badge-outline text-[11px] font-semibold uppercase tracking-wider mb-1">
-              Administración de Personal
-            </span>
+    <div className="space-y-6 max-w-6xl mx-auto animate-fade-in pb-10">
+      
+      {/* Encabezado Principal y Selector de Sede */}
+      <section className="card bg-base-100 border border-base-200 p-5 sm:p-6 shadow-xs rounded-2xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          
+          {/* Título de la Sección */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="badge badge-primary badge-outline text-xs font-semibold gap-1.5 py-2.5 px-3">
+                <IconUsers className="w-3.5 h-3.5" />
+                Administración de Personal
+              </span>
+              <span className="badge badge-ghost text-xs text-base-content/60 font-medium">
+                Gestión de Usuarios
+              </span>
+            </div>
             <h1 className="text-xl sm:text-2xl font-black text-base-content tracking-tight">
-              Agregar Usuario al Laboratorio
+              Directorio de Personal por Laboratorio
             </h1>
-            <p className="text-xs sm:text-sm text-base-content/60 mt-0.5">
-              Crea la cuenta en Clerk y asigna al usuario a una de tus sedes operativas.
+            <p className="text-xs text-base-content/60">
+              Administra las cuentas de acceso, roles analíticos y asignación de personal para cada laboratorio clínico.
             </p>
           </div>
-        </div>
 
-        {onCancel && (
-          <button onClick={onCancel} className="btn btn-ghost btn-sm rounded-xl font-semibold">
-            Volver al Dashboard
-          </button>
-        )}
-      </div>
-
-      {/* Tarjeta del Formulario */}
-      <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl overflow-hidden">
-        <div className="card-body p-6 sm:p-8">
-
-          {/* Alertas de Éxito / Error */}
-          {successMsg && (
-            <div className="alert alert-success text-white shadow-md rounded-2xl py-3 mb-2 animate-fade-in">
-              <IconCheckCircle className="w-6 h-6 shrink-0" />
-              <div className="font-semibold text-sm">{successMsg}</div>
-            </div>
-          )}
-
-          {errorMsg && (
-            <div className="alert alert-error text-white shadow-md rounded-2xl py-3 mb-2 animate-fade-in">
-              <IconAlertCircle className="w-6 h-6 shrink-0" />
-              <div className="font-semibold text-sm">{errorMsg}</div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Sección 1: Información Personal y Credenciales */}
-            <div>
-              <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
-                <IconUsers className="w-4 h-4" /> 1. Credenciales y Datos del Usuario
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Correo Electrónico <span className="text-error">*</span></span>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="ejemplo@laboratorio.com"
-                    className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      Contraseña <span className="text-error">*</span>
-                    </span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      placeholder="Mínimo 8 caracteres"
-                      className="input input-bordered w-full rounded-xl focus:input-primary transition-all pr-12"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-base-content/60 font-semibold hover:text-primary"
-                    >
-                      {showPassword ? 'Ocultar' : 'Ver'}
-                    </button>
-                  </div>
-                  <span className="text-[11px] text-base-content/60 mt-1">
-                    Contraseña inicial de acceso a la plataforma.
-                  </span>
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Nombre(s)</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    placeholder="Ej. Juan Carlos"
-                    className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Apellido(s)</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    placeholder="Ej. Mendoza"
-                    className="input input-bordered w-full rounded-xl focus:input-primary transition-all"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                  />
-                </div>
+          {/* Selector de Laboratorio / Sede a Consultar */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 bg-base-200/70 p-2 rounded-2xl border border-base-300/60">
+              <IconBuilding className="w-4 h-4 text-primary shrink-0 ml-1" />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-base-content/50 uppercase tracking-wider">
+                  Sede a Consultar
+                </span>
+                <select
+                  value={filterLabId}
+                  onChange={(e) => setFilterLabId(e.target.value)}
+                  className="select select-xs select-bordered font-bold text-primary bg-base-100 rounded-xl focus:select-primary"
+                >
+                  <option value="ALL">Todas las Sedes ({users.length})</option>
+                  {localLabs.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name} {l.city ? `(${l.city})` : ''}
+                    </option>
+                  ))}
+                  <option value="UNASSIGNED">Sin Sede Asignada</option>
+                </select>
               </div>
             </div>
 
-            <div className="divider my-2"></div>
+            {/* Botón de Nuevo Usuario */}
+            <button
+              onClick={handleOpenCreateModal}
+              className="btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-2 shadow-xs"
+            >
+              <IconUserPlus className="w-4 h-4" />
+              Nuevo Usuario
+            </button>
+          </div>
 
-            {/* Sección 2: Rol y Laboratorio */}
-            <div>
-              <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
-                <IconBuilding className="w-4 h-4" /> 2. Rol y Asignación de Sede
-              </h2>
+        </div>
+      </section>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Alertas de Éxito / Error */}
+      {successMsg && (
+        <div className="alert alert-success border border-success/40 shadow-xs rounded-2xl text-xs font-semibold text-success-content animate-fade-in flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <IconCheckCircle className="w-5 h-5 shrink-0 text-success-content" />
+            <span>{successMsg}</span>
+          </div>
+          <button onClick={() => setSuccessMsg(null)} className="btn btn-xs btn-ghost text-success-content">✕</button>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="alert alert-error border border-error/40 shadow-xs rounded-2xl text-xs font-semibold text-error-content animate-fade-in flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <IconAlertCircle className="w-5 h-5 shrink-0 text-error-content" />
+            <span>{errorMsg}</span>
+          </div>
+          <button onClick={() => setErrorMsg(null)} className="btn btn-xs btn-ghost text-error-content">✕</button>
+        </div>
+      )}
+
+      {/* Tarjetas de Métricas de Personal para la Sede */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold text-base-content/50 block">Personal Total</span>
+          <div className="text-xl sm:text-2xl font-black text-base-content mt-1">{labMetrics.total}</div>
+          <span className="text-[10px] text-base-content/60 truncate block mt-0.5">{currentLabName}</span>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold text-primary block">Químicos / Técnicos</span>
+          <div className="text-xl sm:text-2xl font-black text-primary mt-1">{labMetrics.techs}</div>
+          <span className="text-[10px] text-base-content/60 block mt-0.5">Operación analítica</span>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold text-secondary block">Recepcionistas</span>
+          <div className="text-xl sm:text-2xl font-black text-secondary mt-1">{labMetrics.receptionists}</div>
+          <span className="text-[10px] text-base-content/60 block mt-0.5">Ingreso de pacientes</span>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-base-100 border border-base-200 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold text-accent block">Administradores</span>
+          <div className="text-xl sm:text-2xl font-black text-accent mt-1">{labMetrics.admins}</div>
+          <span className="text-[10px] text-base-content/60 block mt-0.5">Gestión y control</span>
+        </div>
+      </div>
+
+      {/* Barra de Filtros y Búsqueda */}
+      <div className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          
+          {/* Input de Búsqueda */}
+          <div className="relative flex-1 max-w-md">
+            <IconSearch className="w-4 h-4 text-base-content/40 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre, apellido o correo..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input input-sm input-bordered w-full pl-9 rounded-xl text-xs focus:input-primary"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-base-content/40 hover:text-base-content"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Filtro por Rol y Botón de Recargar */}
+          <div className="flex items-center gap-2">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
+            >
+              <option value="ALL">Todos los Roles</option>
+              <option value="TECH">Analistas (TECH)</option>
+              <option value="LAB_TECHNICIAN">Químicos (LAB_TECHNICIAN)</option>
+              <option value="RECEPTIONIST">Recepcionistas (RECEPTIONIST)</option>
+              {isAdmin && <option value="ADMIN">Administradores (ADMIN)</option>}
+            </select>
+
+            <button
+              onClick={fetchUsers}
+              disabled={isLoadingUsers}
+              className="btn btn-sm btn-ghost border border-base-200 rounded-xl"
+              title="Refrescar Lista"
+            >
+              <IconRefresh className={`w-4 h-4 ${isLoadingUsers ? 'animate-spin text-primary' : ''}`} />
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Tabla de Usuarios del Laboratorio */}
+      <div className="card bg-base-100 border border-base-200 rounded-2xl shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="table table-zebra w-full text-xs">
+            <thead className="bg-base-200/60 text-base-content/70 font-bold uppercase text-[10px] tracking-wider">
+              <tr>
+                <th className="py-3 px-4">Personal / Usuario</th>
+                <th>Rol en el Sistema</th>
+                <th>Laboratorio Asignado</th>
+                <th>Fecha de Alta</th>
+                <th className="text-right px-4">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoadingUsers ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12">
+                    <span className="loading loading-spinner loading-md text-primary"></span>
+                    <p className="text-xs font-semibold text-base-content/60 mt-2">
+                      Cargando personal del laboratorio...
+                    </p>
+                  </td>
+                </tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-base-200 text-base-content/40 flex items-center justify-center mx-auto">
+                      <IconUsers className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm text-base-content">No se encontraron usuarios</h3>
+                      <p className="text-xs text-base-content/50 mt-0.5">
+                        {filterLabId !== 'ALL'
+                          ? 'Esta sede no tiene personal asignado todavía.'
+                          : 'No hay usuarios que coincidan con los filtros aplicados.'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleOpenCreateModal}
+                      className="btn btn-xs btn-primary text-primary-content font-bold rounded-xl gap-1.5"
+                    >
+                      <IconUserPlus className="w-3.5 h-3.5" />
+                      Agregar Usuario a esta Sede
+                    </button>
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((u) => {
+                  const fullName = [u.firstName, u.lastName].filter(Boolean).join(' ') || 'Sin nombre';
+                  const labInfo = u.laboratory || localLabs.find((l) => l.id === u.laboratoryId);
+                  const isCurrentUser = u.email === user?.primaryEmailAddress?.emailAddress || u.id === userProfile?.id;
+
+                  return (
+                    <tr key={u.id} className="hover:bg-base-200/40 transition-colors">
+                      {/* Usuario y Correo */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
+                            {u.firstName ? u.firstName.charAt(0).toUpperCase() : u.email.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-bold text-base-content flex items-center gap-1.5">
+                              {fullName}
+                              {isCurrentUser && (
+                                <span className="badge badge-xs badge-outline text-[9px] font-bold text-primary">Tú</span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-base-content/60 font-mono">{u.email}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Rol */}
+                      <td>{renderRoleBadge(u.role)}</td>
+
+                      {/* Laboratorio Asignado */}
+                      <td>
+                        {labInfo ? (
+                          <div className="flex items-center gap-1.5 font-semibold text-base-content/80">
+                            <IconBuilding className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span>{labInfo.name}</span>
+                            {labInfo.city && (
+                              <span className="text-[10px] text-base-content/50 font-normal">({labInfo.city})</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="badge badge-ghost badge-sm text-base-content/50 font-normal">
+                            Sin Sede Asignada
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Fecha de Creación */}
+                      <td className="text-base-content/60 font-medium">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                      </td>
+
+                      {/* Acciones */}
+                      <td className="text-right px-4">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditModal(u)}
+                            className="btn btn-xs btn-ghost text-primary hover:bg-primary/10 rounded-lg"
+                            title="Editar Datos y Rol"
+                          >
+                            <IconEdit className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Editar</span>
+                          </button>
+
+                          <button
+                            onClick={() => setDeletingUser(u)}
+                            disabled={isCurrentUser}
+                            className={`btn btn-xs btn-ghost text-error hover:bg-error/10 rounded-lg ${
+                              isCurrentUser ? 'opacity-30 cursor-not-allowed' : ''
+                            }`}
+                            title={isCurrentUser ? 'No puedes eliminar tu propia cuenta' : 'Eliminar Usuario'}
+                          >
+                            <IconTrash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pie de Tabla con Total */}
+        <div className="p-4 bg-base-200/40 border-t border-base-200 flex items-center justify-between text-xs text-base-content/60 font-medium">
+          <span>Mostrando {filteredUsers.length} de {users.length} usuarios registrados</span>
+          {onCancel && (
+            <button onClick={onCancel} className="btn btn-xs btn-ghost font-semibold">
+              Volver al Dashboard
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* MODAL: REGISTRAR NUEVO USUARIO                              */}
+      {/* ============================================================ */}
+      {isCreateModalOpen && (
+        <div className="modal modal-open backdrop-blur-xs">
+          <div className="modal-box rounded-2xl max-w-lg border border-base-200 shadow-2xl p-6">
+            <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <IconUserPlus className="w-4 h-4" />
+                </div>
+                <h3 className="font-bold text-base text-base-content">Registrar Nuevo Usuario</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="btn btn-xs btn-circle btn-ghost"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold">Rol del Sistema <span className="text-error">*</span></span>
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Correo Electrónico <span className="text-error">*</span></span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="usuario@laboratorio.com"
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                    className="input input-sm input-bordered rounded-xl text-xs focus:input-primary"
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Contraseña Inicial <span className="text-error">*</span></span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showCreatePassword ? 'text' : 'password'}
+                      required
+                      placeholder="Mín. 8 caracteres"
+                      value={createForm.password}
+                      onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                      className="input input-sm input-bordered rounded-xl text-xs focus:input-primary w-full pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCreatePassword(!showCreatePassword)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-base-content/50 hover:text-primary"
+                    >
+                      {showCreatePassword ? 'Ocultar' : 'Ver'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Nombre(s)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Juan Carlos"
+                    value={createForm.firstName}
+                    onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })}
+                    className="input input-sm input-bordered rounded-xl text-xs focus:input-primary"
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Apellido(s)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Mendoza"
+                    value={createForm.lastName}
+                    onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })}
+                    className="input input-sm input-bordered rounded-xl text-xs focus:input-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-base-200">
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Rol en el Sistema <span className="text-error">*</span></span>
                   </label>
                   <select
-                    name="role"
-                    className="select select-bordered w-full rounded-xl focus:select-primary transition-all font-medium"
-                    value={formData.role}
-                    onChange={handleChange}
-                    required
+                    value={createForm.role}
+                    onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
+                    className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
                   >
-                    <option value="TECH">Técnico (TECH) - Acceso Operativo Completo</option>
-                    <option value="LAB_TECHNICIAN">Técnico de Laboratorio (LAB_TECHNICIAN)</option>
+                    <option value="TECH">Técnico Analista (TECH)</option>
+                    <option value="LAB_TECHNICIAN">Químico Responsable (LAB_TECHNICIAN)</option>
                     <option value="RECEPTIONIST">Recepcionista Clínico (RECEPTIONIST)</option>
-                    {isAdmin && (
-                      <option value="ADMIN">Administrador General (ADMIN)</option>
-                    )}
+                    {isAdmin && <option value="ADMIN">Administrador General (ADMIN)</option>}
                   </select>
                 </div>
 
                 <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-semibold flex items-center gap-1.5">
-                      <IconFlask className="w-4 h-4 text-primary" /> Laboratorio Asignado
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs flex items-center gap-1">
+                      <IconBuilding className="w-3.5 h-3.5 text-primary" /> Sede Asignada
                     </span>
                   </label>
-                  {isLoadingLabs ? (
-                    <div className="skeleton h-12 w-full rounded-xl"></div>
-                  ) : (
-                    <select
-                      name="laboratoryId"
-                      className="select select-bordered w-full rounded-xl focus:select-primary transition-all font-medium"
-                      value={formData.laboratoryId}
-                      onChange={handleChange}
-                    >
-                      <option value="">-- Sin Laboratorio Asignado (General) --</option>
-                      {ownerLabs.map((lab) => (
-                        <option key={lab.id} value={lab.id}>
-                          {lab.name} {[lab.city, lab.country].filter(Boolean).length ? `(${[lab.city, lab.country].filter(Boolean).join(', ')})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {ownerLabs.length === 0 && !isLoadingLabs && (
-                    <span className="text-[11px] text-warning mt-1">
-                      No has creado laboratorios aún. Crea una sede para poder asignarla.
-                    </span>
-                  )}
+                  <select
+                    value={createForm.laboratoryId}
+                    onChange={(e) => setCreateForm({ ...createForm, laboratoryId: e.target.value })}
+                    className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
+                  >
+                    <option value="">-- Sin Asignación (General) --</option>
+                    {localLabs.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name} {l.city ? `(${l.city})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            </div>
 
-            {/* Acciones del Formulario */}
-            <div className="pt-4 flex items-center justify-end gap-3 border-t border-base-200">
-              {onCancel && (
+              <div className="modal-action border-t border-base-200 pt-3">
                 <button
                   type="button"
-                  onClick={onCancel}
-                  className="btn btn-ghost rounded-xl font-semibold"
+                  onClick={() => setIsCreateModalOpen(false)}
                   disabled={isSubmitting}
+                  className="btn btn-sm btn-ghost rounded-xl"
                 >
                   Cancelar
                 </button>
-              )}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Registrando...
+                    </>
+                  ) : (
+                    <>
+                      <IconUserPlus className="w-4 h-4" />
+                      Registrar en el Sistema
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
+      {/* ============================================================ */}
+      {/* MODAL: EDITAR USUARIO                                       */}
+      {/* ============================================================ */}
+      {editingUser && (
+        <div className="modal modal-open backdrop-blur-xs">
+          <div className="modal-box rounded-2xl max-w-lg border border-base-200 shadow-2xl p-6">
+            <div className="flex items-center justify-between border-b border-base-200 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <IconEdit className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-base-content">Editar Usuario</h3>
+                  <p className="text-[11px] text-base-content/60 font-mono">{editingUser.email}</p>
+                </div>
+              </div>
               <button
-                type="submit"
-                className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[150px] shadow-xs"
+                type="button"
+                onClick={() => setEditingUser(null)}
+                className="btn btn-xs btn-circle btn-ghost"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Nombre(s)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                    className="input input-sm input-bordered rounded-xl text-xs focus:input-primary"
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Apellido(s)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                    className="input input-sm input-bordered rounded-xl text-xs focus:input-primary"
+                  />
+                </div>
+
+                <div className="form-control sm:col-span-2">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Correo Electrónico</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="input input-sm input-bordered rounded-xl text-xs focus:input-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-base-200">
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs">Rol en el Sistema <span className="text-error">*</span></span>
+                  </label>
+                  <select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
+                  >
+                    <option value="TECH">Técnico Analista (TECH)</option>
+                    <option value="LAB_TECHNICIAN">Químico Responsable (LAB_TECHNICIAN)</option>
+                    <option value="RECEPTIONIST">Recepcionista Clínico (RECEPTIONIST)</option>
+                    {isAdmin && <option value="ADMIN">Administrador General (ADMIN)</option>}
+                  </select>
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold text-xs flex items-center gap-1">
+                      <IconBuilding className="w-3.5 h-3.5 text-primary" /> Sede Asignada
+                    </span>
+                  </label>
+                  <select
+                    value={editForm.laboratoryId}
+                    onChange={(e) => setEditForm({ ...editForm, laboratoryId: e.target.value })}
+                    className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
+                  >
+                    <option value="">-- Sin Sede (General) --</option>
+                    {localLabs.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name} {l.city ? `(${l.city})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="modal-action border-t border-base-200 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  disabled={isSubmitting}
+                  className="btn btn-sm btn-ghost rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn btn-sm btn-primary text-primary-content font-bold rounded-xl gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <IconCheckCircle className="w-4 h-4" />
+                      Guardar Cambios
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL: CONFIRMAR ELIMINACIÓN                                 */}
+      {/* ============================================================ */}
+      {deletingUser && (
+        <div className="modal modal-open backdrop-blur-xs">
+          <div className="modal-box rounded-2xl max-w-md border border-base-200 shadow-2xl p-6">
+            <div className="flex items-center gap-3 text-error mb-3">
+              <div className="w-10 h-10 rounded-2xl bg-error/10 flex items-center justify-center shrink-0">
+                <IconTrash className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base text-base-content">¿Eliminar Usuario?</h3>
+                <p className="text-xs text-base-content/60">Esta acción no se puede deshacer.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-base-content/70 leading-relaxed">
+              Estás a punto de revocar el acceso y dar de baja la cuenta de:{' '}
+              <strong className="text-base-content">
+                {[deletingUser.firstName, deletingUser.lastName].filter(Boolean).join(' ') || deletingUser.email}
+              </strong>{' '}
+              ({deletingUser.email}).
+            </p>
+
+            <div className="modal-action border-t border-base-200 pt-3 mt-4">
+              <button
+                type="button"
+                onClick={() => setDeletingUser(null)}
                 disabled={isSubmitting}
+                className="btn btn-sm btn-ghost rounded-xl"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={isSubmitting}
+                className="btn btn-sm btn-error text-white font-bold rounded-xl gap-2 shadow-xs"
               >
                 {isSubmitting ? (
                   <>
                     <span className="loading loading-spinner loading-xs"></span>
-                    Creando Usuario...
+                    Eliminando...
                   </>
                 ) : (
                   <>
-                    <IconUserPlus className="w-4 h-4" />
-                    Registrar Usuario
+                    <IconTrash className="w-4 h-4" />
+                    Sí, Eliminar Usuario
                   </>
                 )}
               </button>
             </div>
-
-          </form>
+          </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 }

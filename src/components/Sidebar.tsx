@@ -156,7 +156,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                       className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-user' ? 'active font-bold' : ''}`}
                     >
                       <IconUserPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                      <span className="truncate">Agregar Usuarios</span>
+                      <span className="truncate">Gestión de Usuarios</span>
                     </button>
                   </li>
                 </ul>
@@ -350,33 +350,32 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
               </li>
             )}
 
-            {isAdmin && (
-              <li className="mt-2 pt-2 border-t border-base-200">
-                <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
-                  Administración y Configuración
-                </span>
-                <button
-                  onClick={() => handleNav('general-settings')}
-                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                  title="Configurar logotipo, nombre comercial e identidad de la sede"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                    <IconBuilding className="w-4 h-4" />
-                  </div>
-                  <span className="truncate">Configuración General</span>
-                </button>
+            <li className="mt-2 pt-2 border-t border-base-200">
+              <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
+                Administración y Configuración
+              </span>
+              <button
+                onClick={() => handleNav('general-settings')}
+                className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                title="Configurar logotipo, nombre comercial e identidad de la sede"
+              >
+                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                  <IconBuilding className="w-4 h-4" />
+                </div>
+                <span className="truncate">Configuración General</span>
+              </button>
 
-                <button
-                  onClick={() => handleNav('add-user')}
-                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'add-user' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                >
-                  <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
-                    <IconSettings className="w-4 h-4" />
-                  </div>
-                  <span className="truncate">Gestión de Usuarios</span>
-                </button>
-              </li>
-            )}
+              <button
+                onClick={() => handleNav('add-user')}
+                className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'add-user' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                title="Gestión de usuarios y personal adscrito a las sedes"
+              >
+                <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
+                  <IconSettings className="w-4 h-4" />
+                </div>
+                <span className="truncate">Gestión de Usuarios</span>
+              </button>
+            </li>
           </ul>
 
           {/* Pie de Sidebar */}
