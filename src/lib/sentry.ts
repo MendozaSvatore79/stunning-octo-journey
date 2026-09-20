@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react';
 
 export function initSentry() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  const dsn = import.meta.env.SENTRY_DSN;
 
   if (!dsn) {
     // Sentry no configurado aún en este entorno (modo silencioso)
