@@ -1,6 +1,7 @@
 // src/components/ReagentsInventoryView.tsx
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useApi } from '../hooks/useApi';
+import { toast } from 'react-toastify';
 import {
   IconFlask,
   IconCheckCircle,
@@ -153,7 +154,9 @@ export default function ReagentsInventoryView() {
   const handleSaveNewReagent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReagent.name || !newReagent.lotNumber || !newReagent.expirationDate) {
-      alert('Por favor completa el nombre, número de lote y fecha de caducidad.');
+      toast.warning('Por favor completa el nombre, número de lote y fecha de caducidad.', {
+        theme: 'colored',
+      });
       return;
     }
 
@@ -175,6 +178,10 @@ export default function ReagentsInventoryView() {
       const res = await api.post('/reagents', payload);
       if (res.data) {
         setReagents((prev) => [res.data, ...prev]);
+        toast.success(`Lote "${res.data.name}" registrado exitosamente en la base de datos.`, {
+          theme: 'colored',
+          autoClose: 3000,
+        });
       } else {
         await fetchReagents();
       }
@@ -194,7 +201,10 @@ export default function ReagentsInventoryView() {
       });
     } catch (err) {
       console.error('Error al guardar reactivo en la base de datos:', err);
-      alert('Hubo un error al guardar el reactivo en la base de datos. Verifica tu conexión.');
+      toast.error('Hubo un error al guardar el reactivo en la base de datos.', {
+        theme: 'colored',
+        autoClose: 4000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -211,6 +221,10 @@ export default function ReagentsInventoryView() {
         setReagents((prev) =>
           prev.map((r) => (r.id === selectedForAdjust.id ? res.data : r))
         );
+        toast.info(`Se registraron ${delta} determinaciones descontadas para el lote ${selectedForAdjust.lotNumber}.`, {
+          theme: 'colored',
+          autoClose: 2500,
+        });
       }
     } catch (err) {
       console.error('Error descontando pruebas en la base de datos:', err);
@@ -229,17 +243,79 @@ export default function ReagentsInventoryView() {
     }
   };
 
-  // Eliminar lote de reactivo de la BD
-  const handleDeleteReagent = async (id: string, name: string) => {
-    if (!window.confirm(`¿Confirmas que deseas eliminar el reactivo "${name}" del inventario?`)) {
-      return;
-    }
+  // Solicitud de confirmación interactiva con Toastify
+  const requestDeleteReagent = (reagent: ReagentLot) => {
+    toast(
+      ({ closeToast }) => (
+        <div className="space-y-3 py-1">
+          <div className="flex items-start gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-error/15 text-error flex items-center justify-center shrink-0 mt-0.5">
+              <IconTrash className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-xs text-base-content leading-tight">
+                ¿Eliminar reactivo del inventario?
+              </h4>
+              <p className="text-[11px] text-base-content/80 mt-1">
+                Lote: <strong className="font-mono text-base-content">{reagent.lotNumber}</strong>
+                <br />
+                <span className="font-semibold text-error">{reagent.name}</span>
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-base-content/50 leading-tight">
+            Esta acción removerá el lote de la base de datos de manera permanente.
+          </p>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-base-200">
+            <button
+              type="button"
+              onClick={closeToast}
+              className="btn btn-xs btn-ghost text-xs rounded-xl font-semibold"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                closeToast();
+                await executeDeleteReagent(reagent.id, reagent.name);
+              }}
+              className="btn btn-xs btn-error text-white font-bold rounded-xl shadow-xs gap-1"
+            >
+              <IconTrash className="w-3 h-3" />
+              Sí, eliminar
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        position: 'top-center',
+        autoClose: false,
+        closeOnClick: false,
+        closeButton: false,
+        draggable: false,
+        className: 'border border-base-300 shadow-2xl rounded-2xl bg-base-100',
+      }
+    );
+  };
+
+  // Ejecución de eliminación tras confirmación
+  const executeDeleteReagent = async (id: string, name: string) => {
     try {
       await api.delete(`/reagents/${id}`);
       setReagents((prev) => prev.filter((r) => r.id !== id));
+      toast.success(`Reactivo "${name}" eliminado correctamente del inventario.`, {
+        theme: 'colored',
+        autoClose: 3000,
+      });
     } catch (err) {
       console.error('Error eliminando reactivo:', err);
-      alert('No se pudo eliminar el reactivo de la base de datos.');
+      toast.error('No se pudo eliminar el reactivo de la base de datos.', {
+        theme: 'colored',
+        autoClose: 4000,
+      });
     }
   };
 
@@ -525,7 +601,7 @@ export default function ReagentsInventoryView() {
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => handleDeleteReagent(reagent.id, reagent.name)}
+                      onClick={() => requestDeleteReagent(reagent)}
                       className="btn btn-xs btn-ghost btn-circle text-error/70 hover:text-error hover:bg-error/10"
                       title="Eliminar lote del inventario"
                     >

@@ -10,6 +10,8 @@ import { UserProvider } from './context/UserContext.tsx';
 import { MaintenanceProvider, useMaintenance } from './context/MaintenanceContext.tsx';
 import { LabBrandingProvider } from './context/LabBrandingContext.tsx';
 import GlobalMaintenanceLanding from './components/GlobalMaintenanceLanding.tsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function AppContent() {
   const clerk = useClerk();
@@ -134,6 +136,18 @@ export default function App() {
       <MaintenanceProvider>
         <LabBrandingProvider>
           <AppContent />
+          <ToastContainer
+            position="top-right"
+            autoClose={3500}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
         </LabBrandingProvider>
       </MaintenanceProvider>
     </UserProvider>
