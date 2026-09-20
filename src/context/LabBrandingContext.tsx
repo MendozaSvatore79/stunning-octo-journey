@@ -35,11 +35,11 @@ interface LabBrandingContextType {
 
 const DEFAULT_BRANDING: LabBrandingConfig = {
   labId: 'default',
-  name: 'LabSystem',
-  subtitle: 'Panel Administrador',
+  name: 'Synova Lab',
+  subtitle: 'Sistema de Diagnóstico Clínico & LIS',
   logo: '',
   phone: '921 123 4567',
-  email: 'contacto@labsystem.com',
+  email: 'contacto@synovalab.com',
   address: '',
   sanitaryLicense: 'COFEPRIS-LAB-2026',
   responsibleName: 'Q.F.B. Juan Carlos Mendoza',
@@ -131,10 +131,6 @@ export function LabBrandingProvider({
     const labEntity = labs.find((l) => l.id === selectedLabId);
 
     if (savedConfig) {
-      // Si el almacenamiento local no tenía logo pero la BD sí tiene uno, preservamos el de BD
-      if (!savedConfig.logo && labEntity?.logo) {
-        savedConfig.logo = labEntity.logo;
-      }
       setBrandingState(savedConfig);
       return;
     }
@@ -163,9 +159,13 @@ export function LabBrandingProvider({
       const targetLabId = (!labId || labId === 'default') && labs.length > 0 ? labs[0].id : labId;
 
       // 1. Persistencia local inmediata (optimista)
+      const updatedLogo =
+        newConfig.logo !== undefined ? (newConfig.logo || '') : (brandingState.logo || '');
+
       const updated: LabBrandingConfig = {
         ...brandingState,
         ...newConfig,
+        logo: updatedLogo,
         labId: targetLabId,
       };
       setBrandingState(updated);
@@ -180,14 +180,21 @@ export function LabBrandingProvider({
       if (targetLabId && targetLabId !== 'default') {
         const payload: Record<string, any> = {};
         if (updated.name !== undefined) payload.name = updated.name;
-        if (updated.logo !== undefined) payload.logo = updated.logo;
+        // Si se definió explícitamente el logo: si es vacío (''), enviar null para que la BD lo elimine
+        if (newConfig.logo !== undefined) {
+          payload.logo = newConfig.logo ? newConfig.logo : null;
+        }
         if (updated.address !== undefined) payload.address = updated.address;
 
         try {
           const res = await api.patch<Laboratory>(`/lab/${targetLabId}`, payload);
           if (res.data) {
             setLabs((prev) =>
-              prev.map((l) => (l.id === targetLabId ? { ...l, ...res.data } : l))
+              prev.map((l) =>
+                l.id === targetLabId
+                  ? { ...l, ...res.data, logo: res.data.logo || '' }
+                  : l
+              )
             );
           }
           return { success: true, savedToDb: true };
@@ -197,7 +204,11 @@ export function LabBrandingProvider({
             const res = await api.put<Laboratory>(`/lab/${targetLabId}`, payload);
             if (res.data) {
               setLabs((prev) =>
-                prev.map((l) => (l.id === targetLabId ? { ...l, ...res.data } : l))
+                prev.map((l) =>
+                  l.id === targetLabId
+                    ? { ...l, ...res.data, logo: res.data.logo || '' }
+                    : l
+                )
               );
             }
             return { success: true, savedToDb: true };

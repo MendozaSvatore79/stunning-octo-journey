@@ -1,160 +1,164 @@
 // src/pages/Home.tsx
 import { SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
-import {
-  IconFlask,
-  IconBuilding,
-  IconUsers,
-  IconClipboardList,
-  IconShield,
-  IconCheckCircle,
-} from "../components/icons";
+import { useLabBranding } from "../context/LabBrandingContext";
+import { IconFlask } from "../components/icons";
 
 export default function Home() {
+  const { activeBranding } = useLabBranding();
+
+  // Nombre de identidad institucional estilizado y profesional
+  const brandName =
+    activeBranding?.name &&
+    activeBranding.name !== 'LAB-CENTROL OS' &&
+    activeBranding.name !== 'LabSystem'
+      ? activeBranding.name
+      : 'Synova Lab';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50/50 via-base-100 to-slate-100/70 text-base-content font-sans relative overflow-x-hidden selection:bg-primary selection:text-primary-content flex flex-col justify-between">
-      
-      {/* Esferas de Luz Suave de Fondo Clínico */}
-      <div className="absolute top-[-100px] left-[-100px] w-[600px] h-[600px] rounded-full bg-teal-500/10 blur-[140px] pointer-events-none"></div>
-      <div className="absolute top-[30%] right-[-100px] w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[150px] pointer-events-none"></div>
-
+    <div className="min-h-screen font-sans bg-base-100 text-base-content selection:bg-primary selection:text-primary-content">
       <SignedOut>
-        {/* Navbar Blanco Translúcido y Elegante */}
-        <header className="navbar bg-base-100/85 backdrop-blur-md border-b border-base-200 px-6 sm:px-12 lg:px-16 sticky top-0 z-50 shadow-xs">
-          <div className="flex-1 items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-teal-600/25">
-              L
-            </div>
-            <div>
-              <span className="text-2xl font-black tracking-tight text-base-content block leading-none">
-                LabSystem<span className="text-primary">.</span>
-              </span>
-              <span className="text-[10px] uppercase font-bold text-primary tracking-widest block mt-0.5">
-                Plataforma de Análisis Clínicos
-              </span>
-            </div>
-          </div>
+        <div className="min-h-screen flex flex-col lg:flex-row">
+          
+          {/* Panel Izquierdo: Identidad Institucional Sobria (Estilo LIS Clínico Hospitalario) */}
+          <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-gradient-to-b from-slate-900 via-slate-900 to-teal-950 text-slate-100 p-12 xl:p-16 relative overflow-hidden border-r border-slate-800">
+            {/* Sutil halo ambiental en esquina */}
+            <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
 
-          <div className="flex-none">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
-              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
-              <span>Portal Diagnóstico Activo</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Hero Principal Claro, Luminoso y Profesional */}
-        <main className="relative z-10 flex-1 flex items-center">
-          <div className="mx-auto max-w-7xl px-6 sm:px-12 lg:px-16 py-12 lg:py-16 w-full">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-12 items-center">
-              
-              {/* Columna Izquierda: Mensaje Claro e Impresionante */}
-              <section className="lg:col-span-7 space-y-8 text-left">
-                
-                {/* Insignia Clínica de Laboratorio */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold tracking-wide uppercase shadow-2xs">
-                  <IconFlask className="w-4 h-4 text-primary" /> Sistema Integral de Análisis Clínicos
+            {/* Encabezado Institucional con Emblema de Laboratorio */}
+            <div className="relative z-10 flex items-center gap-4">
+              {activeBranding?.logo ? (
+                <img
+                  src={activeBranding.logo}
+                  alt={brandName}
+                  className="w-12 h-12 rounded-2xl object-contain bg-white p-1.5 shadow-md border border-slate-700 shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-teal-500/20 ring-2 ring-teal-400/20 shrink-0">
+                  <IconFlask className="w-6 h-6 text-white drop-shadow-sm" />
                 </div>
-
-                {/* Titular Principal Limpio */}
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-base-content leading-[1.1]">
-                  Gestión Inteligente de <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 via-cyan-700 to-emerald-600">
-                    Laboratorios y Pacientes
+              )}
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-black tracking-tight text-white block leading-none">
+                    {brandName}
                   </span>
-                </h1>
+                  <span className="badge badge-sm badge-outline text-teal-300 border-teal-500/40 text-[10px] font-bold tracking-wider uppercase py-2">
+                    LIS Pro
+                  </span>
+                </div>
+                <span className="text-xs text-teal-400/90 font-medium tracking-wide block mt-1">
+                  Sistema de Diagnóstico Clínico & Gestión Hospitalaria
+                </span>
+              </div>
+            </div>
 
-                {/* Subtítulo Claro */}
-                <p className="text-base sm:text-lg text-base-content/70 max-w-2xl leading-relaxed font-normal">
-                  Plataforma médica para el registro de expedientes, control de sedes, seguimiento de órdenes de trabajo y captura de resultados analíticos.
+            {/* Mensaje Central Sobrio y Realista */}
+            <div className="relative z-10 max-w-lg space-y-5 my-auto py-12">
+              <div className="w-10 h-0.5 bg-teal-500"></div>
+              <h1 className="text-2xl xl:text-3xl font-semibold leading-snug text-slate-100 tracking-tight">
+                Control analítico de muestras, validación técnica y emisión segura de resultados.
+              </h1>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Plataforma de operación clínica para químicos analistas y personal médico. Trazabilidad de órdenes y entrega digital directa a pacientes.
+              </p>
+            </div>
+
+            {/* Pie Institucional */}
+            <div className="relative z-10 flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/80 pt-6">
+              <span>{brandName} • Edición Médica</span>
+              <span>Acceso seguro para personal autorizado</span>
+            </div>
+          </div>
+
+          {/* Panel Derecho: Acceso Limpio de Clerk */}
+          <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 bg-base-100 min-h-screen">
+            
+            {/* Cabecera Móvil (solo visible en pantallas pequeñas) */}
+            <div className="lg:hidden flex items-center justify-between pb-6 border-b border-base-200">
+              <div className="flex items-center gap-3">
+                {activeBranding?.logo ? (
+                  <img
+                    src={activeBranding.logo}
+                    alt={brandName}
+                    className="w-10 h-10 rounded-xl object-contain bg-white border border-base-300 p-1 shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                    <IconFlask className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                <div>
+                  <span className="font-black text-lg text-base-content block leading-tight">
+                    {brandName}
+                  </span>
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">
+                    Diagnóstico Clínico LIS
+                  </span>
+                </div>
+              </div>
+              <a
+                href="mailto:soporte@synovalab.com"
+                className="text-xs font-semibold text-base-content/60 hover:text-primary"
+              >
+                Soporte
+              </a>
+            </div>
+
+            {/* Enlace de soporte superior en Desktop */}
+            <div className="hidden lg:flex justify-end">
+              <a
+                href="mailto:soporte@synovalab.com"
+                className="text-xs font-medium text-base-content/60 hover:text-primary transition-colors"
+              >
+                ¿Necesitas ayuda? Contactar a Soporte
+              </a>
+            </div>
+
+            {/* Contenedor Centrado del Formulario de Clerk */}
+            <div className="w-full max-w-md mx-auto my-auto py-8">
+              <div className="mb-6 space-y-1 text-center lg:text-left">
+                <h2 className="text-2xl font-bold tracking-tight text-base-content">
+                  Iniciar Sesión
+                </h2>
+                <p className="text-xs text-base-content/60">
+                  Ingresa tus credenciales para acceder a la plataforma
                 </p>
+              </div>
 
-                {/* Tarjetas de Módulos Luminosas */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                  <div className="p-5 rounded-2xl bg-base-100 border border-base-200 shadow-md hover:shadow-xl hover:border-primary/40 transition-all group">
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <IconBuilding className="w-6 h-6" />
-                    </div>
-                    <div className="font-bold text-base text-base-content">Laboratorios</div>
-                    <div className="text-xs text-base-content/60 mt-0.5">Control de sedes clínicas</div>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-base-100 border border-base-200 shadow-md hover:shadow-xl hover:border-secondary/40 transition-all group">
-                    <div className="w-11 h-11 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <IconUsers className="w-6 h-6" />
-                    </div>
-                    <div className="font-bold text-base text-base-content">Pacientes</div>
-                    <div className="text-xs text-base-content/60 mt-0.5">Directorio e historial</div>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-base-100 border border-base-200 shadow-md hover:shadow-xl hover:border-accent/40 transition-all group">
-                    <div className="w-11 h-11 rounded-xl bg-accent/15 text-accent-content flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <IconClipboardList className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="font-bold text-base text-base-content">Órdenes</div>
-                    <div className="text-xs text-base-content/60 mt-0.5">Captura de pruebas</div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Columna Derecha: Tarjeta Blanca Elegante de Login */}
-              <section className="lg:col-span-5 w-full flex justify-center">
-                <div className="w-full max-w-md card bg-base-100 border border-base-200 shadow-2xl rounded-3xl p-6 sm:p-8 hover:shadow-primary/10 transition-all duration-300 relative overflow-hidden">
-                  
-                  {/* Borde Superior Clínico */}
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-600 via-cyan-600 to-emerald-500"></div>
-
-                  <div className="mb-6 text-center space-y-1.5">
-                    <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 border border-primary/20 shadow-inner">
-                      <IconShield className="w-7 h-7" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-base-content tracking-tight">
-                      Acceso al Sistema
-                    </h2>
-                    <p className="text-xs text-base-content/60 font-medium">
-                      Inicia sesión para ingresar al panel clínico
-                    </p>
-                  </div>
-
-                  {/* Formulario Clerk Estilizado */}
-                  <div className="flex justify-center w-full">
-                    <SignIn 
-                      routing="virtual" 
-                      afterSignInUrl="/dashboard"
-                      appearance={{
-                        elements: {
-                          card: "shadow-none border-none bg-transparent p-0 w-full",
-                          headerTitle: "hidden",
-                          headerSubtitle: "hidden",
-                          socialButtonsBlockButton: "rounded-xl border border-base-200 bg-base-200/50 hover:bg-base-200 text-base-content font-semibold text-sm transition-all py-2.5",
-                          formButtonPrimary: "btn btn-primary w-full text-primary-content font-bold rounded-xl shadow-lg shadow-primary/25 py-3 text-sm transition-all",
-                          formFieldInput: "bg-base-100 border border-base-300 text-base-content rounded-xl focus:border-primary focus:outline-none transition-all text-sm py-2.5 px-3",
-                          footerActionLink: "text-primary font-bold hover:underline",
-                          identityPreviewText: "text-sm font-semibold text-base-content/80",
-                          formFieldLabel: "text-xs font-semibold text-base-content/80 mb-1"
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </section>
-
+              <div className="w-full">
+                <SignIn
+                  routing="virtual"
+                  afterSignInUrl="/dashboard"
+                  appearance={{
+                    elements: {
+                      card: "shadow-none border border-base-200 bg-base-100 rounded-2xl p-6 sm:p-7 w-full",
+                      headerTitle: "hidden",
+                      headerSubtitle: "hidden",
+                      socialButtonsBlockButton:
+                        "rounded-xl border border-base-300 bg-base-100 hover:bg-base-200/60 text-base-content font-medium text-sm transition-all py-2.5",
+                      formButtonPrimary:
+                        "btn btn-primary w-full text-primary-content font-semibold rounded-xl py-3 text-sm transition-all shadow-sm",
+                      formFieldInput:
+                        "bg-base-100 border border-base-300 text-base-content rounded-xl focus:border-primary focus:outline-none transition-all text-sm py-2.5 px-3",
+                      footerActionLink: "text-primary font-semibold hover:underline",
+                      identityPreviewText: "text-sm font-medium text-base-content/80",
+                      formFieldLabel: "text-xs font-medium text-base-content/80 mb-1",
+                    },
+                  }}
+                />
+              </div>
             </div>
+
+            {/* Pie de Página */}
+            <div className="pt-6 border-t border-base-200/80 flex flex-col sm:flex-row items-center justify-between text-xs text-base-content/50 gap-2">
+              <span>© 2026 {brandName}. Todos los derechos reservados.</span>
+              <span className="text-[11px] text-base-content/40">Plataforma Médica Segura</span>
+            </div>
+
           </div>
-        </main>
 
-        {/* Footer Claro y Elegante */}
-        <footer className="bg-base-100 border-t border-base-200 text-base-content/60 py-6 px-6 sm:px-12 lg:px-16">
-          <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-medium">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base-content">LabSystem</span>
-              <span>© 2026. Plataforma de Análisis y Diagnóstico Clínico.</span>
-            </div>
-            <div className="text-base-content/50 flex items-center gap-1.5">
-              <IconCheckCircle className="w-4 h-4 text-primary" /> Autenticación Segura con Clerk
-            </div>
-          </div>
-        </footer>
+        </div>
       </SignedOut>
 
       <SignedIn>

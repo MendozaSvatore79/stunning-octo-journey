@@ -9,7 +9,7 @@ import { useMaintenance } from '../context/MaintenanceContext';
 import AdminDashboardView from '../components/AdminDashboardView';
 import OperatorDashboardView from '../components/OperatorDashboardView';
 import ModuleMaintenanceView from '../components/ModuleMaintenanceView';
-import { IconSparkles, IconMenu, IconSettings } from '../components/icons';
+import { IconSparkles, IconMenu, IconSettings, IconFlask } from '../components/icons';
 
 // Carga perezosa (Code Splitting) de vistas pesadas
 const CreateLabModal = lazy(() => import('../components/CreateLabModal'));
@@ -136,8 +136,8 @@ export default function Dashboard() {
             {activeBranding.logo ? (
               <img src={activeBranding.logo} alt="Logo" className="w-7 h-7 rounded-lg object-contain bg-white" />
             ) : (
-              <span className="w-7 h-7 rounded-lg bg-primary text-primary-content flex items-center justify-center font-bold text-xs">
-                {activeBranding.name?.charAt(0) || 'L'}
+              <span className="w-7 h-7 rounded-lg bg-primary text-primary-content flex items-center justify-center shadow-xs">
+                <IconFlask className="w-4 h-4 text-primary-content" />
               </span>
             )}
             <span className="truncate max-w-[140px]">{activeBranding.name || 'LabSystem'}</span>

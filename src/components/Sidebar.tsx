@@ -94,8 +94,8 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                 className="w-10 h-10 rounded-2xl object-cover border border-base-300 shadow-sm shrink-0 bg-white"
               />
             ) : (
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-xl shadow-md shadow-teal-500/20 shrink-0">
-                {activeBranding.name ? activeBranding.name.charAt(0).toUpperCase() : 'L'}
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
+                <IconFlask className="w-5 h-5 text-white" />
               </div>
             )}
             <div className="overflow-hidden min-w-0">

@@ -177,11 +177,34 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
     }
   };
 
-  const handleRemoveLogo = () => {
+  const handleRemoveLogo = async () => {
     setLogoPreview('');
-    isDirtyLogoRef.current = true;
+    isDirtyLogoRef.current = false;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+
+    const effectiveLabId =
+      (!selectedLabId || selectedLabId === 'default') && availableLabs.length > 0
+        ? availableLabs[0].id
+        : selectedLabId;
+
+    // Actualiza de inmediato en el contexto, sidebar y base de datos
+    setIsSaving(true);
+    try {
+      const result = await updateBranding(effectiveLabId, {
+        logo: '',
+      });
+      if (result.savedToDb) {
+        setSuccessMsg('Logotipo eliminado con éxito de la base de datos y de la sede.');
+      } else {
+        setSuccessMsg('Logotipo removido localmente.');
+      }
+    } catch (err) {
+      console.error('Error al eliminar logotipo:', err);
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSuccessMsg(null), 3000);
     }
   };
 
@@ -210,7 +233,7 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
       const result = await updateBranding(effectiveLabId, {
         name: name.trim(),
         subtitle: subtitle.trim() || undefined,
-        logo: logoPreview || undefined,
+        logo: logoPreview ? logoPreview : '',
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
         address: address.trim() || undefined,
