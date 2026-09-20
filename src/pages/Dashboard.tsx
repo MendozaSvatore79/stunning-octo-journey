@@ -200,7 +200,7 @@ export default function Dashboard() {
       </header>
 
       {/* Contenido Principal condicional por Vista, Rol y Mantenimiento con React Suspense */}
-      <main className={`w-full px-2.5 py-4 sm:px-6 lg:px-8 mx-auto transition-all max-w-full overflow-x-hidden ${
+      <main className={`w-full px-2.5 py-4 sm:px-6 lg:px-8 mx-auto transition-all max-w-full overflow-x-hidden pb-28 sm:pb-32 ${
         activeView === 'support' ? 'max-w-none' : 'max-w-7xl'
       }`}>
         {isUserLoading ? (

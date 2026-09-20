@@ -611,3 +611,37 @@ export function IconBot({ className = "w-5 h-5", ...props }: SVGProps<SVGSVGElem
   );
 }
 
+export function IconMove({ className = "w-5 h-5", ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={defaultStroke} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <polyline points="5 9 2 12 5 15" />
+      <polyline points="9 5 12 2 15 5" />
+      <polyline points="15 19 12 22 9 19" />
+      <polyline points="19 9 22 12 19 15" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <line x1="12" y1="2" x2="12" y2="22" />
+    </svg>
+  );
+}
+
+export function IconDockRight({ className = "w-5 h-5", ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={defaultStroke} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <line x1="15" y1="3" x2="15" y2="21" />
+      <path d="m11 10-2 2 2 2" />
+    </svg>
+  );
+}
+
+export function IconArrowsHorizontal({ className = "w-5 h-5", ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={defaultStroke} strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <polyline points="18 8 22 12 18 16" />
+      <polyline points="6 8 2 12 6 16" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+    </svg>
+  );
+}
+
+

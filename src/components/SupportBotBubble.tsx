@@ -11,6 +11,9 @@ import {
   IconWrench,
   IconFlask,
   IconRefresh,
+  IconMove,
+  IconDockRight,
+  IconArrowsHorizontal,
 } from './icons';
 import type { TicketCategory, TicketPriority, TicketStatus, SupportTicket } from './SupportChatView';
 import { querySynovaGemini } from '../utils/geminiAi';
@@ -52,6 +55,130 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [ticketsList, setTicketsList] = useState<SupportTicket[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
+
+  // Estados de acomodo, reposicionamiento y acoplamiento al borde
+  const [isDocked, setIsDocked] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('synova_bot_docked') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [positionSide, setPositionSide] = useState<'right' | 'left'>(() => {
+    try {
+      return (localStorage.getItem('synova_bot_side') as 'right' | 'left') || 'right';
+    } catch {
+      return 'right';
+    }
+  });
+
+  const [customPosition, setCustomPosition] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const saved = localStorage.getItem('synova_bot_pos');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef<{ clientX: number; clientY: number; startPosX: number; startPosY: number }>({
+    clientX: 0,
+    clientY: 0,
+    startPosX: 0,
+    startPosY: 0,
+  });
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if ((e.target as HTMLElement).closest('[data-no-drag="true"]')) return;
+
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    isDraggingRef.current = false;
+    dragStartRef.current = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      startPosX: rect.left,
+      startPosY: rect.top,
+    };
+
+    const onPointerMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - dragStartRef.current.clientX;
+      const dy = ev.clientY - dragStartRef.current.clientY;
+
+      if (!isDraggingRef.current && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+        isDraggingRef.current = true;
+      }
+
+      if (isDraggingRef.current) {
+        const maxX = window.innerWidth - rect.width - 12;
+        const maxY = window.innerHeight - rect.height - 12;
+        const newX = Math.max(12, Math.min(maxX, dragStartRef.current.startPosX + dx));
+        const newY = Math.max(12, Math.min(maxY, dragStartRef.current.startPosY + dy));
+        setCustomPosition({ x: newX, y: newY });
+      }
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      if (isDraggingRef.current) {
+        setCustomPosition((currentPos) => {
+          if (currentPos) {
+            try {
+              localStorage.setItem('synova_bot_pos', JSON.stringify(currentPos));
+            } catch {}
+          }
+          return currentPos;
+        });
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
+
+  const handleBubbleClick = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      return;
+    }
+    setIsOpen((prev) => !prev);
+  };
+
+  const handleToggleDock = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setIsDocked((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('synova_bot_docked', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleToggleSide = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setPositionSide((prev) => {
+      const next = prev === 'right' ? 'left' : 'right';
+      try {
+        localStorage.setItem('synova_bot_side', next);
+        localStorage.removeItem('synova_bot_pos');
+      } catch {}
+      setCustomPosition(null);
+      return next;
+    });
+  };
+
+  const handleResetPosition = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCustomPosition(null);
+    try {
+      localStorage.removeItem('synova_bot_pos');
+    } catch {}
+  };
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -243,60 +370,147 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
   return (
     <>
       {/* ========================================================================= */}
-      {/* 1. BURBUJA FLOTANTE SYNOVA EN ESQUINA INFERIOR DERECHA */}
+      {/* 1. MODO ACOPLADO AL BORDE (DOCK LATERAL DISCRETO)                         */}
       {/* ========================================================================= */}
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex flex-col items-end">
-        {/* Tooltip elegante al inicio */}
-        {!isOpen && (
-          <div className="hidden sm:flex items-center gap-2 mb-2 bg-base-100/95 backdrop-blur-md text-base-content px-3.5 py-1.5 rounded-full shadow-lg border border-base-300 text-xs font-bold select-none">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Synova • Soporte En Línea</span>
-          </div>
-        )}
-
+      {isDocked && !isOpen && (
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`relative group btn btn-circle h-14 w-14 sm:h-16 sm:w-16 shadow-2xl border-2 transition-all duration-300 ${
-            isOpen
-              ? 'bg-base-200 text-base-content border-base-300 hover:bg-base-300 scale-95'
-              : 'bg-gradient-to-tr from-teal-700 via-cyan-700 to-teal-600 hover:from-teal-600 hover:to-cyan-600 text-white border-white/20 hover:scale-105 shadow-teal-700/30'
+          onClick={() => setIsOpen(true)}
+          className={`fixed z-40 bg-gradient-to-r from-teal-800 to-teal-700 hover:from-teal-700 hover:to-teal-600 text-white py-2 px-3 shadow-2xl flex items-center gap-2 transition-all duration-200 cursor-pointer group select-none ${
+            positionSide === 'left'
+              ? 'left-0 bottom-24 sm:bottom-28 rounded-r-2xl border-r-2 border-y-2 border-teal-400/40 hover:translate-x-1'
+              : 'right-0 bottom-24 sm:bottom-28 rounded-l-2xl border-l-2 border-y-2 border-teal-400/40 hover:-translate-x-1'
           }`}
-          aria-label="Abrir asistente de soporte Synova"
-          title="Synova • Soporte Clínico y Tickets"
+          title="Synova • Soporte En Línea (Haz clic para abrir o desacoplar)"
         >
-          {/* Anillo de pulso sutil cuando está cerrado */}
-          {!isOpen && (
-            <span className="absolute -inset-1 rounded-full bg-teal-400/25 animate-ping pointer-events-none"></span>
-          )}
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="font-serif italic font-black text-sm text-white drop-shadow-sm">S</span>
+          <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline text-teal-100">
+            Synova
+          </span>
+          <span
+            data-no-drag="true"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleDock();
+            }}
+            className="p-1 rounded-lg hover:bg-white/15 text-teal-200 hover:text-white transition-colors"
+            title="Desacoplar a burbuja flotante móvil"
+          >
+            <IconArrowsHorizontal className="w-3.5 h-3.5" />
+          </span>
+        </button>
+      )}
 
-          {isOpen ? (
-            <IconX className="w-6 h-6 transition-transform group-hover:rotate-90" />
-          ) : (
-            <div className="flex flex-col items-center justify-center">
-              <span className="font-black text-xl sm:text-2xl leading-none tracking-tight font-serif italic text-white drop-shadow-sm">
-                S
-              </span>
-              <span className="text-[8px] font-black tracking-widest uppercase mt-0.5 opacity-90">
-                Synova
-              </span>
+      {/* ========================================================================= */}
+      {/* 2. BURBUJA FLOTANTE LIBRE (ARRASTRABLE Y REPOSICIONABLE)                  */}
+      {/* ========================================================================= */}
+      {!isDocked && (
+        <div
+          onPointerDown={handlePointerDown}
+          style={
+            customPosition
+              ? { left: `${customPosition.x}px`, top: `${customPosition.y}px` }
+              : undefined
+          }
+          className={`fixed z-40 flex flex-col group touch-none select-none ${
+            customPosition
+              ? ''
+              : positionSide === 'left'
+              ? 'bottom-4 left-4 sm:bottom-6 sm:left-6 items-start'
+              : 'bottom-4 right-4 sm:bottom-6 sm:right-6 items-end'
+          }`}
+        >
+          {/* Tooltip elegante que SOLO aparece al hacer HOVER (NO tapa texto ni datos) */}
+          {!isOpen && (
+            <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto flex items-center gap-1.5 mb-2 bg-base-100/95 backdrop-blur-md text-base-content px-3 py-1 rounded-full shadow-lg border border-base-300 text-[11px] font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Synova • Soporte</span>
+              <div className="flex items-center gap-1 pl-1.5 border-l border-base-300">
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={handleToggleDock}
+                  className="p-1 rounded-md hover:bg-base-200 text-base-content/70 hover:text-primary transition-colors"
+                  title="Acoplar al borde de la pantalla (Minimizar para que no estorbe ningún texto)"
+                >
+                  <IconDockRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={handleToggleSide}
+                  className="p-1 rounded-md hover:bg-base-200 text-base-content/70 hover:text-primary transition-colors"
+                  title="Cambiar de lado (Izquierda / Derecha)"
+                >
+                  <IconArrowsHorizontal className="w-3.5 h-3.5" />
+                </button>
+                {customPosition && (
+                  <button
+                    type="button"
+                    data-no-drag="true"
+                    onClick={handleResetPosition}
+                    className="p-1 rounded-md hover:bg-base-200 text-base-content/70 hover:text-primary transition-colors"
+                    title="Restablecer posición inicial"
+                  >
+                    <IconRefresh className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Indicador de estado en línea */}
-          {!isOpen && (
-            <span
-              className="absolute top-1 right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-xs"
-              title="Synova activa"
-            />
-          )}
-        </button>
-      </div>
+          {/* Botón Circular de la Burbuja */}
+          <button
+            type="button"
+            onClick={handleBubbleClick}
+            className={`relative btn btn-circle h-13 w-13 sm:h-14 sm:w-14 shadow-2xl border-2 transition-all duration-300 cursor-grab active:cursor-grabbing ${
+              isOpen
+                ? 'bg-base-200 text-base-content border-base-300 hover:bg-base-300 scale-95'
+                : 'bg-gradient-to-tr from-teal-700 via-cyan-700 to-teal-600 hover:from-teal-600 hover:to-cyan-600 text-white border-white/25 hover:scale-105 shadow-teal-700/30'
+            }`}
+            aria-label="Abrir asistente de soporte Synova"
+            title="Synova • Soporte Clínico (Arrastra para mover a donde quieras o haz clic para abrir)"
+          >
+            {/* Indicador de arrastre sutil en hover */}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-75 transition-opacity pointer-events-none">
+              <IconMove className="w-3 h-3 text-white drop-shadow-sm" />
+            </div>
+
+            {isOpen ? (
+              <IconX className="w-5 h-5 transition-transform group-hover:rotate-90" />
+            ) : (
+              <div className="flex flex-col items-center justify-center">
+                <span className="font-black text-lg sm:text-xl leading-none tracking-tight font-serif italic text-white drop-shadow-sm">
+                  S
+                </span>
+                <span className="text-[7.5px] font-black tracking-widest uppercase mt-0.5 opacity-95">
+                  Synova
+                </span>
+              </div>
+            )}
+
+            {/* Indicador de estado en línea */}
+            {!isOpen && (
+              <span
+                className="absolute top-0.5 right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-xs"
+                title="Synova activa"
+              />
+            )}
+          </button>
+        </div>
+      )}
 
       {/* ========================================================================= */}
-      {/* 2. VENTANA FLOTANTE DE ASISTENCIA CON SYNOVA */}
+      {/* 3. VENTANA FLOTANTE DE ASISTENCIA CON SYNOVA                               */}
       {/* ========================================================================= */}
       {isOpen && (
-        <div className="fixed bottom-20 right-3 sm:bottom-24 sm:right-6 w-[calc(100vw-1.5rem)] sm:w-[410px] md:w-[430px] max-w-[95vw] h-[560px] max-h-[82vh] bg-base-100 border border-base-300 shadow-2xl rounded-3xl flex flex-col z-40 overflow-hidden animate-scale-in">
+        <div
+          className={`fixed z-40 w-[calc(100vw-1.5rem)] sm:w-[410px] md:w-[430px] max-w-[95vw] h-[560px] max-h-[82vh] bg-base-100 border border-base-300 shadow-2xl rounded-3xl flex flex-col overflow-hidden animate-scale-in ${
+            (customPosition && customPosition.x < window.innerWidth / 2) || (!customPosition && positionSide === 'left')
+              ? 'bottom-20 left-3 sm:bottom-24 sm:left-6'
+              : 'bottom-20 right-3 sm:bottom-24 sm:right-6'
+          }`}
+        >
           {/* Header de Synova */}
           <div className="bg-gradient-to-r from-teal-800 via-cyan-900 to-teal-900 text-white p-3.5 sm:p-4 flex items-center justify-between shrink-0 shadow-md">
             <div className="flex items-center gap-3">
@@ -320,6 +534,26 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Botón para alternar lado (Izquierda / Derecha) */}
+              <button
+                type="button"
+                onClick={handleToggleSide}
+                className="btn btn-ghost btn-circle btn-xs text-white/80 hover:text-white hover:bg-white/10"
+                title="Mover panel al lado opuesto (Izquierda / Derecha)"
+              >
+                <IconArrowsHorizontal className="w-4 h-4" />
+              </button>
+
+              {/* Botón para acoplar al borde (Minimizar) */}
+              <button
+                type="button"
+                onClick={handleToggleDock}
+                className="btn btn-ghost btn-circle btn-xs text-white/80 hover:text-white hover:bg-white/10"
+                title="Acoplar al borde de la pantalla (Minimizar)"
+              >
+                <IconDockRight className="w-4 h-4" />
+              </button>
+
               {/* Botón opcional de pantalla completa */}
               {onNavigateToFullSupport && (
                 <button
@@ -337,7 +571,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
               <button
                 onClick={() => setIsOpen(false)}
                 className="btn btn-ghost btn-circle btn-xs text-white/80 hover:text-white hover:bg-white/10"
-                title="Minimizar"
+                title="Cerrar chat"
               >
                 <IconX className="w-4 h-4" />
               </button>
