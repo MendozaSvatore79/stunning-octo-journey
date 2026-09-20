@@ -190,13 +190,18 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
 
   // Abrir modal de creación preconfigurado con la sede seleccionada
   const handleOpenCreateModal = () => {
+    const validInitialLab =
+      filterLabId !== 'ALL' && filterLabId !== 'UNASSIGNED' && filterLabId !== 'default'
+        ? filterLabId
+        : (localLabs.find((l) => l.id && l.id !== 'default')?.id || '');
+
     setCreateForm({
       email: '',
       password: '',
       firstName: '',
       lastName: '',
       role: 'TECH',
-      laboratoryId: filterLabId !== 'ALL' && filterLabId !== 'UNASSIGNED' ? filterLabId : (localLabs[0]?.id || ''),
+      laboratoryId: validInitialLab,
     });
     setShowCreatePassword(false);
     setIsCreateModalOpen(true);
@@ -214,6 +219,14 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    const cleanLabId =
+      createForm.laboratoryId &&
+      createForm.laboratoryId !== 'default' &&
+      createForm.laboratoryId !== 'ALL' &&
+      createForm.laboratoryId !== 'UNASSIGNED'
+        ? createForm.laboratoryId
+        : undefined;
+
     try {
       const payload = {
         email: createForm.email.trim(),
@@ -221,7 +234,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
         firstName: createForm.firstName.trim() || undefined,
         lastName: createForm.lastName.trim() || undefined,
         role: createForm.role,
-        laboratoryId: createForm.laboratoryId || undefined,
+        laboratoryId: cleanLabId,
       };
 
       await api.post('/users', payload);
@@ -246,7 +259,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
       firstName: u.firstName || '',
       lastName: u.lastName || '',
       role: u.role || 'TECH',
-      laboratoryId: u.laboratoryId || '',
+      laboratoryId: u.laboratoryId && u.laboratoryId !== 'default' ? u.laboratoryId : '',
     });
   };
 
@@ -259,13 +272,21 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    const cleanLabId =
+      editForm.laboratoryId &&
+      editForm.laboratoryId !== 'default' &&
+      editForm.laboratoryId !== 'ALL' &&
+      editForm.laboratoryId !== 'UNASSIGNED'
+        ? editForm.laboratoryId
+        : null;
+
     try {
       const payload = {
         email: editForm.email.trim() || undefined,
         firstName: editForm.firstName.trim() || undefined,
         lastName: editForm.lastName.trim() || undefined,
         role: editForm.role,
-        laboratoryId: editForm.laboratoryId || null,
+        laboratoryId: cleanLabId,
       };
 
       await api.patch(`/users/${editingUser.id}`, payload);
