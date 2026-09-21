@@ -1,5 +1,7 @@
 // src/types/lab.ts
 
+export type VerificationStatus = 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED' | 'IN_REVIEW';
+
 export interface Laboratory {
   id: string;
   name: string;
@@ -8,6 +10,22 @@ export interface Laboratory {
   state?: string;
   country?: string;
   logo?: string;
+
+  // 📜 Datos Sanitarios y Regulatorios (México / COFEPRIS)
+  rfc?: string;
+  cofeprisNotice?: string;
+  sanitaryResponsible?: string;
+  professionalLicense?: string;
+  sanitaryPermitUrl?: string;
+  phone?: string;
+  email?: string;
+
+  // 🛡️ Auditoría y Validación Central
+  verificationStatus?: VerificationStatus;
+  verificationNotes?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+
   createdById?: string;
   createdBy?: {
     id: string;
@@ -27,4 +45,13 @@ export interface CreateLabDto {
   state?: string;
   country?: string;
   logo?: string;
+
+  // 📜 Datos Sanitarios y Regulatorios (México / COFEPRIS)
+  rfc?: string;
+  cofeprisNotice?: string;
+  sanitaryResponsible?: string;
+  professionalLicense?: string;
+  sanitaryPermitUrl?: string;
+  phone?: string;
+  email?: string;
 }

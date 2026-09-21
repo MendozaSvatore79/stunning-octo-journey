@@ -16,6 +16,10 @@ import {
   IconCheckCircle,
   IconAlertCircle,
   IconBuilding,
+  IconShieldCheck,
+  IconFileText,
+  IconPhone,
+  IconMail,
 } from './icons';
 
 interface CreateLabModalProps {
@@ -38,6 +42,13 @@ export default function CreateLabModal({
     state: '',
     city: '',
     logo: '',
+    rfc: '',
+    cofeprisNotice: '',
+    sanitaryResponsible: '',
+    professionalLicense: '',
+    sanitaryPermitUrl: '',
+    phone: '',
+    email: '',
   });
 
   const [availableStates, setAvailableStates] = useState<string[]>([]);
@@ -155,10 +166,18 @@ export default function CreateLabModal({
         state: formData.state?.trim() || undefined,
         city: formData.city?.trim() || undefined,
         logo: formData.logo?.trim() || undefined,
+        // Datos Regulatorios (México / COFEPRIS)
+        rfc: formData.rfc?.trim().toUpperCase() || undefined,
+        cofeprisNotice: formData.cofeprisNotice?.trim() || undefined,
+        sanitaryResponsible: formData.sanitaryResponsible?.trim() || undefined,
+        professionalLicense: formData.professionalLicense?.trim() || undefined,
+        sanitaryPermitUrl: formData.sanitaryPermitUrl?.trim() || undefined,
+        phone: formData.phone?.trim() || undefined,
+        email: formData.email?.trim() || undefined,
       };
 
       const response = await api.post<Laboratory>('/lab', payload);
-      setSuccessMsg('¡Laboratorio registrado exitosamente!');
+      setSuccessMsg('¡Sede registrada exitosamente! Se ha remitido a revisión administrativa.');
 
       setFormData({
         name: '',
@@ -167,6 +186,13 @@ export default function CreateLabModal({
         state: '',
         city: '',
         logo: '',
+        rfc: '',
+        cofeprisNotice: '',
+        sanitaryResponsible: '',
+        professionalLicense: '',
+        sanitaryPermitUrl: '',
+        phone: '',
+        email: '',
       });
 
       if (onLabCreated) {
@@ -176,12 +202,12 @@ export default function CreateLabModal({
       setTimeout(() => {
         setSuccessMsg(null);
         onClose();
-      }, 1200);
+      }, 1400);
     } catch (err: any) {
       console.error('Error al crear laboratorio:', err);
       const serverMessage =
         err?.response?.data?.message ||
-        'No se pudo registrar el laboratorio. Verifica tu conexión e intenta nuevamente.';
+        'No se pudo registrar el laboratorio. Verifica los datos e intenta nuevamente.';
       setErrorMsg(
         Array.isArray(serverMessage) ? serverMessage.join(', ') : serverMessage
       );
@@ -191,21 +217,26 @@ export default function CreateLabModal({
   };
 
   return (
-    <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4">
-      <div className="modal-box w-full max-w-[95vw] sm:max-w-xl border border-base-200 bg-base-100 p-4 sm:p-6 shadow-xl rounded-2xl max-h-[90vh] overflow-y-auto">
+    <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4 z-50">
+      <div className="modal-box w-full max-w-[95vw] sm:max-w-2xl border border-base-200 bg-base-100 p-4 sm:p-7 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto">
         
         {/* Cabecera del Modal */}
         <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-4">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-              <IconFlask className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+              <IconFlask className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-base sm:text-lg text-base-content tracking-tight truncate">
-                Crear Nueva Sede de Laboratorio
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-base sm:text-lg text-base-content tracking-tight truncate">
+                  Alta de Nueva Sede Clínica
+                </h3>
+                <span className="badge badge-warning badge-xs font-bold text-[9px] px-2 py-0.5">
+                  AUDITORÍA INICIAL
+                </span>
+              </div>
               <p className="text-xs text-base-content/60 truncate">
-                Selecciona país, estado y ciudad para dar de alta la sucursal.
+                Ingresa los datos del establecimiento y credenciales sanitarias oficiales.
               </p>
             </div>
           </div>
@@ -220,194 +251,328 @@ export default function CreateLabModal({
 
         {/* Mensajes de Alerta */}
         {errorMsg && (
-          <div className="alert alert-error mb-4 text-xs font-medium shadow-xs py-2 rounded-xl text-white">
+          <div className="alert alert-error mb-4 text-xs font-medium shadow-xs py-2.5 rounded-2xl text-white">
             <IconAlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="alert alert-success mb-4 text-xs font-medium shadow-xs py-2 rounded-xl text-white">
+          <div className="alert alert-success mb-4 text-xs font-medium shadow-xs py-2.5 rounded-2xl text-white">
             <IconCheckCircle className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* Formulario con desplegables dependientes de País -> Estado -> Ciudad */}
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-semibold">
-                Nombre de la Sede / Laboratorio <span className="text-error">*</span>
-              </span>
-            </label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Ej. Laboratorio Central - Sede Guadalajara"
-              className="input input-bordered w-full focus:input-primary transition-all rounded-xl font-medium"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-semibold flex items-center gap-1.5">
-                <IconMapPin className="w-4 h-4 text-base-content/60" /> Calle y Número (Dirección)
-              </span>
-            </label>
-            <input
-              type="text"
-              name="address"
-              placeholder="Ej. Av. Vallarta #2440, Col. Arcos Vallarta"
-              className="input input-bordered w-full focus:input-primary transition-all rounded-xl text-sm"
-              value={formData.address || ''}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Sección de Selección Geográfica Dependiente */}
-          <div className="bg-base-200/50 p-4 rounded-2xl border border-base-200 space-y-4">
-            <div className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-              <IconBuilding className="w-3.5 h-3.5" /> Ubicación de la Sede
+          {/* SECCIÓN 1: IDENTIDAD BÁSICA Y UBICACIÓN */}
+          <div className="space-y-3">
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text font-bold text-xs">
+                  Nombre Comercial del Laboratorio / Sede <span className="text-error">*</span>
+                </span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                placeholder="Ej. Laboratorio Diagnóstico Clínico - Sede Guadalajara Centro"
+                className="input input-bordered input-sm sm:input-md w-full focus:input-primary transition-all rounded-xl font-medium text-xs sm:text-sm"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              
-              {/* Selector de País */}
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text font-bold text-xs flex items-center gap-1.5">
+                  <IconMapPin className="w-3.5 h-3.5 text-base-content/60" /> Calle, Número y Colonia
+                </span>
+              </label>
+              <input
+                type="text"
+                name="address"
+                placeholder="Ej. Av. Hidalgo 1450, Col. Americana"
+                className="input input-bordered input-sm w-full focus:input-primary transition-all rounded-xl text-xs"
+                value={formData.address || ''}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Ubicación Geográfica */}
+            <div className="bg-base-200/40 p-3.5 rounded-2xl border border-base-200 space-y-3">
+              <div className="text-[11px] font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <IconBuilding className="w-3.5 h-3.5" /> Ubicación Geográfica
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="form-control">
+                  <label className="label py-0.5">
+                    <span className="label-text text-[11px] font-semibold flex items-center gap-1">
+                      <IconGlobe className="w-3 h-3 text-primary" /> País
+                    </span>
+                  </label>
+                  <select
+                    name="country"
+                    className="select select-bordered select-xs w-full rounded-xl focus:select-primary font-medium h-9 text-xs"
+                    value={formData.country}
+                    onChange={handleChange}
+                  >
+                    {POPULAR_COUNTRIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-0.5">
+                    <span className="label-text text-[11px] font-semibold">Estado / Entidad</span>
+                  </label>
+                  {isLoadingStates ? (
+                    <div className="skeleton h-9 w-full rounded-xl"></div>
+                  ) : !customStateMode && availableStates.length > 0 ? (
+                    <select
+                      name="state"
+                      className="select select-bordered select-xs w-full rounded-xl focus:select-primary font-medium h-9 text-xs"
+                      value={formData.state}
+                      onChange={handleChange}
+                    >
+                      <option value="">-- Seleccionar --</option>
+                      {availableStates.map((st) => (
+                        <option key={st} value={st}>
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      name="state"
+                      placeholder="Estado"
+                      className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                      value={formData.state || ''}
+                      onChange={handleChange}
+                    />
+                  )}
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-0.5">
+                    <span className="label-text text-[11px] font-semibold">Municipio / Ciudad</span>
+                  </label>
+                  {isLoadingCities ? (
+                    <div className="skeleton h-9 w-full rounded-xl"></div>
+                  ) : !customCityMode && availableCities.length > 0 ? (
+                    <select
+                      name="city"
+                      className="select select-bordered select-xs w-full rounded-xl focus:select-primary font-medium h-9 text-xs"
+                      value={formData.city}
+                      onChange={handleChange}
+                      disabled={!formData.state}
+                    >
+                      <option value="">
+                        {!formData.state ? '-- Elige estado --' : '-- Ciudad --'}
+                      </option>
+                      {availableCities.map((ct) => (
+                        <option key={ct} value={ct}>
+                          {ct}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      name="city"
+                      placeholder="Ciudad"
+                      className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                      value={formData.city || ''}
+                      onChange={handleChange}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECCIÓN 2: CUMPLIMIENTO REGULATORIO Y PERMISOS SANITARIOS (MÉXICO / COFEPRIS) */}
+          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <IconShieldCheck className="w-4 h-4 text-primary" /> Permisos Sanitarios y Legales (COFEPRIS / México)
+              </div>
+              <span className="badge badge-outline badge-primary text-[10px] font-semibold">
+                Norma Oficial
+              </span>
+            </div>
+
+            <p className="text-[11px] text-base-content/70 leading-relaxed">
+              Para cumplir con la legislación sanitaria mexicana y prevenir el ejercicio irregular de análisis clínicos, proporcione las credenciales de este establecimiento. Serán auditadas por el Administrador Global.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="form-control">
-                <label className="label py-1">
-                  <span className="label-text text-xs font-bold flex items-center gap-1">
-                    <IconGlobe className="w-3.5 h-3.5 text-primary" /> País
+                <label className="label py-0.5">
+                  <span className="label-text text-[11px] font-semibold flex items-center gap-1">
+                    <IconFileText className="w-3 h-3 text-primary" /> RFC (Persona Física o Moral)
                   </span>
                 </label>
-                <select
-                  name="country"
-                  className="select select-bordered select-sm w-full rounded-xl focus:select-primary font-medium text-xs h-10"
-                  value={formData.country}
+                <input
+                  type="text"
+                  name="rfc"
+                  maxLength={13}
+                  placeholder="Ej. LAB210405XYZ"
+                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary uppercase font-mono h-9 text-xs"
+                  value={formData.rfc || ''}
                   onChange={handleChange}
-                >
-                  {POPULAR_COUNTRIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
-              {/* Selector de Estado / Provincia */}
               <div className="form-control">
-                <label className="label py-1">
-                  <span className="label-text text-xs font-bold">Estado / Provincia</span>
+                <label className="label py-0.5">
+                  <span className="label-text text-[11px] font-semibold flex items-center gap-1">
+                    <IconShieldCheck className="w-3 h-3 text-primary" /> Folio Aviso de Funcionamiento COFEPRIS
+                  </span>
                 </label>
-                {isLoadingStates ? (
-                  <div className="skeleton h-10 w-full rounded-xl"></div>
-                ) : !customStateMode && availableStates.length > 0 ? (
-                  <select
-                    name="state"
-                    className="select select-bordered select-sm w-full rounded-xl focus:select-primary font-medium text-xs h-10"
-                    value={formData.state}
-                    onChange={handleChange}
-                  >
-                    <option value="">-- Seleccionar Estado --</option>
-                    {availableStates.map((st) => (
-                      <option key={st} value={st}>
-                        {st}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name="state"
-                    placeholder="Escribe el estado"
-                    className="input input-bordered input-sm w-full rounded-xl focus:input-primary text-xs h-10"
-                    value={formData.state || ''}
-                    onChange={handleChange}
-                  />
-                )}
+                <input
+                  type="text"
+                  name="cofeprisNotice"
+                  placeholder="Ej. 24-AF-09-012345"
+                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs font-mono"
+                  value={formData.cofeprisNotice || ''}
+                  onChange={handleChange}
+                />
               </div>
 
-              {/* Selector de Ciudad / Municipio */}
               <div className="form-control">
-                <label className="label py-1">
-                  <span className="label-text text-xs font-bold">Ciudad / Municipio</span>
+                <label className="label py-0.5">
+                  <span className="label-text text-[11px] font-semibold">
+                    Nombre del Responsable Sanitario
+                  </span>
                 </label>
-                {isLoadingCities ? (
-                  <div className="skeleton h-10 w-full rounded-xl"></div>
-                ) : !customCityMode && availableCities.length > 0 ? (
-                  <select
-                    name="city"
-                    className="select select-bordered select-sm w-full rounded-xl focus:select-primary font-medium text-xs h-10"
-                    value={formData.city}
-                    onChange={handleChange}
-                    disabled={!formData.state}
-                  >
-                    <option value="">
-                      {!formData.state ? '-- Primero elige estado --' : '-- Seleccionar Ciudad --'}
-                    </option>
-                    {availableCities.map((ct) => (
-                      <option key={ct} value={ct}>
-                        {ct}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    name="city"
-                    placeholder="Escribe la ciudad"
-                    className="input input-bordered input-sm w-full rounded-xl focus:input-primary text-xs h-10"
-                    value={formData.city || ''}
-                    onChange={handleChange}
-                  />
-                )}
+                <input
+                  type="text"
+                  name="sanitaryResponsible"
+                  placeholder="Ej. Q.F.B. Mariana Morales Ríos"
+                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                  value={formData.sanitaryResponsible || ''}
+                  onChange={handleChange}
+                />
               </div>
 
+              <div className="form-control">
+                <label className="label py-0.5">
+                  <span className="label-text text-[11px] font-semibold">
+                    Cédula Profesional del Químico / Responsable
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  name="professionalLicense"
+                  placeholder="Ej. 8492031 (Dirección Gral. Profesiones)"
+                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary font-mono h-9 text-xs"
+                  value={formData.professionalLicense || ''}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-control sm:col-span-2">
+                <label className="label py-0.5">
+                  <span className="label-text text-[11px] font-semibold">
+                    Enlace al Comprobante de Aviso / Licencia Sanitaria (PDF o Imagen)
+                  </span>
+                </label>
+                <input
+                  type="url"
+                  name="sanitaryPermitUrl"
+                  placeholder="Ej. https://storage.google.com/expedientes/aviso-cofepris-2026.pdf"
+                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                  value={formData.sanitaryPermitUrl || ''}
+                  onChange={handleChange}
+                />
+                <span className="text-[10px] text-base-content/50 mt-1">
+                  Enlace público o seguro al escaneo del documento emitido por la autoridad sanitaria.
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-semibold">URL del Logo (Opcional)</span>
-            </label>
-            <input
-              type="url"
-              name="logo"
-              placeholder="Ej. https://ejemplo.com/logo.png"
-              className="input input-bordered w-full focus:input-primary transition-all rounded-xl text-xs"
-              value={formData.logo || ''}
-              onChange={handleChange}
-            />
+          {/* SECCIÓN 3: CONTACTO Y LOGOTIPO */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="form-control">
+              <label className="label py-0.5">
+                <span className="label-text text-[11px] font-semibold flex items-center gap-1">
+                  <IconPhone className="w-3 h-3 text-base-content/60" /> Teléfono de Contacto
+                </span>
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Ej. +52 33 1234 5678"
+                className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                value={formData.phone || ''}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label py-0.5">
+                <span className="label-text text-[11px] font-semibold flex items-center gap-1">
+                  <IconMail className="w-3 h-3 text-base-content/60" /> Correo Institucional
+                </span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                placeholder="contacto@laboratorio.com"
+                className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                value={formData.email || ''}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-control sm:col-span-2">
+              <label className="label py-0.5">
+                <span className="label-text text-[11px] font-semibold">URL del Logotipo Oficial (Opcional)</span>
+              </label>
+              <input
+                type="url"
+                name="logo"
+                placeholder="Ej. https://ejemplo.com/logo.png"
+                className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                value={formData.logo || ''}
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
           {/* Botones de Acción */}
-          <div className="modal-action border-t border-base-200 pt-4 mt-6">
+          <div className="modal-action border-t border-base-200 pt-4 mt-4">
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-ghost rounded-xl font-semibold"
+              className="btn btn-ghost btn-sm rounded-xl font-semibold"
               disabled={isLoading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[150px] shadow-xs btn-sm"
+              className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[160px] shadow-xs btn-sm"
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  Guardando...
+                  <span className="loading loading-spinner loading-xs"></span>
+                  Procesando Alta...
                 </>
               ) : (
                 <>
-                  <IconPlus className="w-5 h-5" />
-                  Crear Laboratorio
+                  <IconPlus className="w-4 h-4" />
+                  Registrar Sede
                 </>
               )}
             </button>

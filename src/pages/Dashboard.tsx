@@ -121,6 +121,14 @@ export default function Dashboard() {
     });
   };
 
+  const handleLabUpdated = (updatedLab: Laboratory) => {
+    setLabs((prev) => {
+      const next = prev.map((lab) => (lab.id === updatedLab.id ? updatedLab : lab));
+      sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
   // Verificadores de Mantenimiento por Módulo
   const isPatientsDisabled = config.modules.patients && !isVipPassed;
   const isCatalogDisabled = config.modules.catalog && !isVipPassed;
@@ -318,6 +326,7 @@ export default function Dashboard() {
                   isLoadingLabs={isLoadingLabs}
                   onOpenCreateLab={() => setIsCreateLabOpen(true)}
                   onDeleteLabSuccess={handleLabDeleted}
+                  onLabUpdated={handleLabUpdated}
                 />
               )
             ) : activeView === 'add-user' ? (

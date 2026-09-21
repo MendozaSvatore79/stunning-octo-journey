@@ -95,10 +95,10 @@ export default function OnboardingModal({
                 <IconBuilding className="w-12 h-12" />
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-base-content">
-                Paso 1: Registra tu Laboratorio
+                Paso 1: Registra tu Sede y Permisos COFEPRIS
               </h2>
               <p className="text-base-content/70 max-w-md mx-auto leading-relaxed">
-                Todo comienza registrando la información básica de tu laboratorio o sede (Nombre, Dirección, Ciudad y País). Esto permitirá asociar pacientes y órdenes de trabajo a tu entidad.
+                Ingresa los datos de tu establecimiento junto con tus permisos regulatorios oficiales (RFC, Folio de Aviso de Funcionamiento ante COFEPRIS y Cédula Profesional del Responsable Sanitario). La administración central validará tus credenciales para garantizar el estricto cumplimiento sanitario en México.
               </p>
             </div>
           )}
