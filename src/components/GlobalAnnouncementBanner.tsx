@@ -60,29 +60,62 @@ export default function GlobalAnnouncementBanner() {
         const isWarning = a.type === 'WARNING';
         const isMaint = a.type === 'MAINTENANCE';
 
-        const bgClass = isUrgent
-          ? 'bg-error/15 text-error-content border-error/30'
+        // Estilos de alto contraste tanto en modo claro como en modo oscuro
+        const containerStyle = isUrgent
+          ? 'bg-red-50 dark:bg-red-950/50 border-red-300 dark:border-red-800 text-red-950 dark:text-red-100 shadow-sm'
           : isWarning
-          ? 'bg-warning/15 text-warning-content border-warning/30'
+          ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-100 shadow-sm'
           : isMaint
-          ? 'bg-purple-500/15 text-purple-900 dark:text-purple-200 border-purple-500/30'
-          : 'bg-info/15 text-info-content border-info/30';
+          ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-300 dark:border-purple-800 text-purple-950 dark:text-purple-100 shadow-sm'
+          : 'bg-sky-50 dark:bg-sky-950/50 border-sky-300 dark:border-sky-800 text-sky-950 dark:text-sky-100 shadow-sm';
 
-        const iconClass = isUrgent
-          ? 'text-error'
+        const iconBoxStyle = isUrgent
+          ? 'bg-red-600 text-white'
           : isWarning
-          ? 'text-warning'
+          ? 'bg-amber-500 text-white'
           : isMaint
-          ? 'text-purple-600 dark:text-purple-400'
-          : 'text-info';
+          ? 'bg-purple-600 text-white'
+          : 'bg-sky-600 text-white';
+
+        const titleStyle = isUrgent
+          ? 'text-red-950 dark:text-red-100'
+          : isWarning
+          ? 'text-amber-950 dark:text-amber-100'
+          : isMaint
+          ? 'text-purple-950 dark:text-purple-100'
+          : 'text-sky-950 dark:text-sky-100';
+
+        const messageStyle = isUrgent
+          ? 'text-red-900 dark:text-red-200'
+          : isWarning
+          ? 'text-amber-900 dark:text-amber-200'
+          : isMaint
+          ? 'text-purple-900 dark:text-purple-200'
+          : 'text-sky-900 dark:text-sky-200';
+
+        const badgeStyle = isUrgent
+          ? 'bg-red-200 text-red-900 dark:bg-red-900/80 dark:text-red-100'
+          : isWarning
+          ? 'bg-amber-200 text-amber-900 dark:bg-amber-900/80 dark:text-amber-100'
+          : isMaint
+          ? 'bg-purple-200 text-purple-900 dark:bg-purple-900/80 dark:text-purple-100'
+          : 'bg-sky-200 text-sky-900 dark:bg-sky-900/80 dark:text-sky-100';
+
+        const dismissBtnStyle = isUrgent
+          ? 'text-red-800 hover:text-red-950 hover:bg-red-200/60 dark:text-red-300 dark:hover:text-white'
+          : isWarning
+          ? 'text-amber-800 hover:text-amber-950 hover:bg-amber-200/60 dark:text-amber-300 dark:hover:text-white'
+          : isMaint
+          ? 'text-purple-800 hover:text-purple-950 hover:bg-purple-200/60 dark:text-purple-300 dark:hover:text-white'
+          : 'text-sky-800 hover:text-sky-950 hover:bg-sky-200/60 dark:text-sky-300 dark:hover:text-white';
 
         return (
           <div
             key={a.id}
-            className={`p-3 sm:px-4 rounded-xl border flex items-start sm:items-center justify-between gap-3 shadow-xs animate-fade-in ${bgClass}`}
+            className={`p-3 sm:px-4 rounded-2xl border flex items-start sm:items-center justify-between gap-3 animate-fade-in ${containerStyle}`}
           >
             <div className="flex items-start sm:items-center gap-3 min-w-0">
-              <div className={`shrink-0 p-1.5 rounded-lg bg-base-100/50 ${iconClass}`}>
+              <div className={`shrink-0 p-2 rounded-xl shadow-xs ${iconBoxStyle}`}>
                 {isMaint ? (
                   <IconWrench className="w-4 h-4" />
                 ) : isUrgent || isWarning ? (
@@ -93,18 +126,22 @@ export default function GlobalAnnouncementBanner() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-xs uppercase tracking-wider">{a.title}</span>
-                  <span className="badge badge-xs font-semibold uppercase opacity-80">
+                  <span className={`font-black text-xs uppercase tracking-wider ${titleStyle}`}>
+                    {a.title}
+                  </span>
+                  <span className={`badge badge-xs font-bold uppercase tracking-wide border-none px-2 py-0.5 ${badgeStyle}`}>
                     {a.targetScope === 'GLOBAL' ? 'Aviso Global' : 'Sede Específica'}
                   </span>
                 </div>
-                <p className="text-xs opacity-90 leading-snug mt-0.5">{a.message}</p>
+                <p className={`text-xs font-medium leading-relaxed mt-0.5 ${messageStyle}`}>
+                  {a.message}
+                </p>
               </div>
             </div>
 
             <button
               onClick={() => handleDismiss(a.id)}
-              className="btn btn-ghost btn-xs btn-circle shrink-0 opacity-70 hover:opacity-100"
+              className={`btn btn-ghost btn-xs btn-circle shrink-0 transition-colors ${dismissBtnStyle}`}
               title="Descartar aviso"
             >
               <IconX className="w-4 h-4" />
