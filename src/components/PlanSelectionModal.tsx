@@ -150,8 +150,8 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
   ];
 
   return (
-    <dialog className="modal modal-open backdrop-blur-md p-2 sm:p-4 z-50">
-      <div className="modal-box w-full max-w-[96vw] sm:max-w-5xl border border-base-300 bg-base-100 p-4 sm:p-8 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto">
+    <dialog className="modal modal-open backdrop-blur-md p-2 sm:p-4 z-[9999]">
+      <div className="modal-box w-full max-w-[96vw] sm:max-w-5xl border border-base-300 bg-base-100 p-4 sm:p-7 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto">
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-base-200 pb-4 mb-4">
           <div className="flex items-center gap-3">
@@ -201,7 +201,7 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
         ) : (
           <div className="space-y-6">
             {/* Grid de Planes */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pt-2">
               {plans.map((p) => {
                 const isCurrent = subscription?.plan?.type === p.type;
                 const isChosen = selectedPlan === p.type;
@@ -211,15 +211,15 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
                     key={p.type}
                     className={`card rounded-3xl transition-all relative flex flex-col justify-between border-2 ${
                       p.highlight
-                        ? 'border-primary shadow-lg bg-base-100'
+                        ? 'border-primary shadow-xl bg-base-100 ring-2 ring-primary/20'
                         : isChosen
                         ? 'border-primary/60 bg-base-100 shadow-md'
-                        : 'border-base-200 bg-base-200/40 hover:border-base-300'
+                        : 'border-base-200 bg-base-100/70 hover:border-base-300 shadow-xs'
                     }`}
                   >
                     {/* Badge superior */}
                     <div className="absolute -top-3 right-4">
-                      <span className={`badge ${p.badgeClass} text-[10px] uppercase tracking-wider py-2 px-3 shadow-xs`}>
+                      <span className={`badge ${p.badgeClass} text-[10px] uppercase tracking-wider py-2 px-3 shadow-sm`}>
                         {p.badge}
                       </span>
                     </div>
@@ -238,14 +238,22 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
                       </div>
 
                       {/* Límites Destacados */}
-                      <div className="p-3 bg-base-200/60 rounded-2xl border border-base-200 space-y-1 text-xs">
-                        <div className="flex items-center justify-between font-bold text-base-content">
-                          <span>Órdenes / mes:</span>
-                          <span className="text-primary font-mono">{p.ordersText}</span>
+                      <div className="p-3.5 bg-base-200/60 rounded-2xl border border-base-200 space-y-2 text-xs">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] text-base-content/60 uppercase font-bold tracking-wider">
+                            Órdenes / mes:
+                          </span>
+                          <span className="text-primary font-black text-sm tracking-tight">
+                            {p.ordersText}
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between font-bold text-base-content">
-                          <span>Sedes permitidas:</span>
-                          <span className="text-secondary font-mono">{p.labsText}</span>
+                        <div className="flex flex-col gap-0.5 pt-1.5 border-t border-base-200">
+                          <span className="text-[10px] text-base-content/60 uppercase font-bold tracking-wider">
+                            Sedes permitidas:
+                          </span>
+                          <span className="text-secondary font-black text-sm tracking-tight">
+                            {p.labsText}
+                          </span>
                         </div>
                       </div>
 
@@ -295,17 +303,17 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
             </div>
 
             {/* Aviso sobre Pasarela Polar y Soporte en México */}
-            <div className="p-3.5 bg-base-200/60 rounded-2xl border border-base-200 flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 text-base-content/70">
-                <span className="w-2 h-2 rounded-full bg-success"></span>
+            <div className="p-3.5 sm:p-4 bg-base-200/60 rounded-2xl border border-base-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 text-base-content/75 text-center sm:text-left">
+                <span className="w-2.5 h-2.5 rounded-full bg-success shrink-0"></span>
                 <span>
-                  Pagos seguros procesados con <strong>Polar</strong> (Tarjeta de Débito/Crédito) o transferencia directa interbancaria (SPEI).
+                  Pagos seguros procesados con <strong>Polar</strong> (Tarjeta de Débito/Crédito) o transferencia interbancaria (SPEI). Incluye 14 días de prueba gratis.
                 </span>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="btn btn-xs btn-ghost text-base-content/60"
+                className="btn btn-xs btn-ghost text-base-content/70 hover:text-base-content font-semibold"
               >
                 Cerrar
               </button>

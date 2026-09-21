@@ -101,7 +101,7 @@ export default function OnboardingModal({
   };
 
   return (
-    <dialog className="modal modal-open backdrop-blur-md p-2 sm:p-4 z-50">
+    <dialog className="modal modal-open backdrop-blur-md p-2 sm:p-4 z-[9999]">
       <div className="modal-box w-full max-w-[95vw] sm:max-w-3xl border border-base-300 bg-base-100 p-4 sm:p-8 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto">
         {/* Cabecera y botón omitir */}
         <div className="flex items-center justify-between mb-4 sm:mb-6">

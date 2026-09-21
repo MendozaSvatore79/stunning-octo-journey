@@ -77,7 +77,7 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in overflow-y-auto">
       <div className="bg-base-100 rounded-2xl border border-base-200 shadow-2xl max-w-2xl w-full overflow-hidden my-8">
         {/* Header del Modal */}
         <div className="border-b border-base-200 p-5 bg-base-100 flex items-center justify-between">

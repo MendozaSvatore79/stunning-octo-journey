@@ -232,7 +232,7 @@ export default function CreateLabModal({
   };
 
   return (
-    <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4 z-50">
+    <dialog className="modal modal-open backdrop-blur-xs p-2 sm:p-4 z-[9999]">
       <div className="modal-box w-full max-w-[95vw] sm:max-w-2xl border border-base-200 bg-base-100 p-4 sm:p-7 shadow-2xl rounded-3xl max-h-[92vh] overflow-y-auto">
         
         {/* Cabecera del Modal */}

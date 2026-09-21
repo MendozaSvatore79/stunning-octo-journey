@@ -164,11 +164,12 @@ export default function Dashboard() {
   const isSettingsDisabled = config.modules.settings && !isVipPassed;
 
   return (
-    <Sidebar
-      activeView={activeView}
-      onSelectView={setActiveView}
-      onOpenCreateLab={() => setIsCreateLabOpen(true)}
-    >
+    <>
+      <Sidebar
+        activeView={activeView}
+        onSelectView={setActiveView}
+        onOpenCreateLab={() => setIsCreateLabOpen(true)}
+      >
       {/* Navbar Superior */}
       <header className="navbar bg-base-100 shadow-sm border-b border-base-200 px-2 sm:px-4 lg:px-8 sticky top-0 z-30 min-h-[3.5rem]">
         <div className="flex-none lg:hidden">
@@ -512,45 +513,46 @@ export default function Dashboard() {
           </Suspense>
         )}
       </main>
-
-      {/* Modales cargados perezosamente */}
-      <Suspense fallback={null}>
-        {isOnboardingOpen && (
-          <OnboardingModal
-            isOpen={isOnboardingOpen}
-            onClose={handleCloseOnboardingOnly}
-            onStartCreateLab={handleFinishOnboarding}
-          />
-        )}
-
-        {isCreateLabOpen && (
-          <CreateLabModal
-            isOpen={isCreateLabOpen}
-            onClose={() => setIsCreateLabOpen(false)}
-            onLabCreated={handleLabCreated}
-          />
-        )}
-
-        {isMaintenanceControlOpen && (
-          <MaintenanceControlModal
-            isOpen={isMaintenanceControlOpen}
-            onClose={() => setIsMaintenanceControlOpen(false)}
-          />
-        )}
-
-        {isPlanSelectionOpen && (
-          <PlanSelectionModal
-            isOpen={isPlanSelectionOpen}
-            onClose={() => setIsPlanSelectionOpen(false)}
-            onPlanChanged={() => {
-              fetchLabs();
-            }}
-          />
-        )}
-
-        {/* Bot Flotante de Soporte Técnico y Levantamiento de Tickets */}
-        <SupportBotBubble onNavigateToFullSupport={() => setActiveView('support')} />
-      </Suspense>
     </Sidebar>
+
+    {/* Modales cargados perezosamente fuera del Sidebar para superposición y centrado correcto */}
+    <Suspense fallback={null}>
+      {isOnboardingOpen && (
+        <OnboardingModal
+          isOpen={isOnboardingOpen}
+          onClose={handleCloseOnboardingOnly}
+          onStartCreateLab={handleFinishOnboarding}
+        />
+      )}
+
+      {isCreateLabOpen && (
+        <CreateLabModal
+          isOpen={isCreateLabOpen}
+          onClose={() => setIsCreateLabOpen(false)}
+          onLabCreated={handleLabCreated}
+        />
+      )}
+
+      {isMaintenanceControlOpen && (
+        <MaintenanceControlModal
+          isOpen={isMaintenanceControlOpen}
+          onClose={() => setIsMaintenanceControlOpen(false)}
+        />
+      )}
+
+      {isPlanSelectionOpen && (
+        <PlanSelectionModal
+          isOpen={isPlanSelectionOpen}
+          onClose={() => setIsPlanSelectionOpen(false)}
+          onPlanChanged={() => {
+            fetchLabs();
+          }}
+        />
+      )}
+
+      {/* Bot Flotante de Soporte Técnico y Levantamiento de Tickets */}
+      <SupportBotBubble onNavigateToFullSupport={() => setActiveView('support')} />
+    </Suspense>
+  </>
   );
 }
