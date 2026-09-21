@@ -337,11 +337,11 @@ export default function OperatorDashboardView({
                 </span>
               </div>
               <button
-                onClick={() => onNavigate?.('labs')}
-                className="btn btn-xs btn-ghost text-primary font-semibold gap-1"
-                title="Ir al Directorio de Sedes Completo"
+                onClick={onOpenCreateLab}
+                className="btn btn-xs btn-outline btn-primary font-semibold gap-1 rounded-lg"
+                title="Dar de alta una nueva sede de laboratorio"
               >
-                Ver todas <IconArrowRight className="w-3 h-3" />
+                <IconPlus className="w-3 h-3" /> Nueva Sede
               </button>
             </div>
 

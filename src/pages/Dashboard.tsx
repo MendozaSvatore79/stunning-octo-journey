@@ -90,6 +90,17 @@ export default function Dashboard() {
     }
   }, [user?.id]);
 
+  // Redirección de seguridad: La vista 'labs' (directorio y acreditación central) es exclusiva para ADMIN
+  useEffect(() => {
+    if (!isAdmin && activeView === 'labs') {
+      setActiveView('dashboard');
+    }
+    if (activeView === 'create-lab') {
+      setIsCreateLabOpen(true);
+      setActiveView('dashboard');
+    }
+  }, [isAdmin, activeView]);
+
   const handleFinishOnboarding = () => {
     if (user?.id) {
       localStorage.setItem(`lab_onboarding_completed_${user.id}`, 'true');
@@ -142,7 +153,11 @@ export default function Dashboard() {
   const isSettingsDisabled = config.modules.settings && !isVipPassed;
 
   return (
-    <Sidebar activeView={activeView} onSelectView={setActiveView}>
+    <Sidebar
+      activeView={activeView}
+      onSelectView={setActiveView}
+      onOpenCreateLab={() => setIsCreateLabOpen(true)}
+    >
       {/* Navbar Superior */}
       <header className="navbar bg-base-100 shadow-sm border-b border-base-200 px-2 sm:px-4 lg:px-8 sticky top-0 z-30 min-h-[3.5rem]">
         <div className="flex-none lg:hidden">
@@ -320,13 +335,24 @@ export default function Dashboard() {
             ) : activeView === 'labs' ? (
               isLabsDisabled ? (
                 <ModuleMaintenanceView moduleTitle="Directorio de Sedes" moduleKeyName="labsDirectory" />
-              ) : (
+              ) : isAdmin ? (
                 <LabsDirectoryView
                   labs={labs}
                   isLoadingLabs={isLoadingLabs}
                   onOpenCreateLab={() => setIsCreateLabOpen(true)}
                   onDeleteLabSuccess={handleLabDeleted}
                   onLabUpdated={handleLabUpdated}
+                />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
                 />
               )
             ) : activeView === 'add-user' ? (

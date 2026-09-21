@@ -27,6 +27,7 @@ import {
 export type DashboardViewType =
   | 'dashboard'
   | 'labs'
+  | 'create-lab'
   | 'analysis-catalog'
   | 'add-user'
   | 'patients'
@@ -53,9 +54,15 @@ interface SidebarProps {
   children: ReactNode;
   activeView?: DashboardViewType;
   onSelectView?: (view: DashboardViewType) => void;
+  onOpenCreateLab?: () => void;
 }
 
-export default function Sidebar({ children, activeView = 'dashboard', onSelectView }: SidebarProps) {
+export default function Sidebar({
+  children,
+  activeView = 'dashboard',
+  onSelectView,
+  onOpenCreateLab,
+}: SidebarProps) {
   const { role, isAdmin, isLoading } = useUserContext();
   const { activeBranding } = useLabBranding();
 
@@ -292,20 +299,46 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                   </button>
                 </li>
 
-                {/* Configuración de Sede para Encargado */}
+                {/* Gestión de Sede para Encargado del Laboratorio */}
                 {role === 'LAB_TECHNICIAN' && (
-                  <li className="mt-2 pt-2 border-t border-base-200">
-                    <button
-                      onClick={() => handleNav('general-settings')}
-                      className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                      title="Configurar logotipo y datos de esta sede"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                        <IconBuilding className="w-4 h-4" />
-                      </div>
-                      <span className="truncate">Configuración de Sede</span>
-                    </button>
-                  </li>
+                  <>
+                    <li className="mt-2 pt-2 border-t border-base-200">
+                      <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
+                        Sede y Establecimiento
+                      </span>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          if (onOpenCreateLab) {
+                            onOpenCreateLab();
+                          } else {
+                            handleNav('create-lab');
+                          }
+                        }}
+                        className="py-2.5 rounded-xl gap-3 text-base-content/85 hover:bg-base-200"
+                        title="Dar de alta una nueva sede o laboratorio con permisos sanitarios"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                          <IconPlus className="w-4 h-4" />
+                        </div>
+                        <span className="truncate flex-1 text-left">Dar de Alta Sede</span>
+                        <span className="badge badge-primary badge-xs font-bold text-[9px]">REGISTRO</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => handleNav('general-settings')}
+                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                        title="Configurar logotipo y datos de esta sede"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-base-300 text-base-content flex items-center justify-center shrink-0 border border-base-content/10">
+                          <IconBuilding className="w-4 h-4" />
+                        </div>
+                        <span className="truncate flex-1 text-left">Configuración de Sede</span>
+                      </button>
+                    </li>
+                  </>
                 )}
               </>
             )}
