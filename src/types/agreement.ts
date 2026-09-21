@@ -9,6 +9,13 @@ export interface PriceAgreement {
   contactPhone?: string | null;
   isActive: boolean;
   notes?: string | null;
+  createdById?: string | null;
+  laboratories?: {
+    id: string;
+    name: string;
+    city?: string | null;
+    state?: string | null;
+  }[];
   createdAt: string;
   updatedAt: string;
 }

@@ -357,6 +357,19 @@ export default function Sidebar({
                     </li>
                     <li>
                       <button
+                        onClick={() => handleNav('price-agreements')}
+                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'price-agreements' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                        title="Gestión de convenios, aseguradoras y descuentos por sede clínica"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                          <IconHandshake className="w-4 h-4" />
+                        </div>
+                        <span className="truncate flex-1 text-left">Convenios y Descuentos</span>
+                        <span className="badge badge-success text-white badge-xs font-bold text-[9px]">TARIFAS</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
                         onClick={() => handleNav('my-subscription')}
                         className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'my-subscription' ? 'active font-bold' : 'hover:bg-base-200'}`}
                         title="Ver límites de órdenes mensuales y sedes contratadas en tu plan SaaS"

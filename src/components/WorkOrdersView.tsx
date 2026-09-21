@@ -4,6 +4,7 @@ import { useApi } from '../hooks/useApi';
 import type { Patient } from '../types/patient';
 import type { Laboratory } from '../types/lab';
 import type { ClinicalAnalysis, WorkOrder, CreateOrderDto } from '../types/order';
+import type { PriceAgreement } from '../types/agreement';
 import CaptureResultsModal from './CaptureResultsModal';
 import MedicalReportPDF from './MedicalReportPDF';
 import BarcodeThermalLabelModal from './BarcodeThermalLabelModal';
@@ -52,6 +53,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   const [selectedLabId, setSelectedLabId] = useState('');
   const [doctorName, setDoctorName] = useState('Dr. Médico A Cargo');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [labAgreements, setLabAgreements] = useState<PriceAgreement[]>([]);
   const [selectedStudyId, setSelectedStudyId] = useState('');
   const [selectedStudiesList, setSelectedStudiesList] = useState<ClinicalAnalysis[]>([]);
 
@@ -231,6 +233,28 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
+
+  // Cargar convenios habilitados para la sede seleccionada
+  useEffect(() => {
+    if (!selectedLabId) {
+      setLabAgreements([]);
+      return;
+    }
+    let isMounted = true;
+    api.get<PriceAgreement[]>(`/agreements?laboratoryId=${selectedLabId}`)
+      .then((res) => {
+        if (isMounted && res.data) {
+          setLabAgreements(res.data.filter((a) => a.isActive));
+        }
+      })
+      .catch((err) => {
+        console.error('Error al cargar convenios de la sede:', err);
+        if (isMounted) setLabAgreements([]);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [api, selectedLabId]);
 
   // Paciente seleccionado actualmente
   const currentPatient = useMemo(() => {
@@ -795,21 +819,41 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
               {/* Campo Descuento */}
               <div className="space-y-1.5">
-                <label className="label py-0">
-                  <span className="label-text font-bold text-xs sm:text-sm">Descuento:</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="label py-0">
+                    <span className="label-text font-bold text-xs sm:text-sm">Convenio / Descuento:</span>
+                  </label>
+                  {labAgreements.length > 0 && (
+                    <span className="text-[11px] text-primary font-bold">
+                      {labAgreements.length} convenio{labAgreements.length > 1 ? 's' : ''} activo{labAgreements.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
                 <select
                   className="select select-bordered w-full rounded-xl focus:select-primary font-semibold text-sm"
                   value={discountPercent}
                   onChange={(e) => setDiscountPercent(Number(e.target.value))}
                 >
-                  <option value={0}>Selecciona un Descuento (0%)</option>
-                  <option value={5}>Descuento Especial (5%)</option>
-                  <option value={10}>Convenio Médico (10%)</option>
-                  <option value={15}>Adulto Mayor (15%)</option>
-                  <option value={20}>Promoción de Salud (20%)</option>
-                  <option value={25}>Descuento Institucional (25%)</option>
-                  <option value={30}>Campaña Clínica (30%)</option>
+                  <option value={0}>Sin Descuento (0%)</option>
+
+                  {labAgreements.length > 0 && (
+                    <optgroup label="🏢 Convenios habilitados en esta sede">
+                      {labAgreements.map((agr) => (
+                        <option key={agr.id} value={agr.discountPct}>
+                          {agr.name} ({agr.code}) — {agr.discountPct}% OFF
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  <optgroup label="🏷️ Descuentos Generales">
+                    <option value={5}>Descuento Especial (5%)</option>
+                    <option value={10}>Convenio Médico (10%)</option>
+                    <option value={15}>Adulto Mayor / INAPAM (15%)</option>
+                    <option value={20}>Promoción de Salud (20%)</option>
+                    <option value={25}>Descuento Institucional (25%)</option>
+                    <option value={30}>Campaña Clínica (30%)</option>
+                  </optgroup>
                 </select>
               </div>
 

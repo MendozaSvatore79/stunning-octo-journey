@@ -429,20 +429,7 @@ export default function Dashboard() {
                 />
               )
             ) : activeView === 'price-agreements' ? (
-              isAdmin ? (
-                <PriceAgreementsView />
-              ) : (
-                <OperatorDashboardView
-                  userName={user?.firstName || undefined}
-                  role={role}
-                  labs={labs}
-                  isLoadingLabs={isLoadingLabs}
-                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
-                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
-                  onDeleteLabSuccess={handleLabDeleted}
-                  onNavigate={setActiveView}
-                />
-              )
+              <PriceAgreementsView labs={labs} />
             ) : activeView === 'report-templates' ? (
               isAdmin ? (
                 <ReportTemplateConfigView />
