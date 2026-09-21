@@ -90,16 +90,12 @@ export default function Dashboard() {
     }
   }, [user?.id]);
 
-  // Redirección de seguridad: La vista 'labs' (directorio y acreditación central) es exclusiva para ADMIN
   useEffect(() => {
-    if (!isAdmin && activeView === 'labs') {
-      setActiveView('dashboard');
-    }
     if (activeView === 'create-lab') {
       setIsCreateLabOpen(true);
       setActiveView('dashboard');
     }
-  }, [isAdmin, activeView]);
+  }, [activeView]);
 
   const handleFinishOnboarding = () => {
     if (user?.id) {
@@ -335,24 +331,13 @@ export default function Dashboard() {
             ) : activeView === 'labs' ? (
               isLabsDisabled ? (
                 <ModuleMaintenanceView moduleTitle="Directorio de Sedes" moduleKeyName="labsDirectory" />
-              ) : isAdmin ? (
+              ) : (
                 <LabsDirectoryView
                   labs={labs}
                   isLoadingLabs={isLoadingLabs}
                   onOpenCreateLab={() => setIsCreateLabOpen(true)}
                   onDeleteLabSuccess={handleLabDeleted}
                   onLabUpdated={handleLabUpdated}
-                />
-              ) : (
-                <OperatorDashboardView
-                  userName={user?.firstName || undefined}
-                  role={role}
-                  labs={labs}
-                  isLoadingLabs={isLoadingLabs}
-                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
-                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
-                  onDeleteLabSuccess={handleLabDeleted}
-                  onNavigate={setActiveView}
                 />
               )
             ) : activeView === 'add-user' ? (

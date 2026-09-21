@@ -131,10 +131,10 @@ export default function LabsDirectoryView({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="badge badge-sm badge-outline text-primary border-primary/30 font-semibold gap-1.5 py-2.5 px-3">
                 <IconBuilding className="w-3.5 h-3.5" />
-                Red de Sedes Clínicas
+                {isAdmin ? 'Red de Sedes Clínicas' : 'Sedes de Laboratorio'}
               </span>
               <span className="badge badge-sm badge-ghost text-base-content/60 font-medium">
-                {filteredLabs.length} {filteredLabs.length === 1 ? 'sede encontrada' : 'sedes encontradas'}
+                {filteredLabs.length} {filteredLabs.length === 1 ? 'sede registrada' : 'sedes registradas'}
               </span>
               {isAdmin && pendingCount > 0 && (
                 <span className="badge badge-sm badge-warning font-bold gap-1 py-2.5 px-3 text-warning-content">
@@ -143,10 +143,12 @@ export default function LabsDirectoryView({
               )}
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-base-content tracking-tight">
-              Directorio y Acreditación de Sedes
+              {isAdmin ? 'Directorio y Acreditación de Sedes' : 'Directorio de Sedes'}
             </h1>
             <p className="text-xs sm:text-sm text-base-content/70 max-w-2xl leading-relaxed">
-              Supervisa la legalidad sanitaria de cada establecimiento, folios de Aviso de Funcionamiento ante COFEPRIS y dictamina acreditaciones oficiales en territorio mexicano.
+              {isAdmin
+                ? 'Supervisa la legalidad sanitaria de cada establecimiento, folios de Aviso de Funcionamiento ante COFEPRIS y dictamina acreditaciones oficiales en territorio mexicano.'
+                : 'Consulta tus sedes registradas, estado de validación sanitaria y administra la información de cada establecimiento.'}
             </p>
           </div>
 

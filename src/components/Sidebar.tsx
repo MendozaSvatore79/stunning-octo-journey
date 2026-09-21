@@ -304,8 +304,20 @@ export default function Sidebar({
                   <>
                     <li className="mt-2 pt-2 border-t border-base-200">
                       <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
-                        Sede y Establecimiento
+                        Sedes y Laboratorio
                       </span>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => handleNav('labs')}
+                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'labs' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                        title="Directorio de sedes y laboratorios registrados"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                          <IconBuilding className="w-4 h-4" />
+                        </div>
+                        <span className="truncate flex-1 text-left">Sedes</span>
+                      </button>
                     </li>
                     <li>
                       <button
@@ -319,7 +331,7 @@ export default function Sidebar({
                         className="py-2.5 rounded-xl gap-3 text-base-content/85 hover:bg-base-200"
                         title="Dar de alta una nueva sede o laboratorio con permisos sanitarios"
                       >
-                        <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                        <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
                           <IconPlus className="w-4 h-4" />
                         </div>
                         <span className="truncate flex-1 text-left">Dar de Alta Sede</span>
