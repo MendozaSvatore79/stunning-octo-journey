@@ -272,10 +272,10 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
   return (
     <>
       {/* ========================================================================= */}
-      {/* 1. BURBUJA FLOTANTE SYNOVA (SIEMPRE VISIBLE, SEGURA Y REPOSICIONABLE)     */}
+      {/* 1. BURBUJA FLOTANTE SYNOVA (SOLO EN DESKTOP/TABLET: OCULTA EN MÓVIL)      */}
       {/* ========================================================================= */}
       <div
-        className={`fixed z-[100] flex flex-col group select-none transition-all duration-300 ${
+        className={`hidden md:flex fixed z-[100] flex-col group select-none transition-all duration-300 ${
           positionSide === 'left'
             ? 'bottom-5 left-4 sm:left-6 lg:left-[20rem] items-start'
             : 'bottom-5 right-4 sm:right-6 items-end'
@@ -367,7 +367,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
       {/* ========================================================================= */}
       {isOpen && (
         <div
-          className={`fixed z-[100] w-[calc(100vw-1.5rem)] sm:w-[410px] md:w-[430px] max-w-[95vw] h-[560px] max-h-[82vh] bg-base-100 border border-base-300 shadow-2xl rounded-3xl flex flex-col overflow-hidden animate-scale-in ${
+          className={`hidden md:flex fixed z-[100] w-[calc(100vw-1.5rem)] sm:w-[410px] md:w-[430px] max-w-[95vw] h-[560px] max-h-[82vh] bg-base-100 border border-base-300 shadow-2xl rounded-3xl flex-col overflow-hidden animate-scale-in ${
             positionSide === 'left'
               ? 'bottom-20 left-3 sm:bottom-24 sm:left-6 lg:left-[20rem]'
               : 'bottom-20 right-3 sm:bottom-24 sm:right-6'

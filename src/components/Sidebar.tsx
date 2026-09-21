@@ -23,6 +23,7 @@ import {
   IconHandshake,
   IconQrCode,
   IconCreditCard,
+  IconSparkles,
 } from './icons';
 
 export type DashboardViewType =
@@ -365,6 +366,19 @@ export default function Sidebar({
                         </div>
                         <span className="truncate flex-1 text-left">Mi Plan y Cuota</span>
                         <span className="badge badge-warning badge-xs font-bold text-[9px]">SAAS</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => handleNav('support')}
+                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'support' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                        title="Asistencia y soporte técnico especializado"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                          <IconSparkles className="w-4 h-4" />
+                        </div>
+                        <span className="truncate flex-1 text-left">Soporte Técnico</span>
+                        <span className="badge badge-info badge-outline badge-xs font-bold text-[9px]">24/7</span>
                       </button>
                     </li>
                   </>
