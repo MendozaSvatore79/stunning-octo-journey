@@ -27,6 +27,12 @@ const AnalyzerInterfaceView = lazy(() => import('../components/AnalyzerInterface
 const GeneralSettingsView = lazy(() => import('../components/GeneralSettingsView'));
 const SupportTicketsView = lazy(() => import('../components/SupportTicketsView'));
 const SupportBotBubble = lazy(() => import('../components/SupportBotBubble'));
+const AuditLogsView = lazy(() => import('../components/AuditLogsView'));
+const SystemHealthView = lazy(() => import('../components/SystemHealthView'));
+const BroadcastAnnouncementsView = lazy(() => import('../components/BroadcastAnnouncementsView'));
+const PriceAgreementsView = lazy(() => import('../components/PriceAgreementsView'));
+const ReportTemplateConfigView = lazy(() => import('../components/ReportTemplateConfigView'));
+const GlobalAnnouncementBanner = lazy(() => import('../components/GlobalAnnouncementBanner'));
 import { useLabBranding } from '../context/LabBrandingContext';
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
@@ -219,6 +225,10 @@ export default function Dashboard() {
       <main className={`w-full px-2.5 py-4 sm:px-6 lg:px-8 mx-auto transition-all max-w-full overflow-x-hidden pb-28 sm:pb-32 ${
         activeView === 'support' ? 'max-w-none' : 'max-w-7xl'
       }`}>
+        <Suspense fallback={null}>
+          <GlobalAnnouncementBanner />
+        </Suspense>
+
         {isUserLoading ? (
           <div className="min-h-[400px] flex flex-col items-center justify-center gap-3">
             <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -325,6 +335,81 @@ export default function Dashboard() {
             ) : activeView === 'tickets' ? (
               isAdmin ? (
                 <SupportTicketsView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
+              )
+            ) : activeView === 'audit-logs' ? (
+              isAdmin ? (
+                <AuditLogsView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
+              )
+            ) : activeView === 'system-health' ? (
+              isAdmin ? (
+                <SystemHealthView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
+              )
+            ) : activeView === 'announcements' ? (
+              isAdmin ? (
+                <BroadcastAnnouncementsView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
+              )
+            ) : activeView === 'price-agreements' ? (
+              isAdmin ? (
+                <PriceAgreementsView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
+              )
+            ) : activeView === 'report-templates' ? (
+              isAdmin ? (
+                <ReportTemplateConfigView />
               ) : (
                 <OperatorDashboardView
                   userName={user?.firstName || undefined}

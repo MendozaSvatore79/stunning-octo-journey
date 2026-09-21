@@ -19,6 +19,11 @@ import {
   IconClock,
   IconCheckCircle,
   IconTicket,
+  IconHistory,
+  IconHeartPulse,
+  IconMegaphone,
+  IconHandshake,
+  IconQrCode,
 } from './icons';
 
 export type DashboardViewType =
@@ -39,6 +44,11 @@ export type DashboardViewType =
   | 'analyzers'
   | 'support'
   | 'tickets'
+  | 'audit-logs'
+  | 'system-health'
+  | 'announcements'
+  | 'price-agreements'
+  | 'report-templates'
   | 'general-settings';
 
 interface SidebarProps {
@@ -369,17 +379,79 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
               </button>
 
               {isAdmin && (
-                <button
-                  onClick={() => handleNav('tickets')}
-                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'tickets' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                  title="Gestión y supervisión de tickets de soporte técnico generados por Synova IA"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
-                    <IconTicket className="w-4 h-4" />
-                  </div>
-                  <span className="truncate flex-1 text-left">Tickets de Soporte</span>
-                  <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => handleNav('tickets')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'tickets' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Gestión y supervisión de tickets de soporte técnico generados por Synova IA"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                      <IconTicket className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Tickets de Soporte</span>
+                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNav('audit-logs')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'audit-logs' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Bitácora inmutable de auditoría y trazabilidad ISO 15189"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                      <IconHistory className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Bitácora de Auditoría</span>
+                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNav('system-health')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'system-health' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Monitor en vivo de infraestructura, latencia de base de datos y memoria"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
+                      <IconHeartPulse className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Salud del Sistema</span>
+                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNav('announcements')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'announcements' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Emisión y control de comunicados globales y alertas operativas"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                      <IconMegaphone className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Comunicados Globales</span>
+                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNav('price-agreements')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'price-agreements' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Gestión de convenios, tarifas especiales y aseguradoras"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                      <IconHandshake className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Convenios y Precios</span>
+                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNav('report-templates')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'report-templates' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Personalización de plantilla médica, firmas y código QR"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20">
+                      <IconQrCode className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Plantilla y Sellos QR</span>
+                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                  </button>
+                </>
               )}
             </li>
           </ul>

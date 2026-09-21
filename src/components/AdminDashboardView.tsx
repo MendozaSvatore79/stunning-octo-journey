@@ -18,6 +18,11 @@ import {
   IconArrowRight,
   IconMapPin,
   IconTicket,
+  IconHistory,
+  IconHeartPulse,
+  IconMegaphone,
+  IconHandshake,
+  IconQrCode,
 } from './icons';
 
 interface AdminDashboardViewProps {
@@ -309,6 +314,96 @@ export default function AdminDashboardView({
               </div>
             </div>
 
+          </div>
+
+          {/* Gobernanza y Control Central */}
+          <div className="pt-2">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-base-content uppercase tracking-wider text-xs">
+                Gobernanza y Centro de Control Global
+              </h2>
+              <span className="badge badge-warning badge-xs font-bold text-[9px]">EXCLUSIVO ADMIN</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <button
+                onClick={() => onNavigate?.('audit-logs')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                  <IconHistory className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Bitácora</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Auditoría ISO</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigate?.('system-health')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
+                  <IconHeartPulse className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Salud Servidor</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Neon DB & RAM</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigate?.('announcements')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                  <IconMegaphone className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Comunicados</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Avisos Globales</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigate?.('price-agreements')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                  <IconHandshake className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Convenios</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Tarifas y Seguros</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigate?.('report-templates')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20">
+                  <IconQrCode className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Plantillas & QR</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Firmas Médicas</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigate?.('tickets')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                  <IconTicket className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Tickets Bot</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Soporte IA</span>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
