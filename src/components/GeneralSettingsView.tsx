@@ -1,6 +1,6 @@
-// src/components/GeneralSettingsView.tsx
 import { useState, useEffect, useRef } from 'react';
 import { useLabBranding } from '../context/LabBrandingContext';
+import { useUserContext } from '../hooks/useUserContext';
 import type { Laboratory } from '../types/lab';
 import {
   IconSettings,
@@ -92,6 +92,8 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
     canEditBranding,
     labs: contextLabs,
   } = useLabBranding();
+
+  const { role } = useUserContext();
 
   const availableLabs = labs && labs.length > 0 ? labs : contextLabs || [];
 
@@ -324,8 +326,10 @@ export default function GeneralSettingsView({ labs }: GeneralSettingsViewProps) 
         <div className="alert alert-warning border border-warning/40 shadow-xs rounded-2xl text-xs font-semibold">
           <IconAlertCircle className="w-5 h-5 text-warning shrink-0" />
           <div>
-            <span className="font-bold block text-sm">Modo de Solo Lectura</span>
-            Solo el administrador asignado a esta sede tiene autorización para modificar el logotipo y nombre institucional.
+            <span className="font-bold block text-sm">
+              Modo de Solo Lectura ({role === 'TECH' ? 'Técnico Analista' : role === 'RECEPTIONIST' ? 'Recepcionista Clínico' : 'Personal Operativo'})
+            </span>
+            Solo el Administrador General o el Encargado del Laboratorio (Responsable Sanitario) tienen autorización para modificar el logotipo y datos institucionales de esta sede.
           </div>
         </div>
       )}

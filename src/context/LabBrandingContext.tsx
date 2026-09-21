@@ -245,11 +245,13 @@ export function LabBrandingProvider({
     }
   }, [labs]);
 
-  // Permisos: Administrador del Laboratorio / Administrador General
+  // Permisos: Administrador General y Encargados/Responsables del Laboratorio (LAB_TECHNICIAN).
+  // Los roles operativos como TECH (Analista) y RECEPTIONIST permanecen en modo de solo lectura.
   const canEditBranding = Boolean(
     isAdmin ||
     role === 'ADMIN' ||
     role === 'LAB_ADMIN' ||
+    role === 'LAB_TECHNICIAN' ||
     (labs.find((l) => l.id === selectedLabId)?.createdById === userProfile?.id)
   );
 
