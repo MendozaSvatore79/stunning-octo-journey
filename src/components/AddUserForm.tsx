@@ -620,25 +620,33 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
                       {/* Acciones */}
                       <td className="text-right px-4">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleOpenEditModal(u)}
-                            className="btn btn-xs btn-ghost text-primary hover:bg-primary/10 rounded-lg"
-                            title="Editar Datos y Rol"
-                          >
-                            <IconEdit className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Editar</span>
-                          </button>
+                          {u.role === 'ADMIN' && !isAdmin ? (
+                            <span className="badge badge-ghost badge-xs text-[10px] text-base-content/50 font-semibold" title="Solo el Administrador Global puede gestionar esta cuenta">
+                              Admin Global
+                            </span>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleOpenEditModal(u)}
+                                className="btn btn-xs btn-ghost text-primary hover:bg-primary/10 rounded-lg"
+                                title="Editar Datos y Rol"
+                              >
+                                <IconEdit className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Editar</span>
+                              </button>
 
-                          <button
-                            onClick={() => setDeletingUser(u)}
-                            disabled={isCurrentUser}
-                            className={`btn btn-xs btn-ghost text-error hover:bg-error/10 rounded-lg ${
-                              isCurrentUser ? 'opacity-30 cursor-not-allowed' : ''
-                            }`}
-                            title={isCurrentUser ? 'No puedes eliminar tu propia cuenta' : 'Eliminar Usuario'}
-                          >
-                            <IconTrash className="w-3.5 h-3.5" />
-                          </button>
+                              <button
+                                onClick={() => setDeletingUser(u)}
+                                disabled={isCurrentUser}
+                                className={`btn btn-xs btn-ghost text-error hover:bg-error/10 rounded-lg ${
+                                  isCurrentUser ? 'opacity-30 cursor-not-allowed' : ''
+                                }`}
+                                title={isCurrentUser ? 'No puedes eliminar tu propia cuenta' : 'Eliminar Usuario'}
+                              >
+                                <IconTrash className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

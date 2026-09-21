@@ -1,6 +1,7 @@
 // src/components/MaintenanceControlModal.tsx
 import { useState } from 'react';
 import { useMaintenance, type MaintenanceModules } from '../context/MaintenanceContext';
+import { useUserContext } from '../hooks/useUserContext';
 import {
   IconSettings,
   IconShield,
@@ -37,8 +38,9 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
   const [estimatedInput, setEstimatedInput] = useState(config.estimatedTime);
   const [reasonInput, setReasonInput] = useState(config.reason);
   const [copiedLink, setCopiedLink] = useState(false);
+  const { isAdmin } = useUserContext();
 
-  if (!isOpen) return null;
+  if (!isOpen || !isAdmin) return null;
 
   const handleSaveTextChanges = () => {
     updateConfig({
