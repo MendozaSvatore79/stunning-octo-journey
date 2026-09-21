@@ -7,8 +7,6 @@ import {
   IconFlask,
   IconUsers,
   IconClipboardList,
-  IconFileText,
-  IconSettings,
   IconUserPlus,
   IconBuilding,
   IconFolder,
@@ -70,7 +68,7 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
     );
   }
 
-  const isOperationalUser = isAdmin || ['TECH', 'LAB_TECHNICIAN', 'RECEPTIONIST'].includes(role || '');
+  const isOperationalUser = !isAdmin && ['TECH', 'LAB_TECHNICIAN', 'RECEPTIONIST'].includes(role || '');
 
   const handleNav = (view: DashboardViewType) => {
     if (onSelectView) {
@@ -83,7 +81,6 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
     }
   };
 
-  const isLabsActive = ['labs', 'analysis-catalog', 'add-user'].includes(activeView);
   const isPatientsActive = ['patients', 'add-patient', 'patient-history'].includes(activeView);
   const isOrdersActive = ['create-order', 'pending-orders', 'completed-orders'].includes(activeView);
   const isQCActive = ['qc-controls', 'qc-results', 'qc-levey-jennings'].includes(activeView);
@@ -138,260 +135,238 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
               </button>
             </li>
 
-            {/* Submenú Dropdown de Laboratorios */}
-            <li>
-              <details open={isLabsActive}>
-                <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isLabsActive ? 'bg-base-200 font-bold' : ''}`}>
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                    <IconFlask className="w-4 h-4" />
-                  </div>
-                  <span className="truncate">Laboratorios</span>
-                </summary>
-                <ul className="mt-1 space-y-0.5">
-                  <li>
-                    <button
-                      onClick={() => handleNav('labs')}
-                      className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'labs' ? 'active font-bold' : ''}`}
-                    >
-                      <IconBuilding className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                      <span className="truncate">Directorio de Sedes</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => handleNav('analysis-catalog')}
-                      className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'analysis-catalog' ? 'active font-bold' : ''}`}
-                    >
-                      <IconMicroscope className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                      <span className="truncate">Catálogo de Servicios</span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => handleNav('add-user')}
-                      className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-user' ? 'active font-bold' : ''}`}
-                    >
-                      <IconUserPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                      <span className="truncate">Gestión de Usuarios</span>
-                    </button>
-                  </li>
-                </ul>
-              </details>
-            </li>
-
-            {/* Submenú Dropdown de Pacientes */}
+            {/* ======================================================== */}
+            {/* 1. SECCIÓN OPERATIVA: PERSONAL DE SEDE (TÉCNICOS, QUÍMICOS) */}
+            {/* ======================================================== */}
             {isOperationalUser && (
-              <li>
-                <details open={isPatientsActive}>
-                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isPatientsActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
-                      <IconUsers className="w-4 h-4" />
-                    </div>
-                    <span className="truncate">Pacientes</span>
-                  </summary>
-                  <ul className="mt-1 space-y-0.5">
-                    <li>
-                      <button
-                        onClick={() => handleNav('patients')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'patients' ? 'active font-bold' : ''}`}
-                      >
-                        <IconUsers className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                        <span className="truncate">Directorio de Pacientes</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('add-patient')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-patient' ? 'active font-bold' : ''}`}
-                      >
-                        <IconUserPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                        <span className="truncate">Registrar Nuevo</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('patient-history')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'patient-history' ? 'active font-bold' : ''}`}
-                      >
-                        <IconFolder className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                        <span className="truncate">Historial Clínico</span>
-                      </button>
-                    </li>
-                  </ul>
-                </details>
-              </li>
-            )}
+              <>
+                {/* Submenú Dropdown de Pacientes */}
+                <li>
+                  <details open={isPatientsActive}>
+                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isPatientsActive ? 'bg-base-200 font-bold' : ''}`}>
+                      <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
+                        <IconUsers className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">Pacientes</span>
+                    </summary>
+                    <ul className="mt-1 space-y-0.5">
+                      <li>
+                        <button
+                          onClick={() => handleNav('patients')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'patients' ? 'active font-bold' : ''}`}
+                        >
+                          <IconUsers className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Directorio de Pacientes</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('add-patient')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-patient' ? 'active font-bold' : ''}`}
+                        >
+                          <IconUserPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Registrar Nuevo</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('patient-history')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'patient-history' ? 'active font-bold' : ''}`}
+                        >
+                          <IconFolder className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Historial Clínico</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </details>
+                </li>
 
-            {/* Submenú Dropdown de Órdenes de Trabajo */}
-            {isOperationalUser && (
-              <li>
-                <details open={isOrdersActive}>
-                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isOrdersActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                      <IconClipboardList className="w-4 h-4" />
-                    </div>
-                    <span className="truncate">Órdenes de Trabajo</span>
-                  </summary>
-                  <ul className="mt-1 space-y-0.5">
-                    <li>
-                      <button
-                        onClick={() => handleNav('create-order')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'create-order' ? 'active font-bold' : ''}`}
-                      >
-                        <IconPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                        <span className="truncate">Crear Orden</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('pending-orders')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'pending-orders' ? 'active font-bold' : ''}`}
-                      >
-                        <IconClock className="w-3.5 h-3.5 text-warning shrink-0" />
-                        <span className="whitespace-nowrap font-medium">Pendientes</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('completed-orders')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'completed-orders' ? 'active font-bold' : ''}`}
-                      >
-                        <IconCheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
-                        <span className="whitespace-nowrap font-medium">Completadas</span>
-                      </button>
-                    </li>
-                  </ul>
-                </details>
-              </li>
-            )}
+                {/* Submenú Dropdown de Órdenes de Trabajo */}
+                <li>
+                  <details open={isOrdersActive}>
+                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isOrdersActive ? 'bg-base-200 font-bold' : ''}`}>
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                        <IconClipboardList className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">Órdenes de Trabajo</span>
+                    </summary>
+                    <ul className="mt-1 space-y-0.5">
+                      <li>
+                        <button
+                          onClick={() => handleNav('create-order')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'create-order' ? 'active font-bold' : ''}`}
+                        >
+                          <IconPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Crear Orden</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('pending-orders')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'pending-orders' ? 'active font-bold' : ''}`}
+                        >
+                          <IconClock className="w-3.5 h-3.5 text-warning shrink-0" />
+                          <span className="whitespace-nowrap font-medium">Pendientes</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('completed-orders')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'completed-orders' ? 'active font-bold' : ''}`}
+                        >
+                          <IconCheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                          <span className="whitespace-nowrap font-medium">Completadas</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </details>
+                </li>
 
-            {/* SUBMENÚ DROPDOWN: CONTROL DE CALIDAD */}
-            {isOperationalUser && (
-              <li>
-                <details open={isQCActive}>
-                  <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isQCActive ? 'bg-base-200 font-bold' : ''}`}>
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
-                      <IconCertificate className="w-4 h-4" />
-                    </div>
-                    <span className="truncate">Control de Calidad</span>
-                  </summary>
-                  <ul className="mt-1 space-y-0.5">
-                    <li>
-                      <button
-                        onClick={() => handleNav('qc-controls')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'qc-controls' ? 'active font-bold' : ''}`}
-                      >
-                        <IconFlask className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                        <span className="truncate">Controles</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('qc-results')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'qc-results' ? 'active font-bold' : ''}`}
-                      >
-                        <IconClipboardList className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                        <span className="truncate">Resultados a Controles</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('qc-levey-jennings')}
-                        className={`gap-2.5 text-xs py-2 rounded-lg leading-tight text-left ${activeView === 'qc-levey-jennings' ? 'active font-bold' : ''}`}
-                        title="Gráfica de Levey Jennings"
-                      >
-                        <IconChartLine className="w-3.5 h-3.5 text-success shrink-0" />
-                        <span className="truncate">Gráfica de Levey Jennings</span>
-                      </button>
-                    </li>
-                  </ul>
-                </details>
-              </li>
-            )}
+                {/* SUBMENÚ: CONTROL DE CALIDAD */}
+                <li>
+                  <details open={isQCActive}>
+                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isQCActive ? 'bg-base-200 font-bold' : ''}`}>
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                        <IconCertificate className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">Control de Calidad</span>
+                    </summary>
+                    <ul className="mt-1 space-y-0.5">
+                      <li>
+                        <button
+                          onClick={() => handleNav('qc-controls')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'qc-controls' ? 'active font-bold' : ''}`}
+                        >
+                          <IconFlask className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Controles</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('qc-results')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'qc-results' ? 'active font-bold' : ''}`}
+                        >
+                          <IconClipboardList className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Resultados a Controles</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('qc-levey-jennings')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg leading-tight text-left ${activeView === 'qc-levey-jennings' ? 'active font-bold' : ''}`}
+                          title="Gráfica de Levey Jennings"
+                        >
+                          <IconChartLine className="w-3.5 h-3.5 text-success shrink-0" />
+                          <span className="truncate">Gráfica de Levey Jennings</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </details>
+                </li>
 
-            {/* INVENTARIO DE REACTIVOS (ISO 15189) */}
-            {isOperationalUser && (
-              <li>
-                <button
-                  onClick={() => handleNav('reagents')}
-                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'reagents' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                >
-                  <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
-                    <IconFlask className="w-4 h-4" />
-                  </div>
-                  <span className="truncate flex-1 text-left">Reactivos e Insumos</span>
-                  <span className="badge badge-primary badge-xs font-bold text-[9px]">STOCK</span>
-                </button>
-              </li>
-            )}
-
-            {/* INTERFAZ DE ANALIZADORES CLÍNICOS (ASTM / HL7) */}
-            {isOperationalUser && (
-              <li>
-                <button
-                  onClick={() => handleNav('analyzers')}
-                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'analyzers' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                >
-                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
-                    <IconMicroscope className="w-4 h-4" />
-                  </div>
-                  <span className="truncate flex-1 text-left">Analizadores LIS</span>
-                  <span className="badge badge-success text-white badge-xs font-bold text-[9px]">ASTM/HL7</span>
-                </button>
-              </li>
-            )}
-
-            {isOperationalUser && (
-              <li>
-                <a className="py-2.5 rounded-xl gap-3 text-base-content/85 hover:bg-base-200">
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                    <IconFileText className="w-4 h-4" />
-                  </div>
-                  <span className="truncate">Resultados Clínicos</span>
-                </a>
-              </li>
-            )}
-
-            <li className="mt-2 pt-2 border-t border-base-200">
-              <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
-                Administración y Configuración
-              </span>
-              <button
-                onClick={() => handleNav('general-settings')}
-                className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                title="Configurar logotipo, nombre comercial e identidad de la sede"
-              >
-                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                  <IconBuilding className="w-4 h-4" />
-                </div>
-                <span className="truncate">Configuración General</span>
-              </button>
-
-              <button
-                onClick={() => handleNav('add-user')}
-                className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'add-user' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                title="Gestión de usuarios y personal adscrito a las sedes"
-              >
-                <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
-                  <IconSettings className="w-4 h-4" />
-                </div>
-                <span className="truncate">Gestión de Usuarios</span>
-              </button>
-
-              {isAdmin && (
-                <>
+                {/* INVENTARIO DE REACTIVOS (ISO 15189) */}
+                <li>
                   <button
-                    onClick={() => handleNav('tickets')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'tickets' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Gestión y supervisión de tickets de soporte técnico generados por Synova IA"
+                    onClick={() => handleNav('reagents')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'reagents' ? 'active font-bold' : 'hover:bg-base-200'}`}
                   >
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
-                      <IconTicket className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                      <IconFlask className="w-4 h-4" />
                     </div>
-                    <span className="truncate flex-1 text-left">Tickets de Soporte</span>
-                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                    <span className="truncate flex-1 text-left">Reactivos e Insumos</span>
+                    <span className="badge badge-primary badge-xs font-bold text-[9px]">STOCK</span>
                   </button>
+                </li>
 
+                {/* ANALIZADORES CLÍNICOS (ASTM / HL7) */}
+                <li>
+                  <button
+                    onClick={() => handleNav('analyzers')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'analyzers' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                      <IconMicroscope className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Analizadores LIS</span>
+                    <span className="badge badge-success text-white badge-xs font-bold text-[9px]">ASTM/HL7</span>
+                  </button>
+                </li>
+
+                {/* Configuración de Sede para Encargado */}
+                {role === 'LAB_TECHNICIAN' && (
+                  <li className="mt-2 pt-2 border-t border-base-200">
+                    <button
+                      onClick={() => handleNav('general-settings')}
+                      className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                      title="Configurar logotipo y datos de esta sede"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                        <IconBuilding className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">Configuración de Sede</span>
+                    </button>
+                  </li>
+                )}
+              </>
+            )}
+
+            {/* ======================================================== */}
+            {/* 2. SECCIÓN EXCLUSIVA: ADMINISTRADOR GLOBAL (GOBERNANZA) */}
+            {/* ======================================================== */}
+            {isAdmin && (
+              <>
+                <li className="mt-2 pt-2 border-t border-base-200">
+                  <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
+                    Red Hospitalaria y Catálogo
+                  </span>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => handleNav('labs')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'labs' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Supervisión y creación de laboratorios de la red"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                      <IconBuilding className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Directorio de Sedes</span>
+                  </button>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => handleNav('analysis-catalog')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'analysis-catalog' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Catálogo unificado de estudios clínicos"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                      <IconMicroscope className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Catálogo de Servicios</span>
+                  </button>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => handleNav('add-user')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'add-user' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Gestión de usuarios y personal adscrito a las sedes"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0 border border-secondary/20">
+                      <IconUserPlus className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Gestión de Personal</span>
+                  </button>
+                </li>
+
+                <li className="mt-2 pt-2 border-t border-base-200">
+                  <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
+                    Gobernanza y Control Central
+                  </span>
+                </li>
+
+                <li>
                   <button
                     onClick={() => handleNav('audit-logs')}
                     className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'audit-logs' ? 'active font-bold' : 'hover:bg-base-200'}`}
@@ -401,9 +376,10 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                       <IconHistory className="w-4 h-4" />
                     </div>
                     <span className="truncate flex-1 text-left">Bitácora de Auditoría</span>
-                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
                   </button>
+                </li>
 
+                <li>
                   <button
                     onClick={() => handleNav('system-health')}
                     className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'system-health' ? 'active font-bold' : 'hover:bg-base-200'}`}
@@ -413,9 +389,10 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                       <IconHeartPulse className="w-4 h-4" />
                     </div>
                     <span className="truncate flex-1 text-left">Salud del Sistema</span>
-                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
                   </button>
+                </li>
 
+                <li>
                   <button
                     onClick={() => handleNav('announcements')}
                     className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'announcements' ? 'active font-bold' : 'hover:bg-base-200'}`}
@@ -425,9 +402,10 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                       <IconMegaphone className="w-4 h-4" />
                     </div>
                     <span className="truncate flex-1 text-left">Comunicados Globales</span>
-                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
                   </button>
+                </li>
 
+                <li>
                   <button
                     onClick={() => handleNav('price-agreements')}
                     className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'price-agreements' ? 'active font-bold' : 'hover:bg-base-200'}`}
@@ -437,9 +415,10 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                       <IconHandshake className="w-4 h-4" />
                     </div>
                     <span className="truncate flex-1 text-left">Convenios y Precios</span>
-                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
                   </button>
+                </li>
 
+                <li>
                   <button
                     onClick={() => handleNav('report-templates')}
                     className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'report-templates' ? 'active font-bold' : 'hover:bg-base-200'}`}
@@ -448,12 +427,37 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                     <div className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20">
                       <IconQrCode className="w-4 h-4" />
                     </div>
-                    <span className="truncate flex-1 text-left">Plantilla y Sellos QR</span>
-                    <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                    <span className="truncate flex-1 text-left">Plantilla Oficial & QR</span>
                   </button>
-                </>
-              )}
-            </li>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => handleNav('tickets')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'tickets' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Gestión y supervisión de tickets de soporte técnico generados por Synova IA"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                      <IconTicket className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Tickets de Soporte</span>
+                  </button>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => handleNav('general-settings')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Configuración de identidad institucional de la sede activa"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                      <IconBuilding className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Configuración General</span>
+                  </button>
+                </li>
+              </>
+            )}
           </ul>
 
           {/* Pie de Sidebar */}
