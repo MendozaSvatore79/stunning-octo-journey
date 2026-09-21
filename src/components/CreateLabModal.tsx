@@ -21,6 +21,7 @@ import {
   IconPhone,
   IconMail,
 } from './icons';
+import { DocumentScannerUploader } from './DocumentScannerUploader';
 
 interface CreateLabModalProps {
   isOpen: boolean;
@@ -479,23 +480,14 @@ export default function CreateLabModal({
                 />
               </div>
 
-              <div className="form-control sm:col-span-2">
-                <label className="label py-0.5">
-                  <span className="label-text text-[11px] font-semibold">
-                    Enlace al Comprobante de Aviso / Licencia Sanitaria (PDF o Imagen)
-                  </span>
-                </label>
-                <input
-                  type="url"
-                  name="sanitaryPermitUrl"
-                  placeholder="Ej. https://storage.google.com/expedientes/aviso-cofepris-2026.pdf"
-                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+              <div className="sm:col-span-2 pt-1">
+                <DocumentScannerUploader
                   value={formData.sanitaryPermitUrl || ''}
-                  onChange={handleChange}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, sanitaryPermitUrl: val }))
+                  }
+                  disabled={isLoading}
                 />
-                <span className="text-[10px] text-base-content/50 mt-1">
-                  Enlace público o seguro al escaneo del documento emitido por la autoridad sanitaria.
-                </span>
               </div>
             </div>
           </div>

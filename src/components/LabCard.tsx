@@ -11,6 +11,7 @@ import {
   IconShieldCheck,
   IconHistory,
   IconFileText,
+  IconScan,
 } from './icons';
 
 interface LabCardProps {
@@ -176,6 +177,20 @@ export default function LabCard({
               <div className="flex items-center justify-between text-base-content/70">
                 <span className="font-semibold">Responsable:</span>
                 <span className="truncate max-w-[150px] text-right font-medium">{lab.sanitaryResponsible}</span>
+              </div>
+            )}
+            {lab.sanitaryPermitUrl && (
+              <div className="flex items-center justify-between text-[10px] text-base-content/70 pt-1 border-t border-base-200/60">
+                <span className="flex items-center gap-1 text-success font-semibold">
+                  <IconScan className="w-3 h-3" /> Comprobante Adjunto
+                </span>
+                <span className="text-[9px] badge badge-ghost badge-xs">
+                  {lab.sanitaryPermitUrl.startsWith('data:image/')
+                    ? 'Escaneo Digital'
+                    : lab.sanitaryPermitUrl.startsWith('data:application/pdf')
+                    ? 'PDF Oficial'
+                    : 'Enlace Web'}
+                </span>
               </div>
             )}
           </div>

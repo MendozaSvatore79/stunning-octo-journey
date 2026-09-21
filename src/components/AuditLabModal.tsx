@@ -12,6 +12,9 @@ import {
   IconExternalLink,
   IconPhone,
   IconHistory,
+  IconEye,
+  IconDownload,
+  IconScan,
 } from './icons';
 
 interface AuditLabModalProps {
@@ -32,6 +35,7 @@ export default function AuditLabModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showDocLightbox, setShowDocLightbox] = useState(false);
 
   if (!isOpen || !lab) return null;
 
@@ -226,23 +230,136 @@ export default function AuditLabModal({
               </div>
 
               {lab.sanitaryPermitUrl && (
-                <div className="p-2.5 bg-base-100 rounded-xl border border-base-200 sm:col-span-2 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] text-base-content/50 uppercase font-bold block">
-                      Comprobante / Licencia Sanitaria Oficial
+                <div className="p-3 bg-base-100 rounded-2xl border border-primary/20 sm:col-span-2 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-base-content/50 uppercase font-bold flex items-center gap-1.5">
+                      <IconScan className="w-3.5 h-3.5 text-primary" />
+                      Comprobante Sanitario Oficial (COFEPRIS)
                     </span>
-                    <span className="truncate block font-medium text-primary">
-                      {lab.sanitaryPermitUrl}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      {(lab.sanitaryPermitUrl.startsWith('data:image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(lab.sanitaryPermitUrl)) && (
+                        <span className="badge badge-success badge-xs font-bold text-[9px] text-white">
+                          Escaneo Digital
+                        </span>
+                      )}
+                      {(lab.sanitaryPermitUrl.startsWith('data:application/pdf') || /\.pdf$/i.test(lab.sanitaryPermitUrl)) && (
+                        <span className="badge badge-error badge-xs font-bold text-[9px] text-white">
+                          Expediente PDF
+                        </span>
+                      )}
+                      {(!lab.sanitaryPermitUrl.startsWith('data:') && (lab.sanitaryPermitUrl.startsWith('http://') || lab.sanitaryPermitUrl.startsWith('https://'))) && (
+                        <span className="badge badge-info badge-xs font-bold text-[9px] text-white">
+                          Enlace Web
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <a
-                    href={lab.sanitaryPermitUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary btn-outline btn-xs gap-1.5 shrink-0 rounded-lg"
-                  >
-                    Abrir Documento <IconExternalLink className="w-3 h-3" />
-                  </a>
+
+                  {(lab.sanitaryPermitUrl.startsWith('data:image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(lab.sanitaryPermitUrl)) ? (
+                    <div className="flex items-center justify-between gap-3 p-2 bg-base-200/50 rounded-xl border border-base-200">
+                      <div
+                        onClick={() => setShowDocLightbox(true)}
+                        className="w-16 h-16 rounded-lg bg-base-100 border border-base-300 overflow-hidden cursor-pointer shrink-0 relative group hover:opacity-90"
+                        title="Clic para ampliar escaneo"
+                      >
+                        <img
+                          src={lab.sanitaryPermitUrl}
+                          alt="Escaneo Sanitario"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                          <IconEye className="w-4 h-4" />
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-base-content truncate">
+                          Escaneo del Aviso / Licencia Sanitaria
+                        </p>
+                        <p className="text-[10px] text-base-content/60">
+                          Digitalizado y adjuntado por el responsable de la sede.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setShowDocLightbox(true)}
+                          className="btn btn-primary btn-xs gap-1 text-white font-bold rounded-lg"
+                        >
+                          <IconEye className="w-3.5 h-3.5" /> Ver en Grande
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!lab.sanitaryPermitUrl) return;
+                            const a = document.createElement('a');
+                            a.href = lab.sanitaryPermitUrl;
+                            a.download = `escaneo-sanitario-${lab.rfc || lab.id}.jpg`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="btn btn-ghost btn-xs gap-1 text-base-content/70 rounded-lg"
+                          title="Descargar copia oficial"
+                        >
+                          <IconDownload className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (lab.sanitaryPermitUrl.startsWith('data:application/pdf') || /\.pdf$/i.test(lab.sanitaryPermitUrl)) ? (
+                    <div className="flex items-center justify-between gap-3 p-2 bg-base-200/50 rounded-xl border border-base-200">
+                      <div className="w-12 h-12 rounded-lg bg-error/10 text-error flex items-center justify-center shrink-0 border border-error/20">
+                        <IconFileText className="w-6 h-6" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-base-content truncate">
+                          Expediente PDF de Acreditación
+                        </p>
+                        <p className="text-[10px] text-base-content/60">
+                          Documento oficial digitalizado en formato PDF.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <a
+                          href={lab.sanitaryPermitUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-primary btn-xs gap-1 text-white font-bold rounded-lg"
+                        >
+                          <IconExternalLink className="w-3.5 h-3.5" /> Abrir PDF
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!lab.sanitaryPermitUrl) return;
+                            const a = document.createElement('a');
+                            a.href = lab.sanitaryPermitUrl;
+                            a.download = `permiso-sanitario-${lab.rfc || lab.id}.pdf`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="btn btn-ghost btn-xs gap-1 text-base-content/70 rounded-lg"
+                          title="Descargar PDF"
+                        >
+                          <IconDownload className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2 p-2 bg-base-200/50 rounded-xl border border-base-200">
+                      <span className="text-xs font-mono truncate text-primary font-medium">
+                        {lab.sanitaryPermitUrl}
+                      </span>
+                      <a
+                        href={lab.sanitaryPermitUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary btn-outline btn-xs gap-1.5 shrink-0 rounded-lg"
+                      >
+                        Abrir Enlace <IconExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -345,6 +462,77 @@ export default function AuditLabModal({
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>close</button>
       </form>
+
+      {/* Lightbox para visualización detallada del documento escaneado */}
+      {showDocLightbox && lab.sanitaryPermitUrl && (
+        <dialog className="modal modal-open backdrop-blur-md z-60 p-2 sm:p-4">
+          <div className="modal-box max-w-5xl bg-base-100 p-4 sm:p-6 rounded-3xl border border-base-300 space-y-3">
+            <div className="flex items-center justify-between border-b border-base-200 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <IconScan className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-base-content">
+                    Auditoría de Comprobante Sanitario Digitalizado
+                  </h4>
+                  <p className="text-[11px] text-base-content/60">
+                    Sede: <span className="font-semibold text-base-content">{lab.name}</span> | Folio COFEPRIS: <span className="font-mono text-primary font-bold">{lab.cofeprisNotice || 'N/A'}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!lab.sanitaryPermitUrl) return;
+                    const a = document.createElement('a');
+                    a.href = lab.sanitaryPermitUrl;
+                    a.download = `escaneo-sanitario-${lab.rfc || lab.id}.jpg`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }}
+                  className="btn btn-xs btn-outline gap-1"
+                >
+                  <IconDownload className="w-3.5 h-3.5" /> Descargar Copia
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDocLightbox(false)}
+                  className="btn btn-xs btn-circle btn-ghost"
+                >
+                  <IconX className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[75vh] overflow-auto flex items-center justify-center bg-base-200/60 rounded-2xl p-3 border border-base-200">
+              <img
+                src={lab.sanitaryPermitUrl}
+                alt="Documento Sanitario Oficial"
+                className="max-w-full max-h-[72vh] object-contain rounded-lg shadow-lg"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-base-content/50">
+                Verifica que los sellos, firma del responsable sanitario y folios sean legibles y válidos.
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowDocLightbox(false)}
+                className="btn btn-sm btn-ghost rounded-xl font-semibold"
+              >
+                Cerrar Visor
+              </button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setShowDocLightbox(false)}>close</button>
+          </form>
+        </dialog>
+      )}
     </dialog>
   );
 }
