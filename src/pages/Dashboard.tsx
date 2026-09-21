@@ -81,6 +81,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchLabs();
+
+    // Detección de retorno de pasarela de pago Polar Checkout
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout_success') === 'true') {
+      const plan = params.get('plan') || '';
+      alert(`🎉 ¡Pago procesado con éxito! Tu plan ${plan} está activo con tus 14 días de prueba gratis.`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, [fetchLabs]);
 
   // Detección de onboarding para primer ingreso
