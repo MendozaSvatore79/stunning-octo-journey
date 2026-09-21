@@ -1,7 +1,9 @@
 // src/components/LabsDirectoryView.tsx
 import { useState, useMemo } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import type { Laboratory, VerificationStatus } from '../types/lab';
 import { useUserContext } from '../hooks/useUserContext';
+import { isUserLaboratory } from '../utils/labOwnership';
 import {
   IconBuilding,
   IconPlus,
@@ -32,6 +34,7 @@ export default function LabsDirectoryView({
   onLabUpdated,
 }: LabsDirectoryViewProps) {
   const { userProfile, isAdmin } = useUserContext();
+  const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [filterOwnerOnly, setFilterOwnerOnly] = useState(false);
@@ -41,16 +44,31 @@ export default function LabsDirectoryView({
   const [selectedLabToAudit, setSelectedLabToAudit] = useState<Laboratory | null>(null);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
-  // Conteo de sedes pendientes de validación
+  // Para usuarios no admin (ej. LAB_TECHNICIAN), se muestran ESTRICTAMENTE sus sedes dadas de alta
+  const baseLabs = useMemo(() => {
+    if (isAdmin) {
+      if (filterOwnerOnly) {
+        return labs.filter((lab) =>
+          isUserLaboratory(lab, userProfile, user?.id, user?.primaryEmailAddress?.emailAddress)
+        );
+      }
+      return labs;
+    }
+    return labs.filter((lab) =>
+      isUserLaboratory(lab, userProfile, user?.id, user?.primaryEmailAddress?.emailAddress)
+    );
+  }, [labs, isAdmin, filterOwnerOnly, userProfile, user]);
+
+  // Conteo de sedes pendientes de validación sobre el universo visible
   const pendingCount = useMemo(() => {
-    return labs.filter(
+    return baseLabs.filter(
       (l) => !l.verificationStatus || l.verificationStatus === 'PENDING_REVIEW'
     ).length;
-  }, [labs]);
+  }, [baseLabs]);
 
   // Filtrado dinámico de laboratorios
   const filteredLabs = useMemo(() => {
-    return labs.filter((lab) => {
+    return baseLabs.filter((lab) => {
       const matchesSearch =
         lab.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (lab.city && lab.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -69,18 +87,9 @@ export default function LabsDirectoryView({
         if (labStatus !== statusFilter) return false;
       }
 
-      if (!filterOwnerOnly) return true;
-
-      const myId = userProfile?.id;
-      const myClerkId = userProfile?.clerkId;
-      const isOwner =
-        (lab.createdById && (lab.createdById === myId || lab.createdById === myClerkId)) ||
-        (lab.createdBy?.id && lab.createdBy.id === myId) ||
-        (lab.createdBy?.clerkId && lab.createdBy.clerkId === myClerkId);
-
-      return isOwner;
+      return true;
     });
-  }, [labs, searchTerm, filterOwnerOnly, statusFilter, userProfile]);
+  }, [baseLabs, searchTerm, statusFilter]);
 
   const handleOpenAudit = (lab: Laboratory) => {
     setSelectedLabToAudit(lab);
@@ -179,15 +188,17 @@ export default function LabsDirectoryView({
 
           {/* Filtros y Conmutador de Vista */}
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-            <button
-              onClick={() => setFilterOwnerOnly(!filterOwnerOnly)}
-              className={`btn btn-sm rounded-xl gap-2 font-semibold text-xs ${
-                filterOwnerOnly ? 'btn-primary' : 'btn-outline border-base-300'
-              }`}
-            >
-              <IconFilter className="w-3.5 h-3.5" />
-              {filterOwnerOnly ? 'Mis Sedes' : 'Solo Mis Sedes'}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setFilterOwnerOnly(!filterOwnerOnly)}
+                className={`btn btn-sm rounded-xl gap-2 font-semibold text-xs ${
+                  filterOwnerOnly ? 'btn-primary' : 'btn-outline border-base-300'
+                }`}
+              >
+                <IconFilter className="w-3.5 h-3.5" />
+                {filterOwnerOnly ? 'Mis Sedes' : 'Solo Mis Sedes'}
+              </button>
+            )}
 
             <div className="join border border-base-300 rounded-xl overflow-hidden p-0.5 bg-base-200">
               <button
@@ -221,7 +232,7 @@ export default function LabsDirectoryView({
               statusFilter === 'ALL' ? 'btn-neutral' : 'btn-ghost'
             }`}
           >
-            Todas ({labs.length})
+            Todas ({baseLabs.length})
           </button>
           <button
             onClick={() => setStatusFilter('PENDING_REVIEW')}

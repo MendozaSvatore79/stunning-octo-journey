@@ -34,6 +34,14 @@ export interface Laboratory {
     firstName?: string;
     lastName?: string;
   };
+  staff?: Array<{
+    id: string;
+    clerkId?: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }

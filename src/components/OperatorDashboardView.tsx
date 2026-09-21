@@ -1,4 +1,8 @@
 // src/components/OperatorDashboardView.tsx
+import { useMemo } from 'react';
+import { useUser } from '@clerk/clerk-react';
+import { useUserContext } from '../hooks/useUserContext';
+import { isUserLaboratory } from '../utils/labOwnership';
 import type { Laboratory } from '../types/lab';
 import type { UserRole } from '../types/user';
 import type { DashboardViewType } from './Sidebar';
@@ -39,6 +43,16 @@ export default function OperatorDashboardView({
   onOpenOnboarding,
   onNavigate,
 }: OperatorDashboardViewProps) {
+  const { userProfile } = useUserContext();
+  const { user } = useUser();
+
+  // Filtrar estrictamente solo las sedes pertenecientes o asignadas a este operador
+  const myLabs = useMemo(() => {
+    return labs.filter((lab) =>
+      isUserLaboratory(lab, userProfile, user?.id, user?.primaryEmailAddress?.emailAddress)
+    );
+  }, [labs, userProfile, user]);
+
   const roleLabel =
     role === 'LAB_TECHNICIAN'
       ? 'Responsable del Laboratorio'
@@ -48,7 +62,7 @@ export default function OperatorDashboardView({
       ? 'Recepcionista Clínico'
       : 'Personal Clínico';
 
-  const previewLabs = labs.slice(0, 4);
+  const previewLabs = myLabs.slice(0, 4);
 
   return (
     <div className="space-y-6">
@@ -105,7 +119,7 @@ export default function OperatorDashboardView({
             Sedes Habilitadas
           </div>
           <div className="stat-value text-xl font-bold text-base-content mt-0.5">
-            {labs.length}
+            {myLabs.length}
           </div>
           <div className="stat-desc text-[11px] text-base-content/50">
             Centros autorizados
@@ -333,7 +347,7 @@ export default function OperatorDashboardView({
                   Sedes Activas
                 </h3>
                 <span className="text-[11px] text-base-content/50">
-                  {labs.length} disponibles
+                  {myLabs.length} {myLabs.length === 1 ? 'disponible' : 'disponibles'}
                 </span>
               </div>
               <button
