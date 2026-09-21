@@ -18,6 +18,7 @@ import {
   IconMicroscope,
   IconClock,
   IconCheckCircle,
+  IconTicket,
 } from './icons';
 
 export type DashboardViewType =
@@ -37,6 +38,7 @@ export type DashboardViewType =
   | 'reagents'
   | 'analyzers'
   | 'support'
+  | 'tickets'
   | 'general-settings';
 
 interface SidebarProps {
@@ -365,6 +367,20 @@ export default function Sidebar({ children, activeView = 'dashboard', onSelectVi
                 </div>
                 <span className="truncate">Gestión de Usuarios</span>
               </button>
+
+              {isAdmin && (
+                <button
+                  onClick={() => handleNav('tickets')}
+                  className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'tickets' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                  title="Gestión y supervisión de tickets de soporte técnico generados por Synova IA"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                    <IconTicket className="w-4 h-4" />
+                  </div>
+                  <span className="truncate flex-1 text-left">Tickets de Soporte</span>
+                  <span className="badge badge-warning badge-xs font-bold text-[9px]">ADMIN</span>
+                </button>
+              )}
             </li>
           </ul>
 

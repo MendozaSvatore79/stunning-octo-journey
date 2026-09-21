@@ -17,6 +17,7 @@ import {
   IconHeadphones,
   IconArrowRight,
   IconMapPin,
+  IconTicket,
 } from './icons';
 
 interface AdminDashboardViewProps {
@@ -417,12 +418,20 @@ export default function AdminDashboardView({
               ¿Dudas con una orden o resultado? Conéctate con soporte mediante chat o videollamada integrada.
             </p>
 
-            <button
-              onClick={() => onNavigate?.('support')}
-              className="btn btn-sm btn-primary w-full rounded-xl gap-2 text-xs font-semibold shadow-xs"
-            >
-              Abrir Canal de Soporte <IconArrowRight className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => onNavigate?.('support')}
+                className="btn btn-sm btn-primary w-full rounded-xl gap-2 text-xs font-semibold shadow-xs"
+              >
+                Abrir Canal de Soporte <IconArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => onNavigate?.('tickets')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 w-full rounded-xl gap-2 text-xs font-semibold text-base-content/80"
+              >
+                <IconTicket className="w-3.5 h-3.5 text-primary" /> Gestión de Tickets
+              </button>
+            </div>
           </div>
 
         </div>

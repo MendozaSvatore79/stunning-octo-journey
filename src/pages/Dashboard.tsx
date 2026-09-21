@@ -25,6 +25,7 @@ const MaintenanceControlModal = lazy(() => import('../components/MaintenanceCont
 const ReagentsInventoryView = lazy(() => import('../components/ReagentsInventoryView'));
 const AnalyzerInterfaceView = lazy(() => import('../components/AnalyzerInterfaceView'));
 const GeneralSettingsView = lazy(() => import('../components/GeneralSettingsView'));
+const SupportTicketsView = lazy(() => import('../components/SupportTicketsView'));
 const SupportBotBubble = lazy(() => import('../components/SupportBotBubble'));
 import { useLabBranding } from '../context/LabBrandingContext';
 
@@ -320,6 +321,21 @@ export default function Dashboard() {
                 <ModuleMaintenanceView moduleTitle="Configuración General" moduleKeyName="settings" />
               ) : (
                 <GeneralSettingsView labs={labs} />
+              )
+            ) : activeView === 'tickets' ? (
+              isAdmin ? (
+                <SupportTicketsView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
               )
             ) : isAdmin ? (
               <AdminDashboardView
