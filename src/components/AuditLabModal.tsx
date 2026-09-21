@@ -32,6 +32,15 @@ export default function AuditLabModal({
 }: AuditLabModalProps) {
   const api = useApi();
   const [notes, setNotes] = useState(lab?.verificationNotes || '');
+  const [permitExpiresAt, setPermitExpiresAt] = useState(
+    lab?.permitExpiresAt ? lab.permitExpiresAt.slice(0, 10) : ''
+  );
+  const [rpbiExpiresAt, setRpbiExpiresAt] = useState(
+    lab?.rpbiExpiresAt ? lab.rpbiExpiresAt.slice(0, 10) : ''
+  );
+  const [isSuspended, setIsSuspended] = useState(Boolean(lab?.isSuspended));
+  const [suspensionReason, setSuspensionReason] = useState(lab?.suspensionReason || '');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -55,6 +64,10 @@ export default function AuditLabModal({
       const response = await api.patch<Laboratory>(`/lab/${lab.id}/verify`, {
         status: targetStatus,
         notes: notes.trim() || undefined,
+        permitExpiresAt: permitExpiresAt || undefined,
+        rpbiExpiresAt: rpbiExpiresAt || undefined,
+        isSuspended,
+        suspensionReason: suspensionReason || undefined,
       });
 
       const updated = response.data;
@@ -68,20 +81,77 @@ export default function AuditLabModal({
       };
 
       setSuccessMsg(statusMessages[targetStatus]);
-
       setTimeout(() => {
         setSuccessMsg(null);
         onClose();
-      }, 1200);
+      }, 1400);
     } catch (err: any) {
       console.error('Error al dictaminar sede:', err);
-      const serverMsg =
-        err?.response?.data?.message ||
-        'No se pudo completar el dictamen de la sede. Verifica los permisos de administrador.';
-      setErrorMsg(Array.isArray(serverMsg) ? serverMsg.join(', ') : serverMsg);
+      setErrorMsg(
+        err?.response?.data?.message || 'Error al emitir el dictamen. Intenta nuevamente.'
+      );
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleToggleSuspension = async () => {
+    try {
+      setIsSubmitting(true);
+      setErrorMsg(null);
+      const nextSuspended = !isSuspended;
+      let reasonToUse = suspensionReason;
+      if (nextSuspended && !suspensionReason) {
+        const promptReason = window.prompt('Indica el motivo de la suspensión preventiva (ej. Vencimiento de Aviso COFEPRIS):');
+        if (promptReason) {
+          reasonToUse = promptReason;
+          setSuspensionReason(promptReason);
+        }
+      }
+      const response = await api.patch<Laboratory>(`/lab/${lab.id}/suspend`, {
+        isSuspended: nextSuspended,
+        reason: nextSuspended ? (reasonToUse || 'Suspensión preventiva por regulación o vencimiento COFEPRIS') : null,
+      });
+      setIsSuspended(nextSuspended);
+      onLabUpdated(response.data);
+      setSuccessMsg(
+        nextSuspended
+          ? 'Sede puesta en suspensión preventiva. Se bloqueó la emisión de nuevas órdenes.'
+          : 'Suspensión preventiva levantada. Operaciones rehabilitadas.'
+      );
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      console.error('Error al cambiar suspensión:', err);
+      setErrorMsg(err?.response?.data?.message || 'Error al cambiar estado de suspensión');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const calculateSemaphore = (dateStr?: string) => {
+    if (!dateStr) return { label: 'Sin vigencia registrada', badgeClass: 'badge-ghost text-[10px]' };
+    const expiryMs = new Date(dateStr).getTime();
+    const nowMs = Date.now();
+    const days = Math.ceil((expiryMs - nowMs) / (1000 * 60 * 60 * 24));
+
+    if (days <= 0) {
+      return {
+        label: `🔴 Vencido hace ${Math.abs(days)} días`,
+        badgeClass: 'badge-error text-white font-bold text-[10px]',
+        isUrgent: true,
+      };
+    }
+    if (days <= 60) {
+      return {
+        label: `🟡 Vence en ${days} días`,
+        badgeClass: 'badge-warning text-warning-content font-bold text-[10px]',
+        isWarning: true,
+      };
+    }
+    return {
+      label: `🟢 Vigente (${days} días)`,
+      badgeClass: 'badge-success text-white font-bold text-[10px]',
+    };
   };
 
   const getStatusBadge = (st: VerificationStatus) => {
@@ -362,6 +432,108 @@ export default function AuditLabModal({
                   )}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* SECCIÓN VIGENCIAS Y SUSPENSIÓN PREVENTIVA */}
+          <div className="p-3.5 bg-base-200/50 rounded-2xl border border-base-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-base-content flex items-center gap-1.5">
+                <IconShieldCheck className="w-4 h-4 text-primary" />
+                Vigilancia de Vigencias Sanitarias (Semáforo COFEPRIS / RPBI)
+              </span>
+              {isSuspended ? (
+                <span className="badge badge-error text-white font-bold text-[10px] gap-1 py-1 px-2.5">
+                  <IconAlertCircle className="w-3 h-3" /> Suspensión Preventiva Activa
+                </span>
+              ) : (
+                <span className="badge badge-success text-white font-bold text-[10px] gap-1 py-1 px-2.5">
+                  <IconCheckCircle className="w-3 h-3" /> Habilitada para Operar
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Vigencia COFEPRIS */}
+              <div className="p-3 bg-base-100 rounded-xl border border-base-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-base-content/60">
+                    Aviso / Licencia COFEPRIS
+                  </span>
+                  <span className={`badge ${calculateSemaphore(permitExpiresAt).badgeClass}`}>
+                    {calculateSemaphore(permitExpiresAt).label}
+                  </span>
+                </div>
+                <div className="form-control">
+                  <label className="label py-0">
+                    <span className="label-text text-[10px] text-base-content/50">Fecha de Expiración</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={permitExpiresAt}
+                    onChange={(e) => setPermitExpiresAt(e.target.value)}
+                    className="input input-bordered input-xs rounded-lg h-8 text-xs focus:input-primary"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+
+              {/* Vigencia RPBI */}
+              <div className="p-3 bg-base-100 rounded-xl border border-base-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-base-content/60">
+                    Contrato de RPBI
+                  </span>
+                  <span className={`badge ${calculateSemaphore(rpbiExpiresAt).badgeClass}`}>
+                    {calculateSemaphore(rpbiExpiresAt).label}
+                  </span>
+                </div>
+                <div className="form-control">
+                  <label className="label py-0">
+                    <span className="label-text text-[10px] text-base-content/50">Fecha de Expiración</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={rpbiExpiresAt}
+                    onChange={(e) => setRpbiExpiresAt(e.target.value)}
+                    className="input input-bordered input-xs rounded-lg h-8 text-xs focus:input-primary"
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Control de Suspensión Preventiva */}
+            <div className="p-3 bg-base-100 rounded-xl border border-base-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-base-content">
+                  {isSuspended ? 'La sede está suspendida preventivamente' : 'Operación normal de la sede'}
+                </p>
+                <p className="text-[10px] text-base-content/60">
+                  {isSuspended
+                    ? `Motivo: ${suspensionReason || 'Suspensión preventiva por regulación sanitaria'}. La emisión de órdenes está bloqueada.`
+                    : 'Puedes suspender temporalmente la emisión de órdenes si los permisos están vencidos o no conformes.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleToggleSuspension}
+                  disabled={isSubmitting}
+                  className={`btn btn-xs rounded-lg font-bold ${
+                    isSuspended ? 'btn-success text-white' : 'btn-outline btn-error'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <span className="loading loading-spinner loading-xs"></span>
+                  ) : isSuspended ? (
+                    'Levantar Suspensión'
+                  ) : (
+                    'Aplicar Suspensión Preventiva'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 

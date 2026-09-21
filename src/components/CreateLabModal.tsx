@@ -22,6 +22,8 @@ import {
   IconMail,
 } from './icons';
 import { DocumentScannerUploader } from './DocumentScannerUploader';
+import { PlanSelectionModal } from './PlanSelectionModal';
+import type { UserSubscription } from '../types/subscription';
 
 interface CreateLabModalProps {
   isOpen: boolean;
@@ -48,9 +50,14 @@ export default function CreateLabModal({
     sanitaryResponsible: '',
     professionalLicense: '',
     sanitaryPermitUrl: '',
+    permitExpiresAt: '',
+    rpbiExpiresAt: '',
     phone: '',
     email: '',
   });
+
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [availableStates, setAvailableStates] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
@@ -63,6 +70,13 @@ export default function CreateLabModal({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    api.get<UserSubscription>('/subscription/me')
+      .then((res) => setSubscription(res.data))
+      .catch((err) => console.warn('No se pudo verificar suscripción:', err));
+  }, [isOpen, api]);
 
   // Cargar estados automáticamente cuando cambia el país
   useEffect(() => {
@@ -262,6 +276,24 @@ export default function CreateLabModal({
           <div className="alert alert-success mb-4 text-xs font-medium shadow-xs py-2.5 rounded-2xl text-white">
             <IconCheckCircle className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
+          </div>
+        )}
+
+        {subscription?.usage?.isExceededLabs && (
+          <div className="alert alert-warning mb-4 text-xs font-semibold py-2.5 rounded-2xl flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2">
+              <IconAlertCircle className="w-4 h-4 shrink-0" />
+              <span>
+                Has alcanzado el límite de <strong>{subscription.usage.maxLabs} sedes</strong> de tu {subscription.plan.name}.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowUpgradeModal(true)}
+              className="btn btn-xs btn-primary text-white font-bold rounded-lg"
+            >
+              Actualizar Plan
+            </button>
           </div>
         )}
 
@@ -480,6 +512,36 @@ export default function CreateLabModal({
                 />
               </div>
 
+              <div className="form-control">
+                <label className="label py-0.5">
+                  <span className="label-text text-[11px] font-semibold">
+                    Vigencia de Licencia / Aviso COFEPRIS (Opcional)
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  name="permitExpiresAt"
+                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                  value={formData.permitExpiresAt || ''}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label py-0.5">
+                  <span className="label-text text-[11px] font-semibold">
+                    Vigencia de Contrato RPBI (Opcional)
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  name="rpbiExpiresAt"
+                  className="input input-bordered input-xs w-full rounded-xl focus:input-primary h-9 text-xs"
+                  value={formData.rpbiExpiresAt || ''}
+                  onChange={handleChange}
+                />
+              </div>
+
               <div className="sm:col-span-2 pt-1">
                 <DocumentScannerUploader
                   value={formData.sanitaryPermitUrl || ''}
@@ -554,13 +616,15 @@ export default function CreateLabModal({
             <button
               type="submit"
               className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[160px] shadow-xs btn-sm"
-              disabled={isLoading}
+              disabled={isLoading || Boolean(subscription?.usage?.isExceededLabs)}
             >
               {isLoading ? (
                 <>
                   <span className="loading loading-spinner loading-xs"></span>
                   Procesando Alta...
                 </>
+              ) : subscription?.usage?.isExceededLabs ? (
+                'Límite de Sedes Alcanzado'
               ) : (
                 <>
                   <IconPlus className="w-4 h-4" />
@@ -574,6 +638,17 @@ export default function CreateLabModal({
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>close</button>
       </form>
+
+      {/* Modal para actualizar de plan si se alcanzó el límite */}
+      <PlanSelectionModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onPlanChanged={() => {
+          api.get<UserSubscription>('/subscription/me')
+            .then((res) => setSubscription(res.data))
+            .catch((e) => console.warn(e));
+        }}
+      />
     </dialog>
   );
 }

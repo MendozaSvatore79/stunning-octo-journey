@@ -23,6 +23,7 @@ import {
   IconMegaphone,
   IconHandshake,
   IconQrCode,
+  IconCreditCard,
 } from './icons';
 
 interface AdminDashboardViewProps {
@@ -325,7 +326,33 @@ export default function AdminDashboardView({
               <span className="badge badge-warning badge-xs font-bold text-[9px]">EXCLUSIVO ADMIN</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <button
+                onClick={() => onNavigate?.('network-metrics')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                  <IconChartLine className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Métricas Red</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Nacional & TAT</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => onNavigate?.('subscriptions-billing')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                  <IconCreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="font-bold block text-base-content">Suscripciones</span>
+                  <span className="text-[10px] text-base-content/50 block font-normal">Planes & Facturas</span>
+                </div>
+              </button>
+
               <button
                 onClick={() => onNavigate?.('audit-logs')}
                 className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl flex items-center justify-start gap-2 h-auto py-2.5 text-xs text-left"

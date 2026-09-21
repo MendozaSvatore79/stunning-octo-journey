@@ -25,6 +25,8 @@ import {
   IconSearch,
   IconFilter,
 } from './icons';
+import { PlanSelectionModal } from './PlanSelectionModal';
+import type { UserSubscription } from '../types/subscription';
 
 interface WorkOrdersViewProps {
   initialTab?: 'create' | 'pending' | 'completed';
@@ -33,6 +35,10 @@ interface WorkOrdersViewProps {
 export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersViewProps) {
   const api = useApi();
   const [activeTab, setActiveTab] = useState<'create' | 'pending' | 'completed'>(initialTab);
+
+  // Datos de Suscripción y Cuota SaaS
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Datos cargados de la base de datos
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -182,17 +188,21 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
     setIsLoadingData(true);
     setErrorMsg(null);
     try {
-      const [resPatients, resLabs, resStudies, resOrders] = await Promise.allSettled([
+      const [resPatients, resLabs, resStudies, resOrders, resSub] = await Promise.allSettled([
         api.get<Patient[]>('/patients'),
         api.get<Laboratory[]>('/lab'),
         api.get<ClinicalAnalysis[]>('/analysis'),
         api.get<WorkOrder[]>('/orders'),
+        api.get<UserSubscription>('/subscription/me'),
       ]);
 
       const loadedPatients = resPatients.status === 'fulfilled' ? (resPatients.value.data || []) : [];
       const loadedLabs = resLabs.status === 'fulfilled' ? (resLabs.value.data || []) : [];
       const loadedStudies = resStudies.status === 'fulfilled' ? (resStudies.value.data || []) : [];
       const loadedOrders = resOrders.status === 'fulfilled' ? (resOrders.value.data || []) : [];
+      if (resSub.status === 'fulfilled') {
+        setSubscription(resSub.value.data);
+      }
 
       setPatients(loadedPatients);
       setLabs(loadedLabs);
@@ -277,6 +287,19 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       setErrorMsg('Debes seleccionar una sede o laboratorio.');
       return;
     }
+
+    // Validación preventiva de suspensión sanitaria y cuota de órdenes
+    const activeLab = labs.find((l) => l.id === selectedLabId);
+    if (activeLab?.isSuspended) {
+      setErrorMsg(`La sede "${activeLab.name}" se encuentra suspendida preventivamente (${activeLab.suspensionReason || 'Permisos sanitarios vencidos o en revisión'}). No es posible emitir órdenes de trabajo.`);
+      return;
+    }
+    if (subscription?.usage?.isExceededOrders) {
+      setErrorMsg(`Has alcanzado el límite mensual de órdenes para tu plan (${subscription.usage.ordersCountThisMonth} / ${subscription.usage.maxOrders}). Por favor actualiza tu suscripción para seguir procesando estudios.`);
+      setShowUpgradeModal(true);
+      return;
+    }
+
     if (selectedStudiesList.length === 0) {
       setErrorMsg('Debes agregar al menos un estudio clínico a la orden de trabajo.');
       return;
@@ -519,6 +542,58 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         </div>
       </section>
 
+      {/* BARRA DE CONSUMO DE PLAN Y SUSCRIPCIÓN */}
+      {subscription && (
+        <div className="bg-gradient-to-r from-base-100 to-base-200/50 border border-base-200 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl ${subscription.plan.type === 'PRO' ? 'bg-amber-500/10 text-amber-600' : subscription.plan.type === 'GROWTH' ? 'bg-primary/10 text-primary' : 'bg-info/10 text-info'}`}>
+              <IconBuilding className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">Plan Actual:</span>
+                <span className="badge badge-sm font-bold badge-primary">
+                  {subscription.plan.name}
+                </span>
+                <span className={`badge badge-xs ${subscription.status === 'ACTIVE' ? 'badge-success' : 'badge-warning'} font-semibold text-[10px]`}>
+                  {subscription.status}
+                </span>
+              </div>
+              <p className="text-xs text-base-content/70 mt-0.5">
+                {subscription.usage.maxOrders !== null && subscription.usage.maxOrders < 900000
+                  ? `${subscription.usage.ordersCountThisMonth} de ${subscription.usage.maxOrders} órdenes emitidas este mes`
+                  : `${subscription.usage.ordersCountThisMonth} órdenes emitidas este mes (Ilimitadas)`}
+                {' • '}
+                {subscription.usage.maxLabs !== null && subscription.usage.maxLabs < 900000
+                  ? `${subscription.usage.labsCount} de ${subscription.usage.maxLabs} sedes activas`
+                  : `${subscription.usage.labsCount} sedes activas (Ilimitadas)`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {subscription.usage.maxOrders !== null && subscription.usage.maxOrders < 900000 && (
+              <div className="w-full md:w-36 flex flex-col gap-1">
+                <progress
+                  className={`progress w-full h-2 ${subscription.usage.isExceededOrders ? 'progress-error' : (subscription.usage.ordersCountThisMonth / subscription.usage.maxOrders) > 0.8 ? 'progress-warning' : 'progress-primary'}`}
+                  value={subscription.usage.ordersCountThisMonth}
+                  max={subscription.usage.maxOrders}
+                />
+                <span className="text-[10px] text-right font-semibold text-base-content/50">
+                  {Math.round((subscription.usage.ordersCountThisMonth / subscription.usage.maxOrders) * 100)}% consumido
+                </span>
+              </div>
+            )}
+            <button
+              onClick={() => setShowUpgradeModal(true)}
+              className="btn btn-sm btn-outline btn-primary rounded-xl font-bold shrink-0 text-xs"
+            >
+              Mejorar Plan
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Control de Pestañas Responsivo sin Desbordamiento */}
       <div className="tabs tabs-boxed bg-base-200/80 p-1 rounded-2xl w-full sm:max-w-lg grid grid-cols-3 gap-1 border border-base-300/50 shadow-xs">
         <button
@@ -704,6 +779,18 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                     </option>
                   ))}
                 </select>
+                {(() => {
+                  const currentLab = labs.find((l) => l.id === selectedLabId);
+                  if (currentLab?.isSuspended) {
+                    return (
+                      <div className="alert alert-error text-white text-xs py-2 px-3 rounded-xl shadow-xs flex items-center gap-2 mt-2">
+                        <IconAlertCircle className="w-4 h-4 shrink-0" />
+                        <span><strong>Sede Suspendida:</strong> {currentLab.suspensionReason || 'Vencimiento de permisos sanitarios COFEPRIS / RPBI'}. La emisión de órdenes está deshabilitada para esta sede.</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {/* Campo Descuento */}
@@ -1416,6 +1503,13 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
           </form>
         </dialog>
       )}
+
+      {/* MODAL DE MEJORA / CAMBIO DE PLAN SAAS */}
+      <PlanSelectionModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onPlanChanged={loadInitialData}
+      />
 
     </div>
   );

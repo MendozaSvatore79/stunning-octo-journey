@@ -17,6 +17,8 @@ export interface Laboratory {
   sanitaryResponsible?: string;
   professionalLicense?: string;
   sanitaryPermitUrl?: string;
+  permitExpiresAt?: string;
+  rpbiExpiresAt?: string;
   phone?: string;
   email?: string;
 
@@ -25,6 +27,8 @@ export interface Laboratory {
   verificationNotes?: string;
   verifiedAt?: string;
   verifiedBy?: string;
+  isSuspended?: boolean;
+  suspensionReason?: string;
 
   createdById?: string;
   createdBy?: {
@@ -60,6 +64,10 @@ export interface CreateLabDto {
   sanitaryResponsible?: string;
   professionalLicense?: string;
   sanitaryPermitUrl?: string;
+  permitExpiresAt?: string;
+  rpbiExpiresAt?: string;
+  isSuspended?: boolean;
+  suspensionReason?: string;
   phone?: string;
   email?: string;
 }

@@ -33,6 +33,9 @@ const BroadcastAnnouncementsView = lazy(() => import('../components/BroadcastAnn
 const PriceAgreementsView = lazy(() => import('../components/PriceAgreementsView'));
 const ReportTemplateConfigView = lazy(() => import('../components/ReportTemplateConfigView'));
 const GlobalAnnouncementBanner = lazy(() => import('../components/GlobalAnnouncementBanner'));
+const NetworkMetricsView = lazy(() => import('../components/NetworkMetricsView'));
+const SubscriptionsAdminView = lazy(() => import('../components/SubscriptionsAdminView'));
+const PlanSelectionModal = lazy(() => import('../components/PlanSelectionModal'));
 import { useLabBranding } from '../context/LabBrandingContext';
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
@@ -60,6 +63,7 @@ export default function Dashboard() {
   const [isCreateLabOpen, setIsCreateLabOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isMaintenanceControlOpen, setIsMaintenanceControlOpen] = useState(false);
+  const [isPlanSelectionOpen, setIsPlanSelectionOpen] = useState(false);
 
   // Cargar laboratorios de forma silenciosa e hiper rápida
   const fetchLabs = useCallback(async () => {
@@ -93,6 +97,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeView === 'create-lab') {
       setIsCreateLabOpen(true);
+      setActiveView('dashboard');
+    } else if (activeView === 'my-subscription') {
+      setIsPlanSelectionOpen(true);
       setActiveView('dashboard');
     }
   }, [activeView]);
@@ -442,6 +449,36 @@ export default function Dashboard() {
                   onNavigate={setActiveView}
                 />
               )
+            ) : activeView === 'network-metrics' ? (
+              isAdmin ? (
+                <NetworkMetricsView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
+              )
+            ) : activeView === 'subscriptions-billing' ? (
+              isAdmin ? (
+                <SubscriptionsAdminView />
+              ) : (
+                <OperatorDashboardView
+                  userName={user?.firstName || undefined}
+                  role={role}
+                  labs={labs}
+                  isLoadingLabs={isLoadingLabs}
+                  onOpenCreateLab={() => setIsCreateLabOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
+                  onDeleteLabSuccess={handleLabDeleted}
+                  onNavigate={setActiveView}
+                />
+              )
             ) : isAdmin ? (
               <AdminDashboardView
                 userName={user?.firstName || undefined}
@@ -490,6 +527,16 @@ export default function Dashboard() {
           <MaintenanceControlModal
             isOpen={isMaintenanceControlOpen}
             onClose={() => setIsMaintenanceControlOpen(false)}
+          />
+        )}
+
+        {isPlanSelectionOpen && (
+          <PlanSelectionModal
+            isOpen={isPlanSelectionOpen}
+            onClose={() => setIsPlanSelectionOpen(false)}
+            onPlanChanged={() => {
+              fetchLabs();
+            }}
           />
         )}
 

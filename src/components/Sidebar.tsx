@@ -22,6 +22,7 @@ import {
   IconMegaphone,
   IconHandshake,
   IconQrCode,
+  IconCreditCard,
 } from './icons';
 
 export type DashboardViewType =
@@ -48,7 +49,10 @@ export type DashboardViewType =
   | 'announcements'
   | 'price-agreements'
   | 'report-templates'
-  | 'general-settings';
+  | 'general-settings'
+  | 'network-metrics'
+  | 'subscriptions-billing'
+  | 'my-subscription';
 
 interface SidebarProps {
   children: ReactNode;
@@ -350,6 +354,19 @@ export default function Sidebar({
                         <span className="truncate flex-1 text-left">Configuración de Sede</span>
                       </button>
                     </li>
+                    <li>
+                      <button
+                        onClick={() => handleNav('my-subscription')}
+                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'my-subscription' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                        title="Ver límites de órdenes mensuales y sedes contratadas en tu plan SaaS"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                          <IconCreditCard className="w-4 h-4" />
+                        </div>
+                        <span className="truncate flex-1 text-left">Mi Plan y Cuota</span>
+                        <span className="badge badge-warning badge-xs font-bold text-[9px]">SAAS</span>
+                      </button>
+                    </li>
                   </>
                 )}
               </>
@@ -409,6 +426,34 @@ export default function Sidebar({
                   <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
                     Gobernanza y Control Central
                   </span>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => handleNav('network-metrics')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'network-metrics' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Métricas consolidadas a nivel nacional, volumen de órdenes, semáforo sanitario y TAT"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                      <IconChartLine className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Métricas de la Red</span>
+                    <span className="badge badge-primary badge-xs font-bold text-[9px]">KPIs</span>
+                  </button>
+                </li>
+
+                <li>
+                  <button
+                    onClick={() => handleNav('subscriptions-billing')}
+                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'subscriptions-billing' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                    title="Gestión de planes SaaS, límites de cuotas mensuales y facturación"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                      <IconCreditCard className="w-4 h-4" />
+                    </div>
+                    <span className="truncate flex-1 text-left">Suscripciones SaaS</span>
+                    <span className="badge badge-success text-white badge-xs font-bold text-[9px]">PLANES</span>
+                  </button>
                 </li>
 
                 <li>
