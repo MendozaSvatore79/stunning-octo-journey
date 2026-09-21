@@ -59,29 +59,18 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
       setErrorMsg(null);
 
       // 1. Intentar generar sesión de Checkout segura en Polar (con 14 días de prueba gratis)
-      try {
-        const checkoutRes = await api.post<{ checkoutUrl: string }>('/subscription/checkout', {
-          planType: plan,
-          clientOrigin: window.location.origin,
-        });
-        if (checkoutRes.data?.checkoutUrl) {
-          setSuccessMsg('Redirigiendo a la pasarela segura de Polar (14 días gratis)...');
-          setTimeout(() => {
-            window.location.href = checkoutRes.data.checkoutUrl;
-          }, 600);
-          return;
-        }
-      } catch (checkoutErr: any) {
-        const msg = checkoutErr?.response?.data?.message;
-        // Si no están configuradas las variables de Polar aún, fallback a activación directa
-        if (msg && !msg.includes('Faltan credenciales de Polar')) {
-          throw checkoutErr;
-        }
-        console.warn('Polar no configurado o en modo dev, aplicando activación directa:', msg);
-      }
+      const checkoutRes = await api.post<{ checkoutUrl: string }>('/subscription/checkout', {
+        planType: plan,
+        clientOrigin: window.location.origin,
+      });
 
-      // 2. Activación directa / simulada
-      await api.post('/subscription/change-plan', { planType: plan });
+      if (checkoutRes.data?.checkoutUrl) {
+        setSuccessMsg('Redirigiendo a la pasarela segura de Polar (14 días gratis)...');
+        setTimeout(() => {
+          window.location.href = checkoutRes.data.checkoutUrl;
+        }, 600);
+        return;
+      }
       setSelectedPlan(plan);
       setSuccessMsg(`¡Plan ${plan} activado exitosamente! Tu cuenta ha sido actualizada.`);
 

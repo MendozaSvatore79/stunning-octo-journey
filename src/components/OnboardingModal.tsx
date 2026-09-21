@@ -12,6 +12,8 @@ import {
   IconArrowLeft,
   IconX,
   IconPlus,
+  IconCreditCard,
+  IconAlertCircle,
 } from './icons';
 
 interface OnboardingModalProps {
@@ -29,14 +31,44 @@ export default function OnboardingModal({
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('BASIC');
   const [isSavingPlan, setIsSavingPlan] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [isRedirectingPolar, setIsRedirectingPolar] = useState(false);
 
   if (!isOpen) return null;
 
   const totalSteps = 5;
 
+  const handleGoToPolarCheckout = async (planToUse = selectedPlan) => {
+    try {
+      setIsRedirectingPolar(true);
+      setCheckoutError(null);
+      const res = await api.post<{ checkoutUrl: string }>('/subscription/checkout', {
+        planType: planToUse,
+        clientOrigin: window.location.origin,
+      });
+      if (res.data?.checkoutUrl) {
+        onClose();
+        window.location.href = res.data.checkoutUrl;
+        return true;
+      }
+      return false;
+    } catch (err: any) {
+      console.error('Error al iniciar Polar Checkout en Onboarding:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Error al conectar con la pasarela Polar';
+      setCheckoutError(Array.isArray(msg) ? msg.join(', ') : msg);
+      return false;
+    } finally {
+      setIsRedirectingPolar(false);
+    }
+  };
+
   const handleNext = async () => {
     if (currentStep === 2) {
-      // Guardar plan seleccionado
+      // Intentar redirigir al checkout de Polar automáticamente con los 14 días de prueba gratis
+      const redirected = await handleGoToPolarCheckout(selectedPlan);
+      if (redirected) return;
+
+      // Si no redirigió (por ejemplo faltan credenciales o error), guardar plan para modo interno
       try {
         setIsSavingPlan(true);
         await api.post('/subscription/change-plan', { planType: selectedPlan });
@@ -217,6 +249,47 @@ export default function OnboardingModal({
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Mensaje de Error si Polar reporta fallo de credenciales o de red */}
+              {checkoutError && (
+                <div className="alert alert-error text-white text-xs py-3 rounded-2xl shadow-sm flex items-start gap-2 animate-fade-in">
+                  <IconAlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">Aviso de la Pasarela de Pago:</span>
+                    <span>{checkoutError}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Caja de Llamada a la Acción de Polar */}
+              <div className="bg-gradient-to-r from-primary/10 via-base-200 to-base-200/50 p-4 rounded-2xl border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-3 mt-2">
+                <div>
+                  <span className="font-extrabold text-xs text-base-content flex items-center gap-1.5">
+                    <IconCreditCard className="w-4 h-4 text-primary" />
+                    Plan seleccionado: {selectedPlan === 'PRO' ? 'Red Hospitalaria ($1,890 MXN)' : selectedPlan === 'GROWTH' ? 'Clínico Crecimiento ($990 MXN)' : 'Esencial Clínico ($490 MXN)'}
+                  </span>
+                  <span className="text-[11px] text-success font-semibold flex items-center gap-1 mt-0.5">
+                    <IconCheckCircle className="w-3.5 h-3.5" /> Incluye 14 días de prueba gratis. Tu tarjeta se registrará de forma segura en Polar.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleGoToPolarCheckout(selectedPlan)}
+                  disabled={isRedirectingPolar}
+                  className="btn btn-primary btn-sm text-primary-content font-bold rounded-xl gap-2 w-full sm:w-auto shrink-0 shadow-md shadow-primary/20"
+                >
+                  {isRedirectingPolar ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Abriendo Polar...
+                    </>
+                  ) : (
+                    <>
+                      Ir a Polar Checkout (14d gratis) <IconArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}
