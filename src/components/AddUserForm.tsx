@@ -338,7 +338,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
       case 'LAB_TECHNICIAN':
         return (
           <span className="badge badge-primary badge-sm font-bold gap-1 shadow-2xs">
-            <IconFlask className="w-3 h-3" /> Químico / Técnico
+            <IconFlask className="w-3 h-3" /> Responsable de Laboratorio
           </span>
         );
       case 'TECH':
@@ -501,8 +501,8 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
               className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
             >
               <option value="ALL">Todos los Roles</option>
+              <option value="LAB_TECHNICIAN">Responsables de Laboratorio (LAB_TECHNICIAN)</option>
               <option value="TECH">Analistas (TECH)</option>
-              <option value="LAB_TECHNICIAN">Químicos (LAB_TECHNICIAN)</option>
               <option value="RECEPTIONIST">Recepcionistas (RECEPTIONIST)</option>
               {isAdmin && <option value="ADMIN">Administradores (ADMIN)</option>}
             </select>
@@ -759,7 +759,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
                     className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
                   >
                     <option value="TECH">Técnico Analista (TECH)</option>
-                    <option value="LAB_TECHNICIAN">Químico Responsable (LAB_TECHNICIAN)</option>
+                    <option value="LAB_TECHNICIAN">Responsable del Laboratorio (LAB_TECHNICIAN)</option>
                     <option value="RECEPTIONIST">Recepcionista Clínico (RECEPTIONIST)</option>
                     {isAdmin && <option value="ADMIN">Administrador General (ADMIN)</option>}
                   </select>
@@ -893,7 +893,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
                     className="select select-sm select-bordered rounded-xl text-xs font-semibold focus:select-primary"
                   >
                     <option value="TECH">Técnico Analista (TECH)</option>
-                    <option value="LAB_TECHNICIAN">Químico Responsable (LAB_TECHNICIAN)</option>
+                    <option value="LAB_TECHNICIAN">Responsable del Laboratorio (LAB_TECHNICIAN)</option>
                     <option value="RECEPTIONIST">Recepcionista Clínico (RECEPTIONIST)</option>
                     {isAdmin && <option value="ADMIN">Administrador General (ADMIN)</option>}
                   </select>

@@ -40,8 +40,10 @@ export default function OperatorDashboardView({
   onNavigate,
 }: OperatorDashboardViewProps) {
   const roleLabel =
-    role === 'TECH' || role === 'LAB_TECHNICIAN'
-      ? 'Técnico de Laboratorio'
+    role === 'LAB_TECHNICIAN'
+      ? 'Responsable del Laboratorio'
+      : role === 'TECH'
+      ? 'Técnico Analista'
       : role === 'RECEPTIONIST'
       ? 'Recepcionista Clínico'
       : 'Personal Clínico';
