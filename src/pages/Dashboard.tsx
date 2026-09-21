@@ -121,6 +121,10 @@ export default function Dashboard() {
   const isQCDisabled = config.modules.qualityControl && !isVipPassed;
   const isLabsDisabled = config.modules.labsDirectory && !isVipPassed;
   const isSupportDisabled = config.modules.supportChat && !isVipPassed;
+  const isReagentsDisabled = config.modules.reagents && !isVipPassed;
+  const isAnalyzersDisabled = config.modules.analyzers && !isVipPassed;
+  const isUsersDisabled = config.modules.users && !isVipPassed;
+  const isSettingsDisabled = config.modules.settings && !isVipPassed;
 
   return (
     <Sidebar activeView={activeView} onSelectView={setActiveView}>
@@ -255,9 +259,17 @@ export default function Dashboard() {
                 <AnalysisCatalogView />
               )
             ) : activeView === 'reagents' ? (
-              <ReagentsInventoryView />
+              isReagentsDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Inventario de Reactivos e Insumos" moduleKeyName="reagents" />
+              ) : (
+                <ReagentsInventoryView />
+              )
             ) : activeView === 'analyzers' ? (
-              <AnalyzerInterfaceView />
+              isAnalyzersDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Analizadores Clínicos LIS" moduleKeyName="analyzers" />
+              ) : (
+                <AnalyzerInterfaceView />
+              )
             ) : activeView === 'create-order' || activeView === 'pending-orders' || activeView === 'completed-orders' ? (
               isWorkOrdersDisabled ? (
                 <ModuleMaintenanceView moduleTitle="Órdenes de Trabajo" moduleKeyName="workOrders" />
@@ -298,9 +310,17 @@ export default function Dashboard() {
                 />
               )
             ) : activeView === 'add-user' ? (
-              <AddUserForm labs={labs} onCancel={() => setActiveView('dashboard')} />
+              isUsersDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Gestión de Usuarios" moduleKeyName="users" />
+              ) : (
+                <AddUserForm labs={labs} onCancel={() => setActiveView('dashboard')} />
+              )
             ) : activeView === 'general-settings' ? (
-              <GeneralSettingsView labs={labs} />
+              isSettingsDisabled ? (
+                <ModuleMaintenanceView moduleTitle="Configuración General" moduleKeyName="settings" />
+              ) : (
+                <GeneralSettingsView labs={labs} />
+              )
             ) : isAdmin ? (
               <AdminDashboardView
                 userName={user?.firstName || undefined}

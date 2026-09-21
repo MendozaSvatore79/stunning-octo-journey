@@ -9,6 +9,10 @@ export interface MaintenanceModules {
   qualityControl: boolean;
   labsDirectory: boolean;
   supportChat: boolean;
+  reagents: boolean;
+  analyzers: boolean;
+  users: boolean;
+  settings: boolean;
 }
 
 export interface MaintenanceConfig {
@@ -31,6 +35,10 @@ const DEFAULT_MAINTENANCE_CONFIG: MaintenanceConfig = {
     qualityControl: false,
     labsDirectory: false,
     supportChat: false,
+    reagents: false,
+    analyzers: false,
+    users: false,
+    settings: false,
   },
 };
 
@@ -73,7 +81,15 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     try {
       const res = await api.get<MaintenanceConfig>('/support/maintenance');
       if (res.data) {
-        setConfig(res.data);
+        setConfig((prev) => ({
+          ...DEFAULT_MAINTENANCE_CONFIG,
+          ...res.data,
+          modules: {
+            ...DEFAULT_MAINTENANCE_CONFIG.modules,
+            ...(prev.modules || {}),
+            ...(res.data.modules || {}),
+          },
+        }));
       }
     } catch (err) {
       console.warn('Fallback de mantenimiento:', err);

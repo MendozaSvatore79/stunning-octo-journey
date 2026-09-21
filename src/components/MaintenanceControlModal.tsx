@@ -14,6 +14,8 @@ import {
   IconEye,
   IconCheck,
   IconWrench,
+  IconMicroscope,
+  IconUserPlus,
 } from './icons';
 
 interface MaintenanceControlModalProps {
@@ -59,13 +61,17 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
     onClose();
   };
 
-  const moduleItems: { key: keyof MaintenanceModules; label: string; icon: any; color: string }[] = [
-    { key: 'patients', label: 'Módulo de Pacientes', icon: IconUsers, color: 'text-secondary' },
-    { key: 'catalog', label: 'Catálogo de Análisis', icon: IconFlask, color: 'text-primary' },
-    { key: 'workOrders', label: 'Órdenes de Trabajo', icon: IconClipboardList, color: 'text-primary' },
-    { key: 'qualityControl', label: 'Control de Calidad', icon: IconCertificate, color: 'text-accent' },
-    { key: 'labsDirectory', label: 'Directorio de Sedes', icon: IconBuilding, color: 'text-primary' },
-    { key: 'supportChat', label: 'Soporte Técnico Live', icon: IconHeadphones, color: 'text-secondary font-bold' },
+  const moduleItems: { key: keyof MaintenanceModules; label: string; icon: any }[] = [
+    { key: 'patients', label: 'Módulo de Pacientes', icon: IconUsers },
+    { key: 'catalog', label: 'Catálogo de Análisis', icon: IconFlask },
+    { key: 'workOrders', label: 'Órdenes de Trabajo', icon: IconClipboardList },
+    { key: 'qualityControl', label: 'Control de Calidad', icon: IconCertificate },
+    { key: 'labsDirectory', label: 'Directorio de Sedes', icon: IconBuilding },
+    { key: 'reagents', label: 'Inventario de Reactivos', icon: IconFlask },
+    { key: 'analyzers', label: 'Analizadores LIS (ASTM/HL7)', icon: IconMicroscope },
+    { key: 'users', label: 'Gestión de Usuarios', icon: IconUserPlus },
+    { key: 'settings', label: 'Configuración General', icon: IconSettings },
+    { key: 'supportChat', label: 'Soporte Técnico Live', icon: IconHeadphones },
   ];
 
   return (
@@ -196,24 +202,47 @@ export default function MaintenanceControlModal({ isOpen, onClose }: Maintenance
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {moduleItems.map((item) => {
                 const IconComp = item.icon;
-                const isModuleDisabled = config.modules[item.key];
+                const isModuleDisabled = Boolean(config.modules[item.key]);
                 return (
                   <div
                     key={item.key}
-                    className={`p-3.5 rounded-xl border transition-all flex items-center justify-between ${
+                    className={`p-3 rounded-xl border transition-all flex items-center justify-between ${
                       isModuleDisabled
-                        ? 'bg-warning/10 border-warning/30 text-warning-content'
-                        : 'bg-base-100 border-base-200 text-base-content'
+                        ? 'bg-amber-500/10 border-amber-500/40 shadow-xs dark:bg-amber-500/15'
+                        : 'bg-base-100 border-base-200 hover:border-base-300'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <IconComp className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-bold">{item.label}</span>
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <div
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                          isModuleDisabled
+                            ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                            : 'bg-primary/10 text-primary'
+                        }`}
+                      >
+                        <IconComp className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span
+                          className={`text-xs font-bold block truncate ${
+                            isModuleDisabled
+                              ? 'text-amber-950 dark:text-amber-100'
+                              : 'text-base-content'
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        {isModuleDisabled && (
+                          <span className="text-[10px] font-black uppercase text-amber-700 dark:text-amber-400 block tracking-wider mt-0.5">
+                            Inhabilitado
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <input
                       type="checkbox"
-                      className="toggle toggle-warning toggle-sm"
+                      className="toggle toggle-warning toggle-sm shrink-0"
                       checked={isModuleDisabled}
                       onChange={(e) => toggleModuleMaintenance(item.key, e.target.checked)}
                     />
