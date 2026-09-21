@@ -62,21 +62,26 @@ export default function OnboardingModal({
     }
   };
 
+  const handleSkipCheckout = async () => {
+    try {
+      setIsSavingPlan(true);
+      await api.post('/subscription/change-plan', { planType: selectedPlan });
+    } catch (e) {
+      console.warn('Error al guardar plan inicial:', e);
+    } finally {
+      setIsSavingPlan(false);
+      setCurrentStep(3);
+    }
+  };
+
   const handleNext = async () => {
     if (currentStep === 2) {
       // Intentar redirigir al checkout de Polar automáticamente con los 14 días de prueba gratis
       const redirected = await handleGoToPolarCheckout(selectedPlan);
       if (redirected) return;
 
-      // Si no redirigió (por ejemplo faltan credenciales o error), guardar plan para modo interno
-      try {
-        setIsSavingPlan(true);
-        await api.post('/subscription/change-plan', { planType: selectedPlan });
-      } catch (e) {
-        console.warn('Error al guardar plan inicial:', e);
-      } finally {
-        setIsSavingPlan(false);
-      }
+      // Si falló el checkout de Polar, mantenemos al usuario en este paso para que vea el error o decida omitir
+      return;
     }
 
     if (currentStep < totalSteps) {
@@ -291,6 +296,17 @@ export default function OnboardingModal({
                   )}
                 </button>
               </div>
+
+              <div className="flex justify-center sm:justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={handleSkipCheckout}
+                  disabled={isSavingPlan}
+                  className="text-xs text-base-content/50 hover:text-primary transition-colors underline"
+                >
+                  Continuar sin registrar tarjeta por ahora (Modo de prueba local)
+                </button>
+              </div>
             </div>
           )}
 
@@ -323,7 +339,7 @@ export default function OnboardingModal({
           )}
 
           {currentStep === 5 && (
-            <div className="text-center space-y-4 animate-fade-in">
+            <div className="space-y-4 text-center animate-fade-in">
               <div className="inline-flex p-4 bg-success/10 text-success rounded-2xl mb-2">
                 <IconCheckCircle className="w-12 h-12" />
               </div>
@@ -331,7 +347,7 @@ export default function OnboardingModal({
                 ¡Todo listo para comenzar!
               </h2>
               <p className="text-base-content/70 max-w-md mx-auto leading-relaxed text-sm">
-                Tu cuenta está configurada con el <strong>{selectedPlan === 'GROWTH' ? 'Plan Crecimiento' : selectedPlan === 'PRO' ? 'Plan Red Hospitalaria' : 'Plan Esencial Clínico'}</strong>. Haz clic abajo para dar de alta tu primera sede.
+                Has configurado tu plan inicial. Ahora da de alta tu primera sede para empezar a procesar estudios y emitir órdenes de trabajo.
               </p>
             </div>
           )}
@@ -349,14 +365,17 @@ export default function OnboardingModal({
           {currentStep < totalSteps ? (
             <button
               onClick={handleNext}
-              disabled={isSavingPlan}
+              disabled={isSavingPlan || isRedirectingPolar}
               className="btn btn-primary text-primary-content font-bold rounded-xl gap-2 min-w-[120px]"
             >
-              {isSavingPlan ? (
-                <span className="loading loading-spinner loading-xs"></span>
+              {isSavingPlan || isRedirectingPolar ? (
+                <>
+                  <span className="loading loading-spinner loading-xs"></span>
+                  {currentStep === 2 ? 'Conectando a Polar...' : 'Guardando...'}
+                </>
               ) : (
                 <>
-                  Siguiente <IconArrowRight className="w-4 h-4" />
+                  {currentStep === 2 ? 'Ir a Polar Checkout' : 'Siguiente'} <IconArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
