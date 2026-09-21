@@ -62,6 +62,7 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
       try {
         const checkoutRes = await api.post<{ checkoutUrl: string }>('/subscription/checkout', {
           planType: plan,
+          clientOrigin: window.location.origin,
         });
         if (checkoutRes.data?.checkoutUrl) {
           setSuccessMsg('Redirigiendo a la pasarela segura de Polar (14 días gratis)...');
