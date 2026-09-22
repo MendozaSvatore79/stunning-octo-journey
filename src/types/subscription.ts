@@ -8,6 +8,11 @@ export interface PlanConfig {
   priceMxn: number;
   maxOrders: number;
   maxLabs: number;
+  hasQualityControl?: boolean;
+  hasAnalyzerLis?: boolean;
+  hasCustomReportTemplates?: boolean;
+  hasAdvancedAgreements?: boolean;
+  hasPrioritySupport?: boolean;
   features: string[];
 }
 
@@ -25,6 +30,11 @@ export interface UserSubscription {
     currency: string;
     maxOrders: number;
     maxLabs: number;
+    hasQualityControl?: boolean;
+    hasAnalyzerLis?: boolean;
+    hasCustomReportTemplates?: boolean;
+    hasAdvancedAgreements?: boolean;
+    hasPrioritySupport?: boolean;
     features: string[];
   };
   status: SubscriptionStatus;

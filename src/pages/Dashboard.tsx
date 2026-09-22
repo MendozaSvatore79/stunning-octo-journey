@@ -36,6 +36,9 @@ const GlobalAnnouncementBanner = lazy(() => import('../components/GlobalAnnounce
 const NetworkMetricsView = lazy(() => import('../components/NetworkMetricsView'));
 const SubscriptionsAdminView = lazy(() => import('../components/SubscriptionsAdminView'));
 const PlanSelectionModal = lazy(() => import('../components/PlanSelectionModal'));
+const MySubscriptionView = lazy(() => import('../components/MySubscriptionView'));
+const FeatureLockPaywall = lazy(() => import('../components/FeatureLockPaywall'));
+import type { UserSubscription } from '../types/subscription';
 import { useLabBranding } from '../context/LabBrandingContext';
 
 const LABS_CACHE_KEY = 'lab_labs_list_cache';
@@ -79,6 +82,23 @@ export default function Dashboard() {
     }
   }, [api]);
 
+  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
+
+  const fetchUserSubscription = useCallback(async () => {
+    try {
+      const res = await api.get<UserSubscription>('/subscription/me');
+      setUserSubscription(res.data);
+    } catch (e) {
+      console.warn('Error al cargar suscripción en dashboard:', e);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserSubscription();
+    }
+  }, [user?.id, fetchUserSubscription]);
+
   useEffect(() => {
     fetchLabs();
 
@@ -88,8 +108,9 @@ export default function Dashboard() {
       const plan = params.get('plan') || '';
       alert(`🎉 ¡Pago procesado con éxito! Tu plan ${plan} está activo con tus 14 días de prueba gratis.`);
       window.history.replaceState({}, document.title, window.location.pathname);
+      fetchUserSubscription();
     }
-  }, [fetchLabs]);
+  }, [fetchLabs, fetchUserSubscription]);
 
   // Detección de onboarding para primer ingreso
   useEffect(() => {
@@ -105,9 +126,6 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeView === 'create-lab') {
       setIsCreateLabOpen(true);
-      setActiveView('dashboard');
-    } else if (activeView === 'my-subscription') {
-      setIsPlanSelectionOpen(true);
       setActiveView('dashboard');
     }
   }, [activeView]);
@@ -281,6 +299,20 @@ export default function Dashboard() {
             {activeView === 'qc-controls' || activeView === 'qc-results' || activeView === 'qc-levey-jennings' ? (
               isQCDisabled ? (
                 <ModuleMaintenanceView moduleTitle="Control de Calidad" moduleKeyName="qualityControl" />
+              ) : !isAdmin && userSubscription && !userSubscription.plan.hasQualityControl ? (
+                <FeatureLockPaywall
+                  title="Control de Calidad Clínico y Gráficas Levey-Jennings"
+                  moduleName="Control de Calidad (QC)"
+                  description="Garantiza la exactitud analítica de tus pruebas de laboratorio clínico cumpliendo con la NOM-007-SSA3-2011 y lineamientos COFEPRIS mediante calibración Westgard y seguimiento estadístico de lotes."
+                  benefits={[
+                    'Gráficas automáticas Levey-Jennings por parámetro y nivel de control',
+                    'Detección de violaciones a reglas de Westgard (1-2s, 1-3s, 2-2s, R-4s, etc.)',
+                    'Trazabilidad de calibradores y sueros control por lote y caducidad',
+                    'Reportes de validación analítica descargables para auditorías sanitarias',
+                  ]}
+                  requiredPlan="GROWTH"
+                  onNavigateToSubscription={() => setActiveView('my-subscription')}
+                />
               ) : (
                 <QualityControlView
                   initialSubView={
@@ -313,6 +345,20 @@ export default function Dashboard() {
             ) : activeView === 'analyzers' ? (
               isAnalyzersDisabled ? (
                 <ModuleMaintenanceView moduleTitle="Analizadores Clínicos LIS" moduleKeyName="analyzers" />
+              ) : !isAdmin && userSubscription && !userSubscription.plan.hasAnalyzerLis ? (
+                <FeatureLockPaywall
+                  title="Interfaz LIS para Analizadores Clínicos Automáticos"
+                  moduleName="Interfaz LIS (HL7 / ASTM)"
+                  description="Conecta tus equipos de química clínica, hematología y coagulación directamente al sistema para recibir los resultados automáticamente sin errores de captura manual."
+                  benefits={[
+                    'Conexión directa bidireccional mediante protocolos estándar HL7 y ASTM',
+                    'Recepción automática de resultados a las órdenes de trabajo clínicas',
+                    'Eliminación de errores de transcripción humana en un 99.8%',
+                    'Compatibilidad con analizadores Sysmex, Mindray, Beckman, Roche y más',
+                  ]}
+                  requiredPlan="GROWTH"
+                  onNavigateToSubscription={() => setActiveView('my-subscription')}
+                />
               ) : (
                 <AnalyzerInterfaceView />
               )
@@ -460,6 +506,11 @@ export default function Dashboard() {
                   onNavigate={setActiveView}
                 />
               )
+            ) : activeView === 'my-subscription' ? (
+              <MySubscriptionView
+                labs={labs}
+                onOpenUpgradeModal={() => setIsPlanSelectionOpen(true)}
+              />
             ) : activeView === 'subscriptions-billing' ? (
               isAdmin ? (
                 <SubscriptionsAdminView />
