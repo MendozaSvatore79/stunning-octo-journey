@@ -48,6 +48,8 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
     fetchSubscription();
   }, [fetchSubscription]);
 
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+
   const handleUpgradeWithPolar = async (targetPlan: PlanType) => {
     if (subscription?.plan?.type === targetPlan) return;
 
@@ -56,18 +58,30 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
       setErrorMsg(null);
       setSuccessMsg(null);
 
-      const res = await api.post<{ checkoutUrl: string }>('/subscription/checkout', {
+      const res = await api.post<{
+        checkoutUrl?: string;
+        upgradedDirectly?: boolean;
+        newPlan?: PlanType;
+        message?: string;
+      }>('/subscription/checkout', {
         planType: targetPlan,
         clientOrigin: window.location.origin,
       });
 
+      // Si se actualizó directamente en Polar vía API (Upgrade sin volver a pedir tarjeta)
+      if (res.data?.upgradedDirectly) {
+        setSuccessMsg(res.data.message || `¡Tu suscripción ha sido actualizada exitosamente al ${targetPlan}!`);
+        await fetchSubscription();
+        return;
+      }
+
       if (res.data?.checkoutUrl) {
         setSuccessMsg(`Redirigiendo a la pasarela segura de Polar para el Plan ${targetPlan}...`);
         setTimeout(() => {
-          window.location.href = res.data.checkoutUrl;
+          window.location.href = res.data.checkoutUrl!;
         }, 500);
       } else {
-        setErrorMsg('No se recibió la URL de pago de Polar. Intenta nuevamente.');
+        setErrorMsg('No se recibió la respuesta esperada de Polar. Intenta nuevamente.');
       }
     } catch (err: any) {
       console.error('Error al iniciar checkout con Polar:', err);
@@ -76,6 +90,26 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
       );
     } finally {
       setIsSubmitting(null);
+    }
+  };
+
+  const handleOpenCustomerPortal = async () => {
+    try {
+      setIsLoadingPortal(true);
+      setErrorMsg(null);
+      const res = await api.get<{ portalUrl: string }>('/subscription/customer-portal');
+      if (res.data?.portalUrl) {
+        window.open(res.data.portalUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        setErrorMsg('No se recibió el enlace del portal de Polar.');
+      }
+    } catch (err: any) {
+      console.error('Error al abrir portal de Polar:', err);
+      setErrorMsg(
+        err?.response?.data?.message || 'No fue posible abrir el portal de facturación de Polar.'
+      );
+    } finally {
+      setIsLoadingPortal(false);
     }
   };
 
@@ -206,13 +240,31 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
           </div>
         </div>
 
-        <button
-          onClick={fetchSubscription}
-          className="btn btn-sm btn-outline border-base-300 rounded-xl font-semibold gap-2 self-start sm:self-auto text-xs"
-        >
-          <IconClock className="w-4 h-4" />
-          <span>Actualizar Datos</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={handleOpenCustomerPortal}
+            disabled={isLoadingPortal}
+            className="btn btn-sm btn-outline border-base-300 hover:border-primary hover:text-primary rounded-xl font-semibold gap-2 text-xs"
+            title="Ver facturas oficiales, cambiar método de pago o administrar cuenta en Polar"
+          >
+            {isLoadingPortal ? (
+              <span className="loading loading-spinner loading-xs"></span>
+            ) : (
+              <>
+                <IconCreditCard className="w-4 h-4 text-primary" />
+                <span>Portal Polar (Facturas y Tarjeta)</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={fetchSubscription}
+            className="btn btn-sm btn-outline border-base-300 rounded-xl font-semibold gap-2 text-xs"
+          >
+            <IconClock className="w-4 h-4" />
+            <span>Actualizar Datos</span>
+          </button>
+        </div>
       </div>
 
       {/* Alertas informativas */}
