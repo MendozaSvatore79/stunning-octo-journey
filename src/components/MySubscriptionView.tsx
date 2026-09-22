@@ -741,7 +741,10 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-success shrink-0"></span>
             <span>
-              Procesamiento de pagos 100% seguro con <strong>Polar</strong>. Todos los planes incluyen 14 días de prueba sin cargo.
+              Procesamiento de pagos 100% seguro con <strong>Polar</strong>.{' '}
+              {subscription?.status === 'ACTIVE'
+                ? 'Las actualizaciones de plan son inmediatas con prorrateo directo sin prueba gratuita repetida.'
+                : 'Todos los planes nuevos incluyen 14 días de prueba sin cargo.'}
             </span>
           </div>
           <span className="text-[11px] font-semibold text-base-content/50">

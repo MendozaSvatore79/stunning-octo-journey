@@ -108,7 +108,7 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
       }
 
       if (checkoutRes.data?.checkoutUrl) {
-        setSuccessMsg('Redirigiendo a la pasarela segura de Polar (14 días gratis)...');
+        setSuccessMsg('Redirigiendo a la pasarela segura de Polar...');
         setTimeout(() => {
           window.location.href = checkoutRes.data!.checkoutUrl!;
         }, 600);
@@ -371,7 +371,10 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
               <div className="flex items-center gap-2 text-base-content/75 text-center sm:text-left">
                 <span className="w-2.5 h-2.5 rounded-full bg-success shrink-0"></span>
                 <span>
-                  Pagos seguros procesados con <strong>Polar</strong> (Tarjeta de Débito/Crédito) o transferencia interbancaria (SPEI). Incluye 14 días de prueba gratis.
+                  Pagos seguros procesados con <strong>Polar</strong> (Tarjeta de Débito/Crédito) o transferencia interbancaria (SPEI).{' '}
+                  {subscription?.status === 'ACTIVE'
+                    ? 'Actualizaciones directas con prorrateo inmediato sin prueba de cortesía repetida.'
+                    : 'Incluye periodo de prueba de 14 días para cuentas nuevas.'}
                 </span>
               </div>
               <button
