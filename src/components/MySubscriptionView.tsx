@@ -50,8 +50,34 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
 
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
 
-  const handleUpgradeWithPolar = async (targetPlan: PlanType) => {
+  const PLAN_TIER: Record<PlanType, number> = {
+    BASIC: 1,
+    GROWTH: 2,
+    PRO: 3,
+  };
+
+  const handlePlanChange = async (targetPlan: PlanType, isDowngrade: boolean) => {
     if (subscription?.plan?.type === targetPlan) return;
+
+    if (isDowngrade) {
+      const targetConfig = planCards.find((p) => p.type === targetPlan);
+      const ordersLimitStr =
+        targetConfig && targetConfig.ordersLimit >= 999999
+          ? 'ilimitadas'
+          : `${targetConfig?.ordersLimit} órdenes`;
+      const labsLimitStr =
+        targetConfig && targetConfig.labsLimit >= 999999
+          ? 'ilimitadas'
+          : `${targetConfig?.labsLimit} sedes`;
+
+      const confirmed = window.confirm(
+        `¿Deseas cambiar tu suscripción al plan "${targetConfig?.name || targetPlan}"?\n\n` +
+          `• Límite mensual: ${ordersLimitStr}\n` +
+          `• Sedes clínicas permitidas: ${labsLimitStr}\n\n` +
+          `Polar ajustará automáticamente tu facturación y prorrateo correspondiente.`
+      );
+      if (!confirmed) return;
+    }
 
     try {
       setIsSubmitting(targetPlan);
@@ -68,9 +94,12 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
         clientOrigin: window.location.origin,
       });
 
-      // Si se actualizó directamente en Polar vía API (Upgrade sin volver a pedir tarjeta)
+      // Si se actualizó directamente en Polar vía API (Upgrade o Downgrade sincrónico)
       if (res.data?.upgradedDirectly) {
-        setSuccessMsg(res.data.message || `¡Tu suscripción ha sido actualizada exitosamente al ${targetPlan}!`);
+        setSuccessMsg(
+          res.data.message ||
+            `¡Tu suscripción ha sido cambiada exitosamente al plan ${targetPlan}!`
+        );
         await fetchSubscription();
         return;
       }
@@ -84,7 +113,7 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
         setErrorMsg('No se recibió la respuesta esperada de Polar. Intenta nuevamente.');
       }
     } catch (err: any) {
-      console.error('Error al iniciar checkout con Polar:', err);
+      console.error('Error al cambiar de plan con Polar:', err);
       setErrorMsg(
         err?.response?.data?.message || 'No se pudo conectar con la pasarela de Polar.'
       );
@@ -568,20 +597,24 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
         </div>
       </div>
 
-      {/* Sección de Comparativa y Upgrade con Polar */}
+      {/* Sección de Comparativa y Upgrade/Downgrade con Polar */}
       <div className="space-y-4 pt-2">
         <div className="text-center sm:text-left">
           <h2 className="text-lg sm:text-xl font-black text-base-content tracking-tight">
-            Planes Disponibles y Mejoras de Suscripción (Upgrade)
+            Planes Disponibles y Gestión de Suscripción (Upgrade / Downgrade)
           </h2>
           <p className="text-xs text-base-content/60">
-            Aumenta tu capacidad de órdenes mensuales, suma sedes clínicas y desbloquea analizadores automáticos con Polar.
+            Cambia entre cualquiera de los 3 planes de forma sincronizada con Polar. Ajustes inmediatos de órdenes, sedes y analizadores.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
           {planCards.map((p) => {
             const isCurrent = currentPlanType === p.type;
+            const currentTier = PLAN_TIER[currentPlanType] || 1;
+            const cardTier = PLAN_TIER[p.type] || 1;
+            const isUpgrade = cardTier > currentTier;
+            const isDowngrade = cardTier < currentTier;
             const isSubmittingThis = isSubmitting === p.type;
 
             return (
@@ -660,10 +693,10 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
                     >
                       <IconCheckCircle className="w-4 h-4" /> Plan Actual Activo
                     </button>
-                  ) : (
+                  ) : isUpgrade ? (
                     <button
                       type="button"
-                      onClick={() => handleUpgradeWithPolar(p.type)}
+                      onClick={() => handlePlanChange(p.type, false)}
                       disabled={Boolean(isSubmitting)}
                       className={`btn btn-sm w-full rounded-xl font-bold shadow-xs transition-all gap-2 ${
                         p.highlight
@@ -675,12 +708,28 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
                         <span className="loading loading-spinner loading-xs"></span>
                       ) : (
                         <>
-                          <IconSparkles className="w-4 h-4" />
-                          <span>Mejorar a este Plan con Polar</span>
+                          <IconSparkles className="w-4 h-4 text-amber-300" />
+                          <span>Mejorar a este Plan (Upgrade)</span>
                         </>
                       )}
                     </button>
-                  )}
+                  ) : isDowngrade ? (
+                    <button
+                      type="button"
+                      onClick={() => handlePlanChange(p.type, true)}
+                      disabled={Boolean(isSubmitting)}
+                      className="btn btn-sm w-full rounded-xl font-bold border border-base-300 bg-base-200/80 hover:bg-base-300 text-base-content shadow-xs transition-all gap-2"
+                    >
+                      {isSubmittingThis ? (
+                        <span className="loading loading-spinner loading-xs"></span>
+                      ) : (
+                        <>
+                          <IconClock className="w-4 h-4 text-base-content/60" />
+                          <span>Cambiar a este Plan (Downgrade)</span>
+                        </>
+                      )}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             );

@@ -53,24 +53,68 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
 
   if (!isOpen) return null;
 
+  const PLAN_TIER: Record<PlanType, number> = {
+    BASIC: 1,
+    GROWTH: 2,
+    PRO: 3,
+  };
+
   const handleSelectAndActivate = async (plan: PlanType) => {
+    const currentPlan = subscription?.plan?.type || 'BASIC';
+    if (currentPlan === plan) return;
+
+    const isDowngrade = (PLAN_TIER[plan] || 1) < (PLAN_TIER[currentPlan] || 1);
+    if (isDowngrade) {
+      const planInfo = plans.find((p) => p.type === plan);
+      const confirmed = window.confirm(
+        `¿Deseas cambiar tu suscripción al plan "${planInfo?.name || plan}"?\n\n` +
+          `• Límite de órdenes: ${planInfo?.ordersText}\n` +
+          `• Sedes permitidas: ${planInfo?.labsText}\n\n` +
+          `Polar ajustará automáticamente el prorrateo de tu facturación.`
+      );
+      if (!confirmed) return;
+    }
+
     try {
       setIsSubmitting(true);
+      setSelectedPlan(plan);
       setErrorMsg(null);
 
-      // 1. Intentar generar sesión de Checkout segura en Polar (con 14 días de prueba gratis)
-      const checkoutRes = await api.post<{ checkoutUrl: string }>('/subscription/checkout', {
+      // Intentar checkout o upgrade directo en Polar
+      const checkoutRes = await api.post<{
+        checkoutUrl?: string;
+        upgradedDirectly?: boolean;
+        newPlan?: PlanType;
+        message?: string;
+      }>('/subscription/checkout', {
         planType: plan,
         clientOrigin: window.location.origin,
       });
 
+      // Si se actualizó directamente en Polar vía API (Upgrade o Downgrade sincrónico)
+      if (checkoutRes.data?.upgradedDirectly) {
+        setSuccessMsg(
+          checkoutRes.data.message ||
+            `¡Plan ${plan} activado exitosamente! Tu cuenta ha sido actualizada.`
+        );
+        if (onPlanChanged) {
+          onPlanChanged();
+        }
+        setTimeout(() => {
+          setSuccessMsg(null);
+          onClose();
+        }, 1200);
+        return;
+      }
+
       if (checkoutRes.data?.checkoutUrl) {
         setSuccessMsg('Redirigiendo a la pasarela segura de Polar (14 días gratis)...');
         setTimeout(() => {
-          window.location.href = checkoutRes.data.checkoutUrl;
+          window.location.href = checkoutRes.data!.checkoutUrl!;
         }, 600);
         return;
       }
+
       setSelectedPlan(plan);
       setSuccessMsg(`¡Plan ${plan} activado exitosamente! Tu cuenta ha sido actualizada.`);
 
@@ -204,6 +248,10 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pt-2">
               {plans.map((p) => {
                 const isCurrent = subscription?.plan?.type === p.type;
+                const currentTier = PLAN_TIER[subscription?.plan?.type || 'BASIC'] || 1;
+                const cardTier = PLAN_TIER[p.type] || 1;
+                const isUpgrade = cardTier > currentTier;
+                const isDowngrade = cardTier < currentTier;
                 const isChosen = selectedPlan === p.type;
 
                 return (
@@ -278,12 +326,12 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
                         >
                           <IconCheckCircle className="w-4 h-4" /> Plan Actual Activo
                         </button>
-                      ) : (
+                      ) : isUpgrade ? (
                         <button
                           type="button"
                           onClick={() => handleSelectAndActivate(p.type)}
                           disabled={isSubmitting}
-                          className={`btn btn-sm w-full rounded-xl font-bold shadow-xs transition-all ${
+                          className={`btn btn-sm w-full rounded-xl font-bold shadow-xs transition-all gap-1.5 ${
                             p.highlight
                               ? 'btn-primary text-white'
                               : 'btn-outline border-base-300 hover:bg-primary hover:text-white'
@@ -292,10 +340,26 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
                           {isSubmitting && selectedPlan === p.type ? (
                             <span className="loading loading-spinner loading-xs"></span>
                           ) : (
-                            'Activar este Plan'
+                            <>
+                              <IconSparkles className="w-4 h-4" />
+                              <span>Mejorar a este Plan (Upgrade)</span>
+                            </>
                           )}
                         </button>
-                      )}
+                      ) : isDowngrade ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSelectAndActivate(p.type)}
+                          disabled={isSubmitting}
+                          className="btn btn-sm w-full rounded-xl font-bold border border-base-300 bg-base-200/80 hover:bg-base-300 text-base-content shadow-xs transition-all"
+                        >
+                          {isSubmitting && selectedPlan === p.type ? (
+                            <span className="loading loading-spinner loading-xs"></span>
+                          ) : (
+                            'Cambiar a este Plan (Downgrade)'
+                          )}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 );

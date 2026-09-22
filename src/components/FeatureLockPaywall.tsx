@@ -32,10 +32,19 @@ export const FeatureLockPaywall: React.FC<FeatureLockPaywallProps> = ({
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
-      const res = await api.post<{ checkoutUrl: string }>('/subscription/checkout', {
+      const res = await api.post<{
+        checkoutUrl?: string;
+        upgradedDirectly?: boolean;
+        message?: string;
+      }>('/subscription/checkout', {
         planType: requiredPlan,
         clientOrigin: window.location.origin,
       });
+
+      if (res.data?.upgradedDirectly) {
+        window.location.reload();
+        return;
+      }
 
       if (res.data?.checkoutUrl) {
         window.location.href = res.data.checkoutUrl;
