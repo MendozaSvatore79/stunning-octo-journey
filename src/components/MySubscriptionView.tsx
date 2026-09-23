@@ -279,14 +279,14 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
           <button
             onClick={handleOpenCustomerPortal}
             disabled={isLoadingPortal}
-            className="btn btn-sm btn-outline border-base-300 hover:border-primary hover:text-primary rounded-xl font-semibold gap-2 text-xs"
+            className="btn btn-sm btn-primary rounded-xl font-semibold gap-2 text-xs shadow-xs"
             title="Ver facturas oficiales, cambiar método de pago o administrar cuenta en Polar"
           >
             {isLoadingPortal ? (
               <span className="loading loading-spinner loading-xs"></span>
             ) : (
               <>
-                <IconCreditCard className="w-4 h-4 text-primary" />
+                <IconCreditCard className="w-4 h-4" />
                 <span>Portal Polar (Facturas y Tarjeta)</span>
               </>
             )}
@@ -294,7 +294,7 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
 
           <button
             onClick={fetchSubscription}
-            className="btn btn-sm btn-outline border-base-300 rounded-xl font-semibold gap-2 text-xs"
+            className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl font-semibold gap-2 text-xs text-base-content/80"
           >
             <IconClock className="w-4 h-4" />
             <span>Actualizar Datos</span>
@@ -318,43 +318,46 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
       )}
 
       {/* Resumen del Plan Activo y Cuotas de Consumo */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
         {/* Tarjeta de Plan Actual */}
-        <div className="card bg-gradient-to-br from-base-100 to-base-200/50 border border-base-200 shadow-sm rounded-3xl p-6 flex flex-col justify-between">
+        <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-5 sm:p-6 flex flex-col justify-between hover:border-primary/30 transition-all">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black tracking-wider uppercase text-base-content/50">
+              <span className="text-[11px] font-bold tracking-wider uppercase text-base-content/50">
                 Plan Contratado
               </span>
-              <span className="badge badge-primary badge-outline text-[10px] font-bold">
+              <span className="badge badge-primary badge-outline text-[10px] font-bold px-2 py-0.5">
                 {currentPlanType}
               </span>
             </div>
 
             <div>
-              <h2 className="text-2xl font-black text-base-content">
+              <h2 className="text-xl sm:text-2xl font-black text-base-content tracking-tight">
                 {subscription?.plan?.name || 'Plan Esencial Clínico'}
               </h2>
               <div className="flex items-baseline gap-1 mt-1">
                 <span className="text-3xl font-black text-primary">
                   ${subscription?.plan?.priceMxn || 490}
                 </span>
-                <span className="text-xs font-medium text-base-content/60">MXN / mes</span>
+                <span className="text-xs font-semibold text-base-content/60">MXN / mes</span>
               </div>
             </div>
 
-            <div className="p-3.5 bg-base-100 rounded-2xl border border-base-200 space-y-1.5 text-xs text-base-content/75">
+            <div className="p-3 bg-base-200/50 rounded-xl border border-base-200 space-y-1.5 text-xs text-base-content/75">
               <div className="flex justify-between items-center">
-                <span>Estado de pago:</span>
-                <span className="font-bold text-base-content">{statusLabel}</span>
+                <span className="text-base-content/60">Estado de pago:</span>
+                <span className="font-bold text-base-content flex items-center gap-1.5">
+                  <span className={`w-2 h-2 rounded-full ${subscription?.status === 'ACTIVE' ? 'bg-success' : 'bg-warning'}`}></span>
+                  {statusLabel}
+                </span>
               </div>
               {subscription?.currentPeriodEnd && (
-                <div className="flex justify-between items-center">
-                  <span>Próximo corte:</span>
-                  <span className="font-bold text-base-content">
+                <div className="flex justify-between items-center pt-1 border-t border-base-200/70">
+                  <span className="text-base-content/60">Próximo corte:</span>
+                  <span className="font-semibold text-base-content">
                     {new Date(subscription.currentPeriodEnd).toLocaleDateString('es-MX', {
                       day: 'numeric',
-                      month: 'long',
+                      month: 'short',
                       year: 'numeric',
                     })}
                   </span>
@@ -363,24 +366,34 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-base-200 flex items-center gap-2 text-[11px] text-base-content/60">
-            <IconShieldCheck className="w-4 h-4 text-success shrink-0" />
-            <span>Facturación respaldada por pasarela segura Polar.</span>
+          <div className="mt-4 pt-3 border-t border-base-200/60 flex items-center justify-between text-[11px] text-base-content/60">
+            <span className="flex items-center gap-1.5">
+              <IconShieldCheck className="w-4 h-4 text-success shrink-0" />
+              Facturación Polar
+            </span>
+            <button
+              onClick={handleOpenCustomerPortal}
+              className="text-primary hover:underline font-semibold"
+            >
+              Gestionar &rarr;
+            </button>
           </div>
         </div>
 
         {/* Medidor de Órdenes Mensuales */}
-        <div className="card bg-base-100 border border-base-200 shadow-sm rounded-3xl p-6 flex flex-col justify-between">
+        <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-5 sm:p-6 flex flex-col justify-between hover:border-primary/30 transition-all">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <IconClipboardList className="w-4 h-4 text-primary" />
-                <span className="text-xs font-extrabold uppercase tracking-wider text-base-content/70">
+                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <IconClipboardList className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/70">
                   Órdenes del Mes
                 </span>
               </div>
               <span
-                className={`badge badge-sm font-black text-[10px] ${
+                className={`badge badge-sm font-bold text-[10px] ${
                   usage.isExceededOrders
                     ? 'badge-error text-white'
                     : usage.ordersPercent >= 80
@@ -388,21 +401,21 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
                     : 'badge-ghost text-base-content/70'
                 }`}
               >
-                {usage.ordersPercent}% utilizado
+                {usage.ordersPercent}% usado
               </span>
             </div>
 
             <div className="flex items-baseline justify-between pt-1">
-              <span className="text-3xl font-black text-base-content">
+              <span className="text-2xl sm:text-3xl font-black text-base-content">
                 {usage.ordersCountThisMonth.toLocaleString()}
               </span>
-              <span className="text-xs font-semibold text-base-content/60">
+              <span className="text-xs font-medium text-base-content/60">
                 de {usage.maxOrders >= 999999 ? 'Ilimitadas' : `${usage.maxOrders.toLocaleString()} límite`}
               </span>
             </div>
 
             {/* Barra de progreso */}
-            <div className="w-full bg-base-200 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-base-200 rounded-full h-2.5 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   usage.isExceededOrders
@@ -418,19 +431,19 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
             </div>
 
             {usage.isExceededOrders ? (
-              <p className="text-[11px] text-error font-semibold flex items-center gap-1.5 mt-2">
+              <p className="text-[11px] text-error font-semibold flex items-center gap-1.5 mt-1">
                 <IconAlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Has alcanzado el límite mensual. Haz upgrade para seguir emitiendo órdenes.</span>
+                <span>Tope mensual alcanzado. Haz upgrade para seguir emitiendo órdenes.</span>
               </p>
             ) : (
-              <p className="text-[11px] text-base-content/50 mt-1">
-                El contador se reinicia automáticamente el día 1 de cada mes natural.
+              <p className="text-[11px] text-base-content/50">
+                Se reinicia el 1.° de cada mes natural.
               </p>
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-base-200 text-[11px] text-base-content/60 flex items-center justify-between">
-            <span>Disponibles este mes:</span>
+          <div className="mt-4 pt-3 border-t border-base-200/60 text-[11px] text-base-content/60 flex items-center justify-between">
+            <span>Disponibles:</span>
             <span className="font-bold text-base-content">
               {usage.maxOrders >= 999999
                 ? 'Ilimitadas'
@@ -441,37 +454,39 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
         </div>
 
         {/* Medidor de Sedes Clínicas */}
-        <div className="card bg-base-100 border border-base-200 shadow-sm rounded-3xl p-6 flex flex-col justify-between">
+        <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-5 sm:p-6 flex flex-col justify-between hover:border-primary/30 transition-all">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <IconBuilding className="w-4 h-4 text-secondary" />
-                <span className="text-xs font-extrabold uppercase tracking-wider text-base-content/70">
+                <div className="w-7 h-7 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+                  <IconBuilding className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-base-content/70">
                   Sedes Clínicas
                 </span>
               </div>
               <span
-                className={`badge badge-sm font-black text-[10px] ${
+                className={`badge badge-sm font-bold text-[10px] ${
                   usage.isExceededLabs ? 'badge-error text-white' : 'badge-ghost text-base-content/70'
                 }`}
               >
-                {usage.labsCount} / {usage.maxLabs >= 999999 ? '∞' : usage.maxLabs} sedes
+                {usage.labsCount} / {usage.maxLabs >= 999999 ? '∞' : usage.maxLabs}
               </span>
             </div>
 
             <div className="flex items-baseline justify-between pt-1">
-              <span className="text-3xl font-black text-base-content">
+              <span className="text-2xl sm:text-3xl font-black text-base-content">
                 {usage.labsCount}
               </span>
-              <span className="text-xs font-semibold text-base-content/60">
+              <span className="text-xs font-medium text-base-content/60">
                 {usage.maxLabs >= 999999
                   ? 'Sedes Ilimitadas'
-                  : `de ${usage.maxLabs} sedes permitidas`}
+                  : `de ${usage.maxLabs} permitidas`}
               </span>
             </div>
 
             {/* Barra de progreso de sedes */}
-            <div className="w-full bg-base-200 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-base-200 rounded-full h-2.5 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   usage.isExceededLabs ? 'bg-error' : 'bg-secondary'
@@ -486,19 +501,19 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
             </div>
 
             {usage.isExceededLabs ? (
-              <p className="text-[11px] text-error font-semibold flex items-center gap-1.5 mt-2">
+              <p className="text-[11px] text-error font-semibold flex items-center gap-1.5 mt-1">
                 <IconAlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>Tope de sedes alcanzado. Actualiza a Crecimiento o Pro para dar de alta más.</span>
+                <span>Tope de sedes alcanzado. Actualiza de plan para registrar más sedes.</span>
               </p>
             ) : (
-              <p className="text-[11px] text-base-content/50 mt-1">
-                Cada sede cuenta con su propio expediente sanitario COFEPRIS y folios de órdenes.
+              <p className="text-[11px] text-base-content/50">
+                Cada sede cuenta con folios y logotipo oficial.
               </p>
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-base-200 text-[11px] text-base-content/60 flex items-center justify-between">
-            <span>Sedes disponibles:</span>
+          <div className="mt-4 pt-3 border-t border-base-200/60 text-[11px] text-base-content/60 flex items-center justify-between">
+            <span>Sedes libres:</span>
             <span className="font-bold text-base-content">
               {usage.maxLabs >= 999999 ? 'Ilimitadas' : Math.max(0, usage.maxLabs - usage.labsCount)} sucursales
             </span>
@@ -506,82 +521,68 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
         </div>
       </div>
 
-      {/* Matriz de Funciones del Plan Actual */}
-      <div className="card bg-base-100 border border-base-200 shadow-sm rounded-3xl p-5 sm:p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      {/* Resumen Compacto y Elegante de Capacidades de la Suite Clínica */}
+      <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-success/10 text-success flex items-center justify-center shrink-0 border border-success/20">
+            <IconSparkles className="w-5 h-5" />
+          </div>
           <div>
-            <h3 className="text-sm sm:text-base font-extrabold text-base-content flex items-center gap-2">
-              <IconSparkles className="w-4 h-4 text-primary" /> Módulos y Capacidades del Sistema en tu Plan
-            </h3>
-            <p className="text-xs text-base-content/60">
-              Todos los módulos clínicos están incluidos en tu cuenta. Sus capacidades se ajustan al volumen de tu plan ({planCards.find(p => p.type === currentPlanType)?.name || currentPlanType}).
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm text-base-content">
+                Suite Clínica Completa Habilitada
+              </h3>
+              <span className="badge badge-success badge-xs text-white font-bold py-1 px-2">
+                Todos los Módulos Activos
+              </span>
+            </div>
+            <p className="text-xs text-base-content/60 mt-0.5">
+              Tus capacidades operativas están dimensionadas al volumen de tu plan ({planCards.find((p) => p.type === currentPlanType)?.name || currentPlanType}).
             </p>
           </div>
-          <span className="badge badge-success badge-sm text-white font-bold self-start sm:self-auto py-2.5 px-3">
-            Suite Completa Habilitada
-          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-          {/* Control de Calidad */}
-          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
-            <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block">Control de Calidad (QC)</span>
-              <span className="text-[11px] text-base-content/70">
-                {currentPlanType === 'PRO'
-                  ? 'Nivel Corporativo: Multi-nivel, trazabilidad y auditorías COFEPRIS'
-                  : currentPlanType === 'GROWTH'
-                  ? 'Nivel Avanzado: Levey-Jennings, reglas Westgard y alertas automáticas'
-                  : 'Nivel Esencial: Gráficas Levey-Jennings y calibradores por parámetro'}
-              </span>
-            </div>
-          </div>
+        {/* Chips de capacidades esenciales */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge badge-ghost border-base-300 gap-1.5 py-2.5 px-3 text-xs font-medium">
+            <IconCheckCircle className="w-3.5 h-3.5 text-success" />
+            <span>
+              QC:{' '}
+              <strong className="text-base-content font-bold">
+                {currentPlanType === 'PRO' ? 'Corporativo' : currentPlanType === 'GROWTH' ? 'Avanzado' : 'Esencial'}
+              </strong>
+            </span>
+          </span>
 
-          {/* Interfaz LIS */}
-          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
-            <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block">Interfaz LIS Analizadores</span>
-              <span className="text-[11px] text-base-content/70">
-                {currentPlanType === 'PRO'
-                  ? 'LIS Hospitalario: Analizadores en paralelo sin límite (HL7/ASTM)'
-                  : currentPlanType === 'GROWTH'
-                  ? 'Multi-Analizador: Hasta 4 analizadores clínicos simultáneos'
-                  : 'LIS Esencial: Conectividad para 1 analizador automatizado (HL7/ASTM)'}
-              </span>
-            </div>
-          </div>
+          <span className="badge badge-ghost border-base-300 gap-1.5 py-2.5 px-3 text-xs font-medium">
+            <IconCheckCircle className="w-3.5 h-3.5 text-success" />
+            <span>
+              LIS:{' '}
+              <strong className="text-base-content font-bold">
+                {currentPlanType === 'PRO' ? 'Ilimitado' : currentPlanType === 'GROWTH' ? 'Hasta 4 analizadores' : '1 analizador'}
+              </strong>
+            </span>
+          </span>
 
-          {/* Membretes Personalizados */}
-          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
-            <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block">Membretes y Reportes</span>
-              <span className="text-[11px] text-base-content/70">
-                {currentPlanType === 'PRO'
-                  ? 'Diseño Corporativo: Formatos a medida, marcas de agua y branding hospitalario'
-                  : currentPlanType === 'GROWTH'
-                  ? 'Avanzado Multisede: Logos oficiales, membretes y firmas digitales por sede'
-                  : 'Membrete Estándar: Logo del laboratorio, aviso sanitario y firmas oficiales'}
-              </span>
-            </div>
-          </div>
+          <span className="badge badge-ghost border-base-300 gap-1.5 py-2.5 px-3 text-xs font-medium">
+            <IconCheckCircle className="w-3.5 h-3.5 text-success" />
+            <span>
+              Formatos:{' '}
+              <strong className="text-base-content font-bold">
+                {currentPlanType === 'PRO' ? 'Branding Total' : currentPlanType === 'GROWTH' ? 'Multisede' : 'Estándar'}
+              </strong>
+            </span>
+          </span>
 
-          {/* Convenios Multisede */}
-          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
-            <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block">Convenios y Descuentos</span>
-              <span className="text-[11px] text-base-content/70">
-                {currentPlanType === 'PRO'
-                  ? 'Red Corporativa: Convenios ilimitados, aseguradoras y empresas en red'
-                  : currentPlanType === 'GROWTH'
-                  ? 'Gestión Multisede: Convenios empresariales con asignación por sucursal'
-                  : 'Convenios Locales: Descuentos y listas de precios para tus sedes autorizadas'}
-              </span>
-            </div>
-          </div>
+          <span className="badge badge-ghost border-base-300 gap-1.5 py-2.5 px-3 text-xs font-medium">
+            <IconCheckCircle className="w-3.5 h-3.5 text-success" />
+            <span>
+              Convenios:{' '}
+              <strong className="text-base-content font-bold">
+                {currentPlanType === 'PRO' ? 'Red Corporativa' : currentPlanType === 'GROWTH' ? 'Empresariales' : 'Locales'}
+              </strong>
+            </span>
+          </span>
         </div>
       </div>
 
