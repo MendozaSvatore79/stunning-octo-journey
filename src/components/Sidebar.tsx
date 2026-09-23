@@ -381,7 +381,7 @@ export default function Sidebar({
                         <span className="badge badge-warning badge-xs font-bold text-[9px]">SAAS</span>
                       </button>
                     </li>
-                    <li>
+                    <li className="block lg:hidden">
                       <button
                         onClick={() => handleNav('support')}
                         className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'support' ? 'active font-bold' : 'hover:bg-base-200'}`}

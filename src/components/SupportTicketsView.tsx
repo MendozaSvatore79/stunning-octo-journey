@@ -70,8 +70,10 @@ export default function SupportTicketsView() {
   }, [api]);
 
   useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+    if (isAdmin) {
+      fetchTickets();
+    }
+  }, [isAdmin, fetchTickets]);
 
   // Filtrado de tickets
   const filteredTickets = useMemo(() => {

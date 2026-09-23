@@ -267,8 +267,16 @@ export default function SupportChatView() {
   }, [api]);
 
   useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+    if (isAdmin) {
+      fetchTickets();
+    }
+  }, [isAdmin, fetchTickets]);
+
+  useEffect(() => {
+    if (!isAdmin && activeTab === 'tickets') {
+      setActiveTab('chat');
+    }
+  }, [isAdmin, activeTab]);
 
   // 2. Conexión Stream Chat (si hay keys disponibles)
   useEffect(() => {
@@ -504,32 +512,34 @@ export default function SupportChatView() {
           </div>
         </div>
 
-        {/* Pestañas Principales en DaisyUI */}
-        <div className="tabs tabs-boxed bg-base-200 p-1.5 rounded-xl shrink-0 self-start md:self-auto flex items-center gap-1">
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 inline-flex items-center ${
-              activeTab === 'chat' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70 hover:text-base-content'
-            }`}
-          >
-            <IconMessageSquare className="w-4 h-4" />
-            <span>Chat en Vivo</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('tickets')}
-            className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 inline-flex items-center ${
-              activeTab === 'tickets' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70 hover:text-base-content'
-            }`}
-          >
-            <IconTicket className="w-4 h-4" />
-            <span>Tickets & Mesa de Ayuda</span>
-            {countOpen > 0 && (
-              <span className="badge badge-xs badge-error text-white font-black px-1.5 py-0.5 ml-1">
-                {countOpen}
-              </span>
-            )}
-          </button>
-        </div>
+        {/* Pestañas Principales en DaisyUI (Solo Administradores tienen acceso a la Mesa de Ayuda de resolución de tickets) */}
+        {isAdmin && (
+          <div className="tabs tabs-boxed bg-base-200 p-1.5 rounded-xl shrink-0 self-start md:self-auto flex items-center gap-1">
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 inline-flex items-center ${
+                activeTab === 'chat' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70 hover:text-base-content'
+              }`}
+            >
+              <IconMessageSquare className="w-4 h-4" />
+              <span>Chat en Vivo</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('tickets')}
+              className={`tab font-bold text-xs sm:text-sm gap-2 transition-all rounded-lg px-4 py-2 inline-flex items-center ${
+                activeTab === 'tickets' ? 'tab-active bg-primary text-primary-content shadow-xs' : 'text-base-content/70 hover:text-base-content'
+              }`}
+            >
+              <IconTicket className="w-4 h-4" />
+              <span>Tickets & Mesa de Ayuda</span>
+              {countOpen > 0 && (
+                <span className="badge badge-xs badge-error text-white font-black px-1.5 py-0.5 ml-1">
+                  {countOpen}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -650,9 +660,9 @@ export default function SupportChatView() {
       )}
 
       {/* ========================================================================= */}
-      {/* VISTA 2: MESA DE AYUDA Y TICKETS ASISTIDOS POR IA */}
+      {/* VISTA 2: MESA DE AYUDA Y TICKETS ASISTIDOS POR IA (SOLO ADMIN)            */}
       {/* ========================================================================= */}
-      {activeTab === 'tickets' && (
+      {isAdmin && activeTab === 'tickets' && (
         <div className="space-y-4">
           {/* Métricas y Barra de Filtros */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
