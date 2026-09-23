@@ -12,7 +12,6 @@ import {
   IconCreditCard,
   IconClock,
   IconShieldCheck,
-  IconLock,
 } from './icons';
 
 interface MySubscriptionViewProps {
@@ -154,10 +153,13 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
       labsLimit: 3,
       features: [
         'Hasta 400 órdenes de trabajo al mes',
-        'Hasta 3 sedes o sucursales clínicas',
-        'Expediente completo de pacientes y resultados',
-        'Impresión de reportes oficiales y etiquetas térmicas',
-        'Catálogo de análisis clínicos y reactivos',
+        'Hasta 3 sedes clínicas autorizadas',
+        'Control de Calidad esencial (Levey-Jennings y calibradores)',
+        'Interfaz LIS para 1 analizador automático (HL7 / ASTM)',
+        'Membrete clínico estándar con logo y datos sanitarios',
+        'Convenios y listas de precios locales por sede',
+        'Expediente completo de pacientes y resultados oficiales',
+        'Catálogo de análisis clínicos y control de reactivos base',
         'Asistente y Bot clínico Synova 24/7',
       ],
       highlight: false,
@@ -174,11 +176,13 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
       features: [
         'Hasta 1,500 órdenes de trabajo al mes',
         'De 4 a 7 sedes clínicas autorizadas',
-        'Control de Calidad (Levey-Jennings y Westgard)',
-        'Interfaz LIS para analizadores (HL7/ASTM)',
-        'Personalización de membretes y logos oficiales',
-        'Gestión de convenios y descuentos multisede',
-        'Soporte técnico prioritario',
+        'Control de Calidad avanzado (Levey-Jennings y reglas Westgard)',
+        'Conexión LIS multi-analizador (hasta 4 equipos en simultáneo)',
+        'Membretes oficiales multisede avanzados y firmas digitales',
+        'Gestión de convenios empresariales multisede compartidos',
+        'Descuento automático de reactivos por corrida y caducidades',
+        'Expediente clínico multisede y reportes acumulativos',
+        'Soporte técnico prioritario y asistencia en integración LIS',
       ],
       highlight: true,
     },
@@ -192,13 +196,15 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
       ordersLimit: 999999,
       labsLimit: 999999,
       features: [
-        'Órdenes de trabajo ILIMITADAS',
-        'Sedes y sucursales ILIMITADAS (8+ sedes)',
-        'Conexión LIS multi-analizador en paralelo sin límite',
-        'Control de calidad avanzado multi-nivel y auditorías',
-        'Personalización completa de formatos clínicos corporativos',
-        'Convenios y listas de precios corporativas ilimitadas',
-        'Atención VIP y soporte 24/7 dedicado',
+        'Órdenes de trabajo ILIMITADAS (sin tope de volumen mensual)',
+        'Sedes y sucursales ILIMITADAS (8+ sedes en red)',
+        'Conexión LIS multi-analizador en paralelo sin límite de equipos',
+        'Control de calidad multi-nivel y auditorías sanitarias COFEPRIS',
+        'Personalización corporativa total de membretes y formatos clínicos',
+        'Convenios corporativos, aseguradoras y listas de precios ilimitadas',
+        'Trazabilidad analítica completa, lotes maestros y consumo predictivo',
+        'Expediente institucional de alto flujo y entrega masiva',
+        'Atención VIP y soporte 24/7 dedicado con asesor directo',
       ],
       highlight: false,
     },
@@ -502,95 +508,77 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
 
       {/* Matriz de Funciones del Plan Actual */}
       <div className="card bg-base-100 border border-base-200 shadow-sm rounded-3xl p-5 sm:p-6 space-y-4">
-        <h3 className="text-sm sm:text-base font-extrabold text-base-content flex items-center gap-2">
-          <IconSparkles className="w-4 h-4 text-primary" /> Módulos y Capacidades de tu Plan Actual
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h3 className="text-sm sm:text-base font-extrabold text-base-content flex items-center gap-2">
+              <IconSparkles className="w-4 h-4 text-primary" /> Módulos y Capacidades del Sistema en tu Plan
+            </h3>
+            <p className="text-xs text-base-content/60">
+              Todos los módulos clínicos están incluidos en tu cuenta. Sus capacidades se ajustan al volumen de tu plan ({planCards.find(p => p.type === currentPlanType)?.name || currentPlanType}).
+            </p>
+          </div>
+          <span className="badge badge-success badge-sm text-white font-bold self-start sm:self-auto py-2.5 px-3">
+            Suite Completa Habilitada
+          </span>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
           {/* Control de Calidad */}
-          <div
-            className={`p-3.5 rounded-2xl border flex items-start gap-2.5 ${
-              subscription?.plan?.hasQualityControl
-                ? 'bg-success/5 border-success/20 text-base-content'
-                : 'bg-base-200/50 border-base-200 text-base-content/50'
-            }`}
-          >
-            {subscription?.plan?.hasQualityControl ? (
-              <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            ) : (
-              <IconLock className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-            )}
+          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
+            <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <div>
               <span className="font-bold block">Control de Calidad (QC)</span>
-              <span className="text-[11px]">
-                {subscription?.plan?.hasQualityControl
-                  ? 'Levey-Jennings y reglas Westgard activo'
-                  : 'Requiere Plan Crecimiento o Pro'}
+              <span className="text-[11px] text-base-content/70">
+                {currentPlanType === 'PRO'
+                  ? 'Nivel Corporativo: Multi-nivel, trazabilidad y auditorías COFEPRIS'
+                  : currentPlanType === 'GROWTH'
+                  ? 'Nivel Avanzado: Levey-Jennings, reglas Westgard y alertas automáticas'
+                  : 'Nivel Esencial: Gráficas Levey-Jennings y calibradores por parámetro'}
               </span>
             </div>
           </div>
 
           {/* Interfaz LIS */}
-          <div
-            className={`p-3.5 rounded-2xl border flex items-start gap-2.5 ${
-              subscription?.plan?.hasAnalyzerLis
-                ? 'bg-success/5 border-success/20 text-base-content'
-                : 'bg-base-200/50 border-base-200 text-base-content/50'
-            }`}
-          >
-            {subscription?.plan?.hasAnalyzerLis ? (
-              <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            ) : (
-              <IconLock className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-            )}
+          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
+            <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <div>
               <span className="font-bold block">Interfaz LIS Analizadores</span>
-              <span className="text-[11px]">
-                {subscription?.plan?.hasAnalyzerLis
-                  ? 'Conexión HL7/ASTM automatizada'
-                  : 'Requiere Plan Crecimiento o Pro'}
+              <span className="text-[11px] text-base-content/70">
+                {currentPlanType === 'PRO'
+                  ? 'LIS Hospitalario: Analizadores en paralelo sin límite (HL7/ASTM)'
+                  : currentPlanType === 'GROWTH'
+                  ? 'Multi-Analizador: Hasta 4 analizadores clínicos simultáneos'
+                  : 'LIS Esencial: Conectividad para 1 analizador automatizado (HL7/ASTM)'}
               </span>
             </div>
           </div>
 
           {/* Membretes Personalizados */}
-          <div
-            className={`p-3.5 rounded-2xl border flex items-start gap-2.5 ${
-              subscription?.plan?.hasCustomReportTemplates
-                ? 'bg-success/5 border-success/20 text-base-content'
-                : 'bg-base-200/50 border-base-200 text-base-content/50'
-            }`}
-          >
-            {subscription?.plan?.hasCustomReportTemplates ? (
-              <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            ) : (
-              <IconLock className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-            )}
+          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
+            <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block">Membretes Oficiales</span>
-              <span className="text-[11px]">
-                {subscription?.plan?.hasCustomReportTemplates
-                  ? 'Diseño y logos corporativos habilitado'
-                  : 'Membrete estándar predeterminado'}
+              <span className="font-bold block">Membretes y Reportes</span>
+              <span className="text-[11px] text-base-content/70">
+                {currentPlanType === 'PRO'
+                  ? 'Diseño Corporativo: Formatos a medida, marcas de agua y branding hospitalario'
+                  : currentPlanType === 'GROWTH'
+                  ? 'Avanzado Multisede: Logos oficiales, membretes y firmas digitales por sede'
+                  : 'Membrete Estándar: Logo del laboratorio, aviso sanitario y firmas oficiales'}
               </span>
             </div>
           </div>
 
           {/* Convenios Multisede */}
-          <div
-            className={`p-3.5 rounded-2xl border flex items-start gap-2.5 ${
-              subscription?.plan?.hasAdvancedAgreements
-                ? 'bg-success/5 border-success/20 text-base-content'
-                : 'bg-base-200/50 border-base-200 text-base-content'
-            }`}
-          >
+          <div className="p-3.5 rounded-2xl border bg-success/5 border-success/20 text-base-content flex items-start gap-2.5">
             <IconCheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <div>
               <span className="font-bold block">Convenios y Descuentos</span>
-              <span className="text-[11px]">
-                {subscription?.plan?.hasAdvancedAgreements
-                  ? 'Convenios ilimitados multisede'
-                  : 'Convenios locales habilitados'}
+              <span className="text-[11px] text-base-content/70">
+                {currentPlanType === 'PRO'
+                  ? 'Red Corporativa: Convenios ilimitados, aseguradoras y empresas en red'
+                  : currentPlanType === 'GROWTH'
+                  ? 'Gestión Multisede: Convenios empresariales con asignación por sucursal'
+                  : 'Convenios Locales: Descuentos y listas de precios para tus sedes autorizadas'}
               </span>
             </div>
           </div>

@@ -174,8 +174,9 @@ export default function OnboardingModal({
                     </div>
                     <ul className="text-[11px] space-y-1 text-base-content/70 pt-1">
                       <li>• Hasta <strong>400 órdenes / mes</strong></li>
-                      <li>• Hasta <strong>3 sedes</strong></li>
-                      <li>• Notificaciones ilimitadas</li>
+                      <li>• Hasta <strong>3 sedes clínicas</strong></li>
+                      <li>• LIS básico (1 equipo) & QC esencial</li>
+                      <li>• Membrete y convenios locales</li>
                     </ul>
                   </div>
                   <div className="mt-3 text-right">
@@ -207,8 +208,9 @@ export default function OnboardingModal({
                     </div>
                     <ul className="text-[11px] space-y-1 text-base-content/70 pt-1">
                       <li>• Hasta <strong>1,500 órdenes / mes</strong></li>
-                      <li>• De <strong>4 a 7 sedes</strong></li>
-                      <li>• Interfaz Analizadores LIS</li>
+                      <li>• De <strong>4 a 7 sedes clínicas</strong></li>
+                      <li>• Multi-LIS (4 equipos) & QC Westgard</li>
+                      <li>• Membretes multisede & convenios</li>
                     </ul>
                   </div>
                   <div className="mt-3 text-right">
@@ -241,7 +243,8 @@ export default function OnboardingModal({
                     <ul className="text-[11px] space-y-1 text-base-content/70 pt-1">
                       <li>• <strong>Órdenes Ilimitadas</strong></li>
                       <li>• <strong>Sedes Ilimitadas (8+)</strong></li>
-                      <li>• Soporte VIP 24/7</li>
+                      <li>• Multi-LIS ilimitado en paralelo</li>
+                      <li>• QC multi-nivel & soporte VIP 24/7</li>
                     </ul>
                   </div>
                   <div className="mt-3 text-right">
