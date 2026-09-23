@@ -91,8 +91,9 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       ? window.location.origin.replace('https://', 'http://')
       : window.location.origin;
     const reportUrl = `${origin}/results/${ord.id}`;
+    const surveyUrl = `${origin}/survey/${ord.id}`;
     const labName = (ord.laboratory?.name || 'Laboratorio Clínico').toUpperCase();
-    const text = `🏥 *${labName}*\n\nEstimado(a) *${ord.patient?.firstName || 'Paciente'} ${ord.patient?.lastName || ''}*:\nLe informamos que los resultados de sus análisis clínicos correspondientes a la Orden *#${folioNumber}* han sido debidamente procesados y avalados.\n\n📄 Puede consultar o descargar su informe oficial aquí:\n${reportUrl}\n\nAgradecemos su confianza en nuestro servicio.`;
+    const text = `🏥 *${labName}*\n\nEstimado(a) *${ord.patient?.firstName || 'Paciente'} ${ord.patient?.lastName || ''}*:\nLe informamos que los resultados de sus análisis clínicos correspondientes a la Orden *#${folioNumber}* han sido debidamente procesados y avalados.\n\n📄 Puede consultar o descargar su informe oficial aquí:\n${reportUrl}\n\n⭐ *¿Cómo fue su experiencia con nosotros?*\nCalifíquenos en 30 segundos aquí:\n👉 ${surveyUrl}\n\nAgradecemos su confianza en nuestro servicio.`;
     return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
   };
 

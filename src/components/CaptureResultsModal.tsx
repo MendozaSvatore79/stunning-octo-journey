@@ -166,10 +166,11 @@ export default function CaptureResultsModal({
   const rawDigits = patientPhone.replace(/[^\d]/g, '');
   const cleanPhone = rawDigits.length === 10 ? `52${rawDigits}` : rawDigits;
 
+  const surveyUrl = `${window.location.origin}/survey/${order.id}`;
   const labName = (order.laboratory?.name || 'LABORATORIO CLÍNICO CENTRAL').toUpperCase();
   const whatsappMsg = panicAlerts.length > 0
-    ? `🚨 *AVISO DE VALOR CRÍTICO - ${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*:\nSe han emitido tus resultados del *Folio #${folioNumber}* con parámetros de atención prioritaria:\n${panicAlerts.map(p => `• *${p.paramName}*: ${p.value} ${p.units} (${p.panicThresholdDescription})`).join('\n')}\n\n📄 Consulta tu informe médico validado aquí:\n${verificationUrl}\n\n_Por favor ponte en contacto con tu médico tratante a la brevedad._`
-    : `🏥 *${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*,\n\nTus resultados del *Folio #${folioNumber}* ya han sido validados clínicamente.\n\n📄 Consulta o descarga tu reporte en PDF de forma pública aquí:\n${verificationUrl}\n\n_Atentamente: Q.F.B. Juan Carlos Mendoza_`;
+    ? `🚨 *AVISO DE VALOR CRÍTICO - ${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*:\nSe han emitido tus resultados del *Folio #${folioNumber}* con parámetros de atención prioritaria:\n${panicAlerts.map(p => `• *${p.paramName}*: ${p.value} ${p.units} (${p.panicThresholdDescription})`).join('\n')}\n\n📄 Consulta tu informe médico validado aquí:\n${verificationUrl}\n\n⭐ Tu opinión es importante. Califícanos aquí:\n👉 ${surveyUrl}\n\n_Por favor ponte en contacto con tu médico tratante a la brevedad._`
+    : `🏥 *${labName}*\n\nHola *${patient?.firstName || 'Paciente'} ${patient?.lastName || ''}*,\n\nTus resultados del *Folio #${folioNumber}* ya han sido validados clínicamente.\n\n📄 Consulta o descarga tu reporte en PDF aquí:\n${verificationUrl}\n\n⭐ *¿Cómo fue tu experiencia hoy?*\nTu opinión nos ayuda a brindarte la mejor atención. Califícanos en 30 segundos aquí:\n👉 ${surveyUrl}\n\n_Atentamente: Q.F.B. Juan Carlos Mendoza_`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(whatsappMsg)}`;
   const mailtoUrl = `mailto:${patientEmail}?subject=Resultados%20de%20Laboratorio%20-%20Folio%20%23${folioNumber}&body=${encodeURIComponent(whatsappMsg)}`;

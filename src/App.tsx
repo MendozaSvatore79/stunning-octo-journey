@@ -6,6 +6,7 @@ import { SignedIn, SignedOut, useClerk, useAuth } from '@clerk/clerk-react';
 import Home from './pages/Home.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import PublicReportView from './components/PublicReportView.tsx';
+import SatisfactionSurveyView from './pages/SatisfactionSurveyView.tsx';
 import { UserProvider } from './context/UserContext.tsx';
 import { MaintenanceProvider, useMaintenance } from './context/MaintenanceContext.tsx';
 import { LabBrandingProvider } from './context/LabBrandingContext.tsx';
@@ -106,10 +107,12 @@ function AppContent() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        {/* Rutas Públicas de Consulta de PDF Sin Necesidad de Iniciar Sesión */}
+        {/* Rutas Públicas de Consulta de PDF y Encuesta de Satisfacción Sin Necesidad de Iniciar Sesión */}
         <Route path="/results/:orderId" element={<PublicReportView />} />
         <Route path="/results" element={<PublicReportView />} />
         <Route path="/verify" element={<PublicReportView />} />
+        <Route path="/survey/:orderId" element={<SatisfactionSurveyView />} />
+        <Route path="/survey" element={<SatisfactionSurveyView />} />
 
         <Route
           path="/dashboard"
