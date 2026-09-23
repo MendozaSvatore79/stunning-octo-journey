@@ -330,11 +330,11 @@ export default function Dashboard() {
               ) : (
                 <SupportChatView />
               )
-            ) : activeView === 'analysis-catalog' ? (
+            ) : activeView === 'analysis-catalog' || activeView === 'add-analysis' ? (
               isCatalogDisabled ? (
                 <ModuleMaintenanceView moduleTitle="Catálogo de Servicios" moduleKeyName="catalog" />
               ) : (
-                <AnalysisCatalogView />
+                <AnalysisCatalogView initialOpenCreate={activeView === 'add-analysis'} />
               )
             ) : activeView === 'reagents' ? (
               isReagentsDisabled ? (

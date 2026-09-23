@@ -31,6 +31,7 @@ export type DashboardViewType =
   | 'labs'
   | 'create-lab'
   | 'analysis-catalog'
+  | 'add-analysis'
   | 'add-user'
   | 'patients'
   | 'add-patient'
@@ -80,7 +81,7 @@ export default function Sidebar({
     );
   }
 
-  const isOperationalUser = !isAdmin && ['TECH', 'LAB_TECHNICIAN', 'RECEPTIONIST'].includes(role || '');
+  const isOperationalUser = !isAdmin && ['TECH', 'LAB_TECHNICIAN', 'LAB_ADMIN', 'RECEPTIONIST'].includes(role || '');
 
   const handleNav = (view: DashboardViewType) => {
     if (onSelectView) {
@@ -96,6 +97,7 @@ export default function Sidebar({
   const isPatientsActive = ['patients', 'add-patient', 'patient-history'].includes(activeView);
   const isOrdersActive = ['create-order', 'pending-orders', 'completed-orders'].includes(activeView);
   const isQCActive = ['qc-controls', 'qc-results', 'qc-levey-jennings'].includes(activeView);
+  const isCatalogActive = ['analysis-catalog', 'add-analysis'].includes(activeView);
 
   return (
     <div className="drawer lg:drawer-open">
@@ -304,6 +306,39 @@ export default function Sidebar({
                   </button>
                 </li>
 
+                {/* SUBMENÚ: CATÁLOGO DE SERVICIOS */}
+                <li>
+                  <details open={isCatalogActive}>
+                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isCatalogActive ? 'bg-base-200 font-bold' : ''}`}>
+                      <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                        <IconFlask className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">Catálogo de Servicios</span>
+                    </summary>
+                    <ul className="mt-1 space-y-0.5">
+                      <li>
+                        <button
+                          onClick={() => handleNav('analysis-catalog')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'analysis-catalog' ? 'active font-bold' : ''}`}
+                        >
+                          <IconFlask className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Lista de Estudios</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('add-analysis')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-analysis' ? 'active font-bold' : ''}`}
+                        >
+                          <IconPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Dar de Alta Estudio</span>
+                          <span className="badge badge-primary badge-xs font-bold text-[8px]">NUEVO</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </details>
+                </li>
+
                 {/* Gestión de Sede para Encargado del Laboratorio */}
                 {(role === 'LAB_TECHNICIAN' || role === 'LAB_ADMIN') && (
                   <>
@@ -436,16 +471,35 @@ export default function Sidebar({
                 </li>
 
                 <li>
-                  <button
-                    onClick={() => handleNav('analysis-catalog')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'analysis-catalog' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Catálogo unificado de estudios clínicos"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
-                      <IconMicroscope className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Catálogo de Servicios</span>
-                  </button>
+                  <details open={isCatalogActive}>
+                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isCatalogActive ? 'bg-base-200 font-bold' : ''}`}>
+                      <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
+                        <IconMicroscope className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">Catálogo de Servicios</span>
+                    </summary>
+                    <ul className="mt-1 space-y-0.5">
+                      <li>
+                        <button
+                          onClick={() => handleNav('analysis-catalog')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'analysis-catalog' ? 'active font-bold' : ''}`}
+                        >
+                          <IconFlask className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Lista de Estudios</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('add-analysis')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-analysis' ? 'active font-bold' : ''}`}
+                        >
+                          <IconPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                          <span className="truncate">Dar de Alta Estudio</span>
+                          <span className="badge badge-primary badge-xs font-bold text-[8px]">NUEVO</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </details>
                 </li>
 
                 <li>

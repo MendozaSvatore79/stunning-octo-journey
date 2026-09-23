@@ -15,9 +15,10 @@ import {
 
 interface AnalysisCatalogViewProps {
   onStudyCreatedOrUpdated?: () => void;
+  initialOpenCreate?: boolean;
 }
 
-export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: AnalysisCatalogViewProps) {
+export default function AnalysisCatalogView({ onStudyCreatedOrUpdated, initialOpenCreate }: AnalysisCatalogViewProps) {
   const api = useApi();
   const [studies, setStudies] = useState<ClinicalAnalysis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +69,7 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
   }, [studies, searchTerm]);
 
   // Abrir modal en modo creación
-  const handleOpenCreate = () => {
+  const handleOpenCreate = useCallback(() => {
     setEditingStudy(null);
     setFormData({
       name: '',
@@ -79,7 +80,13 @@ export default function AnalysisCatalogView({ onStudyCreatedOrUpdated }: Analysi
     setErrorMsg(null);
     setSuccessMsg(null);
     setIsModalOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (initialOpenCreate) {
+      handleOpenCreate();
+    }
+  }, [initialOpenCreate, handleOpenCreate]);
 
   // Abrir modal en modo edición
   const handleOpenEdit = (study: ClinicalAnalysis) => {

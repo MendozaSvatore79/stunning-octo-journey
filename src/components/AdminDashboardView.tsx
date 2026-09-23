@@ -301,6 +301,12 @@ export default function AdminDashboardView({
               </div>
               <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
                 <button
+                  onClick={() => onNavigate?.('add-analysis')}
+                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs shadow-xs"
+                >
+                  <IconPlus className="w-4 h-4" /> Dar de Alta Estudio
+                </button>
+                <button
                   onClick={() => onNavigate?.('analysis-catalog')}
                   className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 text-base-content/80 rounded-xl gap-2 font-semibold justify-start text-xs"
                 >

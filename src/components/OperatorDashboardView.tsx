@@ -20,7 +20,7 @@ import {
   IconHeadphones,
   IconArrowRight,
   IconMapPin,
-  IconFileText,
+  IconMicroscope,
 } from './icons';
 
 interface OperatorDashboardViewProps {
@@ -88,6 +88,15 @@ export default function OperatorDashboardView({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => onNavigate?.('analysis-catalog')}
+              className="btn btn-outline btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
+              title="Catálogo de servicios y estudios clínicos"
+            >
+              <IconMicroscope className="w-4 h-4" />
+              Catálogo de Servicios
+            </button>
+
             <button
               onClick={onOpenCreateLab}
               className="btn btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
@@ -298,30 +307,36 @@ export default function OperatorDashboardView({
               </div>
             </div>
 
-            {/* Card: Catálogo de Estudios */}
+            {/* Card: Catálogo de Servicios y Estudios */}
             <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                    <IconFileText className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+                    <IconMicroscope className="w-4 h-4" />
                   </div>
                   <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
-                    Referencia
+                    Servicios
                   </span>
                 </div>
                 <h3 className="font-bold text-base text-base-content mb-1">
-                  Catálogo de Estudios
+                  Catálogo de Servicios
                 </h3>
                 <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                  Consulta de valores de referencia, metodologías analíticas y pruebas disponibles.
+                  Alta de nuevos estudios clínicos, tarifas de precios, valores de referencia y metodologías analíticas.
                 </p>
               </div>
               <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
                 <button
+                  onClick={() => onNavigate?.('add-analysis')}
+                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs shadow-xs"
+                >
+                  <IconPlus className="w-4 h-4" /> Dar de Alta Estudio / Servicio
+                </button>
+                <button
                   onClick={() => onNavigate?.('analysis-catalog')}
                   className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 text-base-content/80 rounded-xl gap-2 font-semibold justify-start text-xs"
                 >
-                  <IconArrowRight className="w-4 h-4 text-primary" /> Consultar Catálogo
+                  <IconArrowRight className="w-4 h-4 text-primary" /> Consultar Catálogo Completo
                 </button>
                 <button
                   onClick={() => onNavigate?.('completed-orders')}
