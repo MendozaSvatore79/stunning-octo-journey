@@ -15,7 +15,6 @@ import {
   IconFileText,
   IconEye,
   IconX,
-  IconBuilding,
   IconSparkles,
 } from './icons';
 
@@ -25,20 +24,11 @@ interface ReportTemplateConfigViewProps {
 }
 
 export default function ReportTemplateConfigView({
-  labs,
   onNavigate,
 }: ReportTemplateConfigViewProps = {}) {
   const api = useApi();
   const { isAdmin, role } = useUserContext();
-  const {
-    activeBranding,
-    selectedLabId,
-    setSelectedLabId,
-    canEditBranding,
-    labs: contextLabs,
-  } = useLabBranding();
-
-  const availableLabs = labs && labs.length > 0 ? labs : contextLabs || [];
+  const { activeBranding, canEditBranding } = useLabBranding();
 
   const [config, setConfig] = useState<ReportTemplateConfig>({
     id: 'default_template',
@@ -156,26 +146,7 @@ export default function ReportTemplateConfigView({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {/* Selector de Sede Activa */}
-            <div className="flex items-center gap-2 bg-base-200/70 px-3 py-1.5 rounded-xl border border-base-300">
-              <IconBuilding className="w-4 h-4 text-primary shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-base-content/50 uppercase tracking-wider">Sede Activa</span>
-                <select
-                  value={selectedLabId}
-                  onChange={(e) => setSelectedLabId(e.target.value)}
-                  className="select select-xs select-ghost font-bold text-primary p-0 h-auto min-h-0 focus:bg-transparent"
-                >
-                  {availableLabs.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name} {l.city ? `(${l.city})` : ''}
-                    </option>
-                  ))}
-                  {availableLabs.length === 0 && <option value="default">LabSystem Central</option>}
-                </select>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
 
             <button
               type="button"
@@ -213,10 +184,10 @@ export default function ReportTemplateConfigView({
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-base-content uppercase tracking-wider flex items-center gap-1.5">
                   <IconSparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                  Logotipo Oficial de la Sede
+                  Logotipo Oficial del Laboratorio
                 </span>
                 <span className="badge badge-success badge-sm text-[10px] font-bold text-white">
-                  ● Enlazado a Configuración General
+                  ● Sincronizado
                 </span>
               </div>
 
@@ -239,8 +210,8 @@ export default function ReportTemplateConfigView({
                   </p>
                   <p className="text-[10px] text-base-content/60 truncate">
                     {activeBranding?.logo
-                      ? 'Logotipo oficial importado automáticamente para los reportes PDF.'
-                      : 'No has cargado el logotipo de esta sede en Configuración General.'}
+                      ? 'Logotipo institucional vinculado desde Configuración General para todas las órdenes.'
+                      : 'No has cargado el logotipo institucional en Configuración General.'}
                   </p>
                   {onNavigate && (
                     <button
