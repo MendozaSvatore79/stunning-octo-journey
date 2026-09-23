@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../hooks/useApi';
 import type { UserSubscription, PlanType } from '../types/subscription';
 import type { Laboratory } from '../types/lab';
+import { toast } from 'react-toastify';
 import {
   IconSparkles,
   IconCheckCircle,
@@ -48,6 +49,12 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
   }, [fetchSubscription]);
 
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [confirmPlanModal, setConfirmPlanModal] = useState<{
+    targetPlan: PlanType;
+    name: string;
+    ordersLimitStr: string;
+    labsLimitStr: string;
+  } | null>(null);
 
   const PLAN_TIER: Record<PlanType, number> = {
     BASIC: 1,
@@ -55,33 +62,39 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
     PRO: 3,
   };
 
-  const handlePlanChange = async (targetPlan: PlanType, isDowngrade: boolean) => {
+  const handlePlanChange = (targetPlan: PlanType, isDowngrade: boolean) => {
     if (subscription?.plan?.type === targetPlan) return;
 
     if (isDowngrade) {
       const targetConfig = planCards.find((p) => p.type === targetPlan);
       const ordersLimitStr =
         targetConfig && targetConfig.ordersLimit >= 999999
-          ? 'ilimitadas'
+          ? 'Ilimitadas'
           : `${targetConfig?.ordersLimit} órdenes`;
       const labsLimitStr =
         targetConfig && targetConfig.labsLimit >= 999999
-          ? 'ilimitadas'
+          ? 'Ilimitadas'
           : `${targetConfig?.labsLimit} sedes`;
 
-      const confirmed = window.confirm(
-        `¿Deseas cambiar tu suscripción al plan "${targetConfig?.name || targetPlan}"?\n\n` +
-          `• Límite mensual: ${ordersLimitStr}\n` +
-          `• Sedes clínicas permitidas: ${labsLimitStr}\n\n` +
-          `Polar ajustará automáticamente tu facturación y prorrateo correspondiente.`
-      );
-      if (!confirmed) return;
+      setConfirmPlanModal({
+        targetPlan,
+        name: targetConfig?.name || targetPlan,
+        ordersLimitStr,
+        labsLimitStr,
+      });
+      return;
     }
 
+    executePlanChange(targetPlan);
+  };
+
+  const executePlanChange = async (targetPlan: PlanType) => {
+    setConfirmPlanModal(null);
     try {
       setIsSubmitting(targetPlan);
       setErrorMsg(null);
       setSuccessMsg(null);
+      toast.info(`Procesando cambio de suscripción con Polar...`, { autoClose: 2500 });
 
       const res = await api.post<{
         checkoutUrl?: string;
@@ -95,27 +108,33 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
 
       // Si se actualizó directamente en Polar vía API (Upgrade o Downgrade sincrónico)
       if (res.data?.upgradedDirectly) {
-        setSuccessMsg(
+        const msg =
           res.data.message ||
-            `¡Tu suscripción ha sido cambiada exitosamente al plan ${targetPlan}!`
-        );
+          `¡Tu suscripción ha sido cambiada exitosamente al plan ${targetPlan}!`;
+        setSuccessMsg(msg);
+        toast.success(msg, { autoClose: 4000 });
         await fetchSubscription();
         return;
       }
 
       if (res.data?.checkoutUrl) {
-        setSuccessMsg(`Redirigiendo a la pasarela segura de Polar para el Plan ${targetPlan}...`);
+        const redirectMsg = `Redirigiendo a la pasarela segura de Polar...`;
+        setSuccessMsg(redirectMsg);
+        toast.info(redirectMsg, { autoClose: 2000 });
         setTimeout(() => {
           window.location.href = res.data.checkoutUrl!;
-        }, 500);
+        }, 600);
       } else {
-        setErrorMsg('No se recibió la respuesta esperada de Polar. Intenta nuevamente.');
+        const err = 'No se recibió la respuesta esperada de Polar. Intenta nuevamente.';
+        setErrorMsg(err);
+        toast.error(err);
       }
     } catch (err: any) {
       console.error('Error al cambiar de plan con Polar:', err);
-      setErrorMsg(
-        err?.response?.data?.message || 'No se pudo conectar con la pasarela de Polar.'
-      );
+      const errText =
+        err?.response?.data?.message || 'No se pudo conectar con la pasarela de Polar.';
+      setErrorMsg(errText);
+      toast.error(errText);
     } finally {
       setIsSubmitting(null);
     }
@@ -125,20 +144,30 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
     try {
       setIsLoadingPortal(true);
       setErrorMsg(null);
+      toast.info('Abriendo portal de facturación en Polar...', { autoClose: 2000 });
       const res = await api.get<{ portalUrl: string }>('/subscription/customer-portal');
       if (res.data?.portalUrl) {
         window.open(res.data.portalUrl, '_blank', 'noopener,noreferrer');
       } else {
-        setErrorMsg('No se recibió el enlace del portal de Polar.');
+        const err = 'No se recibió el enlace del portal de Polar.';
+        setErrorMsg(err);
+        toast.error(err);
       }
     } catch (err: any) {
       console.error('Error al abrir portal de Polar:', err);
-      setErrorMsg(
-        err?.response?.data?.message || 'No fue posible abrir el portal de facturación de Polar.'
-      );
+      const errText =
+        err?.response?.data?.message || 'No fue posible abrir el portal de facturación de Polar.';
+      setErrorMsg(errText);
+      toast.error(errText);
     } finally {
       setIsLoadingPortal(false);
     }
+  };
+
+  const handleManualRefresh = async () => {
+    toast.info('Actualizando datos de suscripción...', { autoClose: 1500 });
+    await fetchSubscription();
+    toast.success('Datos actualizados correctamente.', { autoClose: 2000 });
   };
 
   const planCards = [
@@ -293,7 +322,7 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
           </button>
 
           <button
-            onClick={fetchSubscription}
+            onClick={handleManualRefresh}
             className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl font-semibold gap-2 text-xs text-base-content/80"
           >
             <IconClock className="w-4 h-4" />
@@ -741,6 +770,68 @@ export const MySubscriptionView: React.FC<MySubscriptionViewProps> = ({ labs = [
           </span>
         </div>
       </div>
+
+      {/* Modal Moderno DaisyUI de Confirmación de Cambio de Plan */}
+      {confirmPlanModal && (
+        <div className="modal modal-open z-50">
+          <div className="modal-box bg-base-100 border border-base-200 shadow-2xl rounded-3xl p-6 sm:p-7 max-w-md w-full relative">
+            <button
+              onClick={() => setConfirmPlanModal(null)}
+              className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 text-base-content/60"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-warning/10 text-warning flex items-center justify-center border border-warning/20 shrink-0">
+                <IconAlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-lg text-base-content">
+                  ¿Confirmar cambio de plan?
+                </h3>
+                <p className="text-xs text-base-content/60">
+                  Ajuste de suscripción a <strong className="text-base-content font-bold">{confirmPlanModal.name}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-base-200/60 rounded-2xl border border-base-200 space-y-2 text-xs mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-base-content/70">Límite mensual:</span>
+                <span className="font-bold text-base-content">{confirmPlanModal.ordersLimitStr}</span>
+              </div>
+              <div className="flex items-center justify-between pt-1.5 border-t border-base-200">
+                <span className="text-base-content/70">Sedes clínicas permitidas:</span>
+                <span className="font-bold text-base-content">{confirmPlanModal.labsLimitStr}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-base-content/70 leading-relaxed mb-6">
+              Polar ajustará automáticamente tu facturación y el prorrateo correspondiente de forma transparente e inmediata.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setConfirmPlanModal(null)}
+                className="btn btn-sm btn-ghost hover:bg-base-200 rounded-xl font-semibold text-xs text-base-content/80"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => executePlanChange(confirmPlanModal.targetPlan)}
+                className="btn btn-sm btn-primary rounded-xl font-bold text-xs gap-1.5 shadow-sm"
+              >
+                <IconCheckCircle className="w-4 h-4" />
+                Confirmar Cambio
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop bg-black/40 backdrop-blur-xs" onClick={() => setConfirmPlanModal(null)}></div>
+        </div>
+      )}
     </div>
   );
 };

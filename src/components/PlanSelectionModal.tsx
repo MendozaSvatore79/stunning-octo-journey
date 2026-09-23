@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 import type { PlanType, UserSubscription } from '../types/subscription';
+import { toast } from 'react-toastify';
 import {
   IconCheckCircle,
   IconSparkles,
@@ -29,6 +30,12 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [confirmDowngradeModal, setConfirmDowngradeModal] = useState<{
+    plan: PlanType;
+    name: string;
+    ordersText: string;
+    labsText: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -59,26 +66,32 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
     PRO: 3,
   };
 
-  const handleSelectAndActivate = async (plan: PlanType) => {
+  const handleSelectAndActivate = (plan: PlanType) => {
     const currentPlan = subscription?.plan?.type || 'BASIC';
     if (currentPlan === plan) return;
 
     const isDowngrade = (PLAN_TIER[plan] || 1) < (PLAN_TIER[currentPlan] || 1);
     if (isDowngrade) {
       const planInfo = plans.find((p) => p.type === plan);
-      const confirmed = window.confirm(
-        `¿Deseas cambiar tu suscripción al plan "${planInfo?.name || plan}"?\n\n` +
-          `• Límite de órdenes: ${planInfo?.ordersText}\n` +
-          `• Sedes permitidas: ${planInfo?.labsText}\n\n` +
-          `Polar ajustará automáticamente el prorrateo de tu facturación.`
-      );
-      if (!confirmed) return;
+      setConfirmDowngradeModal({
+        plan,
+        name: planInfo?.name || plan,
+        ordersText: planInfo?.ordersText || 'Volumen ajustado',
+        labsText: planInfo?.labsText || 'Sedes ajustadas',
+      });
+      return;
     }
 
+    executeActivation(plan);
+  };
+
+  const executeActivation = async (plan: PlanType) => {
+    setConfirmDowngradeModal(null);
     try {
       setIsSubmitting(true);
       setSelectedPlan(plan);
       setErrorMsg(null);
+      toast.info(`Procesando solicitud de activación para el plan ${plan}...`, { autoClose: 2500 });
 
       // Intentar checkout o upgrade directo en Polar
       const checkoutRes = await api.post<{
@@ -93,10 +106,11 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
 
       // Si se actualizó directamente en Polar vía API (Upgrade o Downgrade sincrónico)
       if (checkoutRes.data?.upgradedDirectly) {
-        setSuccessMsg(
+        const msg =
           checkoutRes.data.message ||
-            `¡Plan ${plan} activado exitosamente! Tu cuenta ha sido actualizada.`
-        );
+          `¡Plan ${plan} activado exitosamente! Tu cuenta ha sido actualizada.`;
+        setSuccessMsg(msg);
+        toast.success(msg, { autoClose: 4000 });
         if (onPlanChanged) {
           onPlanChanged();
         }
@@ -108,7 +122,7 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
       }
 
       if (checkoutRes.data?.checkoutUrl) {
-        setSuccessMsg('Redirigiendo a la pasarela segura de Polar...');
+        toast.info('Redirigiendo a la pasarela segura de Polar...', { autoClose: 2000 });
         setTimeout(() => {
           window.location.href = checkoutRes.data!.checkoutUrl!;
         }, 600);
@@ -116,7 +130,9 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
       }
 
       setSelectedPlan(plan);
-      setSuccessMsg(`¡Plan ${plan} activado exitosamente! Tu cuenta ha sido actualizada.`);
+      const msg = `¡Plan ${plan} activado exitosamente! Tu cuenta ha sido actualizada.`;
+      setSuccessMsg(msg);
+      toast.success(msg, { autoClose: 3000 });
 
       if (onPlanChanged) {
         onPlanChanged();
@@ -128,9 +144,10 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
       }, 1500);
     } catch (err: any) {
       console.error('Error al cambiar de plan:', err);
-      setErrorMsg(
-        err?.response?.data?.message || 'No se pudo actualizar el plan. Intenta nuevamente.'
-      );
+      const errText =
+        err?.response?.data?.message || 'No se pudo actualizar el plan. Intenta nuevamente.';
+      setErrorMsg(errText);
+      toast.error(errText);
     } finally {
       setIsSubmitting(false);
     }
@@ -397,6 +414,69 @@ export const PlanSelectionModal: React.FC<PlanSelectionModalProps> = ({
           </div>
         )}
       </div>
+
+      {/* Modal Moderno DaisyUI de Confirmación de Downgrade */}
+      {confirmDowngradeModal && (
+        <div className="modal modal-open z-60">
+          <div className="modal-box bg-base-100 border border-base-200 shadow-2xl rounded-3xl p-6 sm:p-7 max-w-md w-full relative">
+            <button
+              onClick={() => setConfirmDowngradeModal(null)}
+              className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 text-base-content/60"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-warning/10 text-warning flex items-center justify-center border border-warning/20 shrink-0">
+                <IconAlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-lg text-base-content">
+                  ¿Confirmar cambio de plan?
+                </h3>
+                <p className="text-xs text-base-content/60">
+                  Ajuste de suscripción a <strong className="text-base-content font-bold">{confirmDowngradeModal.name}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-base-200/60 rounded-2xl border border-base-200 space-y-2 text-xs mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-base-content/70">Límite mensual:</span>
+                <span className="font-bold text-base-content">{confirmDowngradeModal.ordersText}</span>
+              </div>
+              <div className="flex items-center justify-between pt-1.5 border-t border-base-200">
+                <span className="text-base-content/70">Sedes clínicas:</span>
+                <span className="font-bold text-base-content">{confirmDowngradeModal.labsText}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-base-content/70 leading-relaxed mb-6">
+              Polar ajustará automáticamente el prorrateo de tu facturación de forma transparente.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setConfirmDowngradeModal(null)}
+                className="btn btn-sm btn-ghost hover:bg-base-200 rounded-xl font-semibold text-xs text-base-content/80"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => executeActivation(confirmDowngradeModal.plan)}
+                className="btn btn-sm btn-primary rounded-xl font-bold text-xs gap-1.5 shadow-sm"
+              >
+                <IconCheckCircle className="w-4 h-4" />
+                Confirmar Cambio
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop bg-black/40 backdrop-blur-xs" onClick={() => setConfirmDowngradeModal(null)}></div>
+        </div>
+      )}
+
       <form method="dialog" className="modal-backdrop">
         <button onClick={onClose}>close</button>
       </form>
