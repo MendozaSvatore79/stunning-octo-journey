@@ -86,13 +86,16 @@ export function LabBrandingProvider({
     return saved || (initialLabs.length > 0 ? initialLabs[0].id : 'default');
   });
 
-  // Si cambia la lista de labs y no hay seleccionado válido, fijar el primero de la lista
+  // Si cambia la lista de labs y no hay seleccionado válido o apunta a un ID obsoleto, fijar el primero de la lista
   useEffect(() => {
-    if (labs.length > 0 && (!selectedLabId || selectedLabId === 'default')) {
-      const saved = localStorage.getItem(SELECTED_LAB_STORAGE_KEY);
-      const targetId = (saved && labs.some((l) => l.id === saved)) ? saved : labs[0].id;
-      setSelectedLabIdState(targetId);
-      localStorage.setItem(SELECTED_LAB_STORAGE_KEY, targetId);
+    if (labs.length > 0) {
+      const isValid = selectedLabId && selectedLabId !== 'default' && labs.some((l) => l.id === selectedLabId);
+      if (!isValid) {
+        const saved = localStorage.getItem(SELECTED_LAB_STORAGE_KEY);
+        const targetId = (saved && labs.some((l) => l.id === saved)) ? saved : labs[0].id;
+        setSelectedLabIdState(targetId);
+        localStorage.setItem(SELECTED_LAB_STORAGE_KEY, targetId);
+      }
     }
   }, [labs, selectedLabId]);
 
@@ -155,8 +158,9 @@ export function LabBrandingProvider({
   // Actualizar branding y persistir en la base de datos (Backend) y en almacenamiento local
   const updateBranding = useCallback(
     async (labId: string, newConfig: Partial<LabBrandingConfig>): Promise<BrandingSaveResult> => {
-      // Resolver targetLabId real (evitar que quede en 'default' si hay labs en el sistema)
-      const targetLabId = (!labId || labId === 'default') && labs.length > 0 ? labs[0].id : labId;
+      // Resolver targetLabId real (evitar que quede en 'default' o apunte a un ID inexistente si hay labs en el sistema)
+      const isTargetInLabs = labs.some((l) => l.id === labId);
+      const targetLabId = (!labId || labId === 'default' || !isTargetInLabs) && labs.length > 0 ? labs[0].id : labId;
 
       // 1. Persistencia local inmediata (optimista)
       const updatedLogo =
@@ -189,13 +193,20 @@ export function LabBrandingProvider({
         try {
           const res = await api.patch<Laboratory>(`/lab/${targetLabId}`, payload);
           if (res.data) {
-            setLabs((prev) =>
-              prev.map((l) =>
-                l.id === targetLabId
-                  ? { ...l, ...res.data, logo: res.data.logo || '' }
-                  : l
-              )
-            );
+            const returnedLab = res.data;
+            setLabs((prev) => {
+              const exists = prev.some((l) => l.id === returnedLab.id);
+              if (exists) {
+                return prev.map((l) =>
+                  l.id === returnedLab.id ? { ...l, ...returnedLab, logo: returnedLab.logo || '' } : l
+                );
+              }
+              return [...prev, { ...returnedLab, logo: returnedLab.logo || '' }];
+            });
+            if (targetLabId !== returnedLab.id) {
+              setSelectedLabIdState(returnedLab.id);
+              localStorage.setItem(SELECTED_LAB_STORAGE_KEY, returnedLab.id);
+            }
           }
           return { success: true, savedToDb: true };
         } catch (err: any) {
@@ -203,13 +214,20 @@ export function LabBrandingProvider({
           try {
             const res = await api.put<Laboratory>(`/lab/${targetLabId}`, payload);
             if (res.data) {
-              setLabs((prev) =>
-                prev.map((l) =>
-                  l.id === targetLabId
-                    ? { ...l, ...res.data, logo: res.data.logo || '' }
-                    : l
-                )
-              );
+              const returnedLab = res.data;
+              setLabs((prev) => {
+                const exists = prev.some((l) => l.id === returnedLab.id);
+                if (exists) {
+                  return prev.map((l) =>
+                    l.id === returnedLab.id ? { ...l, ...returnedLab, logo: returnedLab.logo || '' } : l
+                  );
+                }
+                return [...prev, { ...returnedLab, logo: returnedLab.logo || '' }];
+              });
+              if (targetLabId !== returnedLab.id) {
+                setSelectedLabIdState(returnedLab.id);
+                localStorage.setItem(SELECTED_LAB_STORAGE_KEY, returnedLab.id);
+              }
             }
             return { success: true, savedToDb: true };
           } catch (innerErr: any) {
