@@ -10,6 +10,7 @@ import {
   type SanitarySignatureConfig,
 } from '../utils/cryptoSecurity';
 import DigitalSignatureModal from './DigitalSignatureModal';
+import { useLabBranding } from '../context/LabBrandingContext';
 
 interface MedicalReportPDFProps {
   order: WorkOrder;
@@ -31,6 +32,7 @@ export default function MedicalReportPDF({
   isPublic = false,
 }: MedicalReportPDFProps) {
   const { isSignedIn } = useAuth();
+  const { activeBranding } = useLabBranding();
   const canConfigureSignature = !isPublic && Boolean(isSignedIn);
 
   const [currentOrder, setCurrentOrder] = useState<WorkOrder>(order);
@@ -41,6 +43,10 @@ export default function MedicalReportPDF({
 
   const patient = currentOrder.patient;
   const lab = currentOrder.laboratory;
+
+  const effectiveLogo = lab?.logo || activeBranding?.logo;
+  const effectiveLabName = lab?.name || activeBranding?.name || 'LABORATORIO CLÍNICO CENTRAL';
+  const effectiveAddress = [lab?.address, lab?.city, lab?.state, lab?.country].filter(Boolean).join(', ') || activeBranding?.address || 'Dirección de la Sede Médica';
 
   const [signatureConfig, setSignatureConfig] = useState<SanitarySignatureConfig>(getSanitarySignatureConfig);
   const [cryptoHash, setCryptoHash] = useState<string>('');
@@ -94,8 +100,10 @@ export default function MedicalReportPDF({
   const metodoStr = matchMethod ? matchMethod[1].trim() : '( Citometría de flujo / Cinético / Espectrofotometría / Físico / Químico / Microscópico )';
   const responsableStr = matchResponsible
     ? matchResponsible[1].trim()
-    : signatureConfig.responsibleName || 'Q.F.B. JUAN CARLOS MENDOZA HERNÁNDEZ';
-  const cedulaStr = matchProfessional ? matchProfessional[1].trim() : signatureConfig.professionalLicense || '5518954';
+    : signatureConfig.responsibleName || activeBranding?.responsibleName || 'Q.F.B. JUAN CARLOS MENDOZA HERNÁNDEZ';
+  const cedulaStr = matchProfessional
+    ? matchProfessional[1].trim()
+    : signatureConfig.professionalLicense || activeBranding?.sanitaryLicense || '5518954';
   const observacionesStr = matchObs ? matchObs[1].trim() : 'NO SE OBSERVO ANOMALIAS EN EL FROTIS PERIFERICO. SUERO NORMAL, ESTUDIO RATIFICADO Y VALIDADO CLINICAMENTE.';
 
   const appOrigin = typeof window !== 'undefined'
@@ -222,10 +230,10 @@ export default function MedicalReportPDF({
       {/* ENCABEZADO COMPACTO DE LABORATORIO */}
       <div className="flex items-start justify-between border-b-2 border-slate-900 pb-1.5">
         <div className="flex items-center gap-2.5">
-          {lab?.logo ? (
+          {effectiveLogo ? (
             <img
-              src={lab.logo}
-              alt={lab.name}
+              src={effectiveLogo}
+              alt={effectiveLabName}
               className="w-11 h-11 object-contain rounded-xl"
               onError={(e) => {
                 (e.target as HTMLElement).style.display = 'none';
@@ -233,13 +241,13 @@ export default function MedicalReportPDF({
             />
           ) : (
             <div className="w-11 h-11 bg-gradient-to-tr from-teal-700 to-cyan-800 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-sm shrink-0">
-              {lab?.name?.[0] || 'L'}
+              {effectiveLabName?.[0] || 'L'}
             </div>
           )}
           <div>
-            <h1 className="text-base font-black uppercase text-slate-900 tracking-tight leading-none">{lab?.name || 'LABORATORIO CLÍNICO CENTRAL'}</h1>
+            <h1 className="text-base font-black uppercase text-slate-900 tracking-tight leading-none">{effectiveLabName}</h1>
             <p className="text-[10px] text-slate-600 font-medium mt-0.5">
-              {[lab?.address, lab?.city, lab?.state, lab?.country].filter(Boolean).join(', ') || 'Dirección de la Sede Médica'}
+              {effectiveAddress}
             </p>
             <p className="text-[8.5px] text-slate-500 font-semibold">
               Certificado de Calidad y Registro Sanitario Oficial

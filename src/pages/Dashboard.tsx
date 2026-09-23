@@ -47,7 +47,7 @@ export default function Dashboard() {
   const { user } = useUser();
   const { isAdmin, role, isLoading: isUserLoading } = useUserContext();
   const { config, isVipPassed } = useMaintenance();
-  const { activeBranding } = useLabBranding();
+  const { activeBranding, canEditBranding } = useLabBranding();
   const api = useApi();
 
   const [activeView, setActiveView] = useState<DashboardViewType>('dashboard');
@@ -477,8 +477,8 @@ export default function Dashboard() {
             ) : activeView === 'price-agreements' ? (
               <PriceAgreementsView labs={labs} />
             ) : activeView === 'report-templates' ? (
-              isAdmin ? (
-                <ReportTemplateConfigView />
+              (isAdmin || role === 'LAB_TECHNICIAN' || role === 'LAB_ADMIN' || canEditBranding) ? (
+                <ReportTemplateConfigView labs={labs} onNavigate={setActiveView} />
               ) : (
                 <OperatorDashboardView
                   userName={user?.firstName || undefined}

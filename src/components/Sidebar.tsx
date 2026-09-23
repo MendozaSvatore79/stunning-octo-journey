@@ -305,7 +305,7 @@ export default function Sidebar({
                 </li>
 
                 {/* Gestión de Sede para Encargado del Laboratorio */}
-                {role === 'LAB_TECHNICIAN' && (
+                {(role === 'LAB_TECHNICIAN' || role === 'LAB_ADMIN') && (
                   <>
                     <li className="mt-2 pt-2 border-t border-base-200">
                       <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
@@ -353,6 +353,18 @@ export default function Sidebar({
                           <IconBuilding className="w-4 h-4" />
                         </div>
                         <span className="truncate flex-1 text-left">Configuración de Sede</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => handleNav('report-templates')}
+                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'report-templates' ? 'active font-bold' : 'hover:bg-base-200'}`}
+                        title="Personalización de plantilla médica, firmas y código QR de esta sede"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20">
+                          <IconQrCode className="w-4 h-4" />
+                        </div>
+                        <span className="truncate flex-1 text-left">Plantilla Oficial & QR</span>
                       </button>
                     </li>
                     <li>

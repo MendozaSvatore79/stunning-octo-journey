@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useUserContext } from '../hooks/useUserContext';
 import { useLabBranding } from '../context/LabBrandingContext';
+import type { Laboratory } from '../types/lab';
+import type { DashboardViewType } from './Sidebar';
 import type { ReportTemplateConfig, OrderVerificationResult } from '../types/report-template';
 import { toast } from 'react-toastify';
 import {
@@ -13,12 +15,30 @@ import {
   IconFileText,
   IconEye,
   IconX,
+  IconBuilding,
+  IconSparkles,
 } from './icons';
 
-export default function ReportTemplateConfigView() {
+interface ReportTemplateConfigViewProps {
+  labs?: Laboratory[];
+  onNavigate?: (view: DashboardViewType) => void;
+}
+
+export default function ReportTemplateConfigView({
+  labs,
+  onNavigate,
+}: ReportTemplateConfigViewProps = {}) {
   const api = useApi();
-  const { isAdmin } = useUserContext();
-  const { activeBranding } = useLabBranding();
+  const { isAdmin, role } = useUserContext();
+  const {
+    activeBranding,
+    selectedLabId,
+    setSelectedLabId,
+    canEditBranding,
+    labs: contextLabs,
+  } = useLabBranding();
+
+  const availableLabs = labs && labs.length > 0 ? labs : contextLabs || [];
 
   const [config, setConfig] = useState<ReportTemplateConfig>({
     id: 'default_template',
@@ -93,13 +113,21 @@ export default function ReportTemplateConfigView() {
     }
   };
 
-  if (!isAdmin) {
+  // Permiso para cada Responsable Sanitario / Encargado de Laboratorio o Administrador
+  const canManageTemplate = Boolean(
+    isAdmin ||
+    role === 'LAB_TECHNICIAN' ||
+    role === 'LAB_ADMIN' ||
+    canEditBranding
+  );
+
+  if (!canManageTemplate) {
     return (
-      <div className="card bg-base-100 border border-base-200 p-8 text-center rounded-2xl shadow-xs">
+      <div className="card bg-base-100 border border-base-200 p-8 text-center rounded-2xl shadow-xs max-w-lg mx-auto my-8">
         <IconShield className="w-12 h-12 text-warning mx-auto mb-3" />
-        <h2 className="text-lg font-bold text-base-content">Acceso Exclusivo de Administrador</h2>
+        <h2 className="text-lg font-bold text-base-content">Acceso Restringido</h2>
         <p className="text-xs text-base-content/70 mt-1">
-          La personalización de la plantilla médica institucional y sellos sanitarios está reservada al Administrador Global.
+          La personalización de la plantilla médica institucional y sellos sanitarios está reservada al Responsable Sanitario o Administrador de la sede.
         </p>
       </div>
     );
@@ -128,8 +156,29 @@ export default function ReportTemplateConfigView() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Selector de Sede Activa */}
+            <div className="flex items-center gap-2 bg-base-200/70 px-3 py-1.5 rounded-xl border border-base-300">
+              <IconBuilding className="w-4 h-4 text-primary shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold text-base-content/50 uppercase tracking-wider">Sede Activa</span>
+                <select
+                  value={selectedLabId}
+                  onChange={(e) => setSelectedLabId(e.target.value)}
+                  className="select select-xs select-ghost font-bold text-primary p-0 h-auto min-h-0 focus:bg-transparent"
+                >
+                  {availableLabs.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name} {l.city ? `(${l.city})` : ''}
+                    </option>
+                  ))}
+                  {availableLabs.length === 0 && <option value="default">LabSystem Central</option>}
+                </select>
+              </div>
+            </div>
+
             <button
+              type="button"
               onClick={() => setIsTesterOpen(true)}
               className="btn btn-outline border-base-300 hover:bg-base-200 btn-sm gap-2 font-semibold rounded-xl text-xs"
             >
@@ -137,6 +186,7 @@ export default function ReportTemplateConfigView() {
               Probar Validador QR
             </button>
             <button
+              type="button"
               onClick={fetchConfig}
               className="btn btn-ghost btn-sm border border-base-200 hover:bg-base-200 gap-1.5 rounded-xl text-xs font-semibold"
               disabled={isLoading}
@@ -157,6 +207,53 @@ export default function ReportTemplateConfigView() {
               <IconFileText className="w-4 h-4 text-primary" />
               Parámetros de la Plantilla Médica
             </h2>
+
+            {/* Vinculación Directa con Logotipo de Configuración General */}
+            <div className="p-3.5 bg-base-200/50 rounded-2xl border border-base-200 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-base-content uppercase tracking-wider flex items-center gap-1.5">
+                  <IconSparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                  Logotipo Oficial de la Sede
+                </span>
+                <span className="badge badge-success badge-sm text-[10px] font-bold text-white">
+                  ● Enlazado a Configuración General
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3.5 bg-base-100 p-3 rounded-xl border border-base-300/70">
+                {activeBranding?.logo ? (
+                  <img
+                    src={activeBranding.logo}
+                    alt={activeBranding.name}
+                    className="w-12 h-12 object-contain rounded-xl border border-base-300 bg-white p-1 shadow-xs shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 font-black text-xl flex items-center justify-center shrink-0">
+                    {activeBranding?.name?.charAt(0) || 'L'}
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-xs text-base-content truncate">
+                    {activeBranding?.name || 'Laboratorio Clínico Central'}
+                  </p>
+                  <p className="text-[10px] text-base-content/60 truncate">
+                    {activeBranding?.logo
+                      ? 'Logotipo oficial importado automáticamente para los reportes PDF.'
+                      : 'No has cargado el logotipo de esta sede en Configuración General.'}
+                  </p>
+                  {onNavigate && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('general-settings')}
+                      className="text-[10px] font-bold text-primary hover:underline mt-0.5 inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      {activeBranding?.logo ? 'Cambiar logotipo en Configuración General →' : 'Subir logotipo en Configuración General →'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div>
               <label className="text-[11px] font-bold text-base-content/70 block mb-1">
@@ -182,6 +279,28 @@ export default function ReportTemplateConfigView() {
                 className="textarea textarea-bordered w-full rounded-xl text-xs"
               ></textarea>
             </div>
+
+            {(activeBranding?.responsibleName || activeBranding?.sanitaryLicense) && (
+              <div className="flex items-center justify-between bg-primary/5 p-2 rounded-xl border border-primary/20 text-[10px]">
+                <span className="text-base-content/70">
+                  Datos detectados en la sede: <strong>{activeBranding.responsibleName || 'Responsable'}</strong> {activeBranding.sanitaryLicense ? `(${activeBranding.sanitaryLicense})` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfig((prev) => ({
+                      ...prev,
+                      signatureName: activeBranding.responsibleName || prev.signatureName,
+                      licenseNumber: activeBranding.sanitaryLicense || prev.licenseNumber,
+                    }));
+                    toast.info('Firma sanitaria sincronizada con los datos de la sede');
+                  }}
+                  className="btn btn-ghost btn-xs text-primary font-bold hover:bg-primary/10"
+                >
+                  Sincronizar Firma
+                </button>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
