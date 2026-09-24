@@ -185,25 +185,27 @@ export default function SatisfactionSurveyView() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
-        <div className="w-16 h-16 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center mb-4 animate-pulse">
+      <div className="min-h-screen bg-base-200/50 flex flex-col items-center justify-center p-4 text-base-content space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-2 animate-pulse">
           <IconSparkles className="w-8 h-8" />
         </div>
-        <span className="loading loading-spinner loading-lg text-teal-400 mb-3"></span>
-        <p className="text-sm font-semibold text-slate-300">Cargando encuesta de satisfacción...</p>
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+        <p className="text-xs sm:text-sm font-semibold text-base-content/70">
+          Cargando encuesta de satisfacción...
+        </p>
       </div>
     );
   }
 
   if (errorMsg && !order) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
-        <div className="max-w-md w-full bg-slate-800 border border-slate-700 rounded-3xl p-6 text-center space-y-4 shadow-xl">
-          <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto">
-            <IconAlertCircle className="w-6 h-6" />
+      <div className="min-h-screen bg-base-200/50 flex flex-col items-center justify-center p-4 text-base-content">
+        <div className="max-w-md w-full bg-base-100 border border-base-200 rounded-3xl p-6 text-center space-y-4 shadow-xl">
+          <div className="w-14 h-14 rounded-2xl bg-error/10 text-error flex items-center justify-center mx-auto">
+            <IconAlertCircle className="w-7 h-7" />
           </div>
-          <h2 className="text-lg font-bold text-white">No se encontró la orden médica</h2>
-          <p className="text-xs text-slate-300">{errorMsg}</p>
+          <h2 className="text-lg font-black text-base-content">No se encontró la orden médica</h2>
+          <p className="text-xs text-base-content/60">{errorMsg}</p>
         </div>
       </div>
     );
@@ -215,71 +217,72 @@ export default function SatisfactionSurveyView() {
   const folio = order?.folio || order?.id.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start p-3 sm:p-6 md:p-10 font-sans selection:bg-teal-500 selection:text-white">
+    <div className="min-h-screen bg-base-200/50 text-base-content flex flex-col items-center justify-start p-3 sm:p-6 md:p-10 font-sans selection:bg-primary selection:text-primary-content">
       {/* Contenedor Principal Centrado */}
-      <div className="w-full max-w-xl mx-auto space-y-5">
-        {/* Encabezado con Identidad del Laboratorio */}
-        <div className="flex items-center justify-between bg-slate-900/80 backdrop-blur-md p-4 rounded-3xl border border-slate-800/80 shadow-lg">
+      <div className="w-full max-w-xl mx-auto space-y-4 sm:space-y-6">
+        
+        {/* Encabezado con Identidad Clínica Institucional */}
+        <div className="flex items-center justify-between bg-base-100 p-4 sm:p-5 rounded-3xl border border-base-200 shadow-sm">
           <div className="flex items-center gap-3">
             {labLogo ? (
               <img
                 src={labLogo}
                 alt={labName}
-                className="w-12 h-12 object-contain rounded-2xl bg-white/5 p-1 border border-slate-700"
+                className="w-12 h-12 object-contain rounded-2xl bg-base-200/60 p-1 border border-base-300"
               />
             ) : (
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black text-xl shadow-xs shrink-0">
                 {labName.charAt(0) || 'L'}
               </div>
             )}
             <div>
-              <h1 className="text-sm sm:text-base font-black text-white uppercase tracking-tight leading-tight line-clamp-1">
+              <h1 className="text-sm sm:text-base font-black text-base-content uppercase tracking-tight leading-tight line-clamp-1">
                 {labName}
               </h1>
-              <p className="text-[11px] text-teal-400 font-semibold flex items-center gap-1 mt-0.5">
-                <IconHeart className="w-3.5 h-3.5 text-red-400 inline" /> Encuesta de Calidad y Satisfacción
+              <p className="text-xs text-primary font-semibold flex items-center gap-1.5 mt-0.5">
+                <IconHeart className="w-3.5 h-3.5 text-error inline" /> Encuesta de Calidad y Satisfacción
               </p>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="badge badge-teal badge-sm font-mono font-bold bg-teal-500/20 text-teal-300 border-teal-500/30">
+            <span className="badge badge-primary badge-sm font-mono font-bold py-3 px-3 text-xs shadow-xs">
               Folio #{folio}
             </span>
           </div>
         </div>
 
         {/* Tarjeta de Encuesta */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl space-y-6">
+        <div className="bg-base-100 border border-base-200 rounded-3xl p-5 sm:p-8 shadow-xl space-y-6">
           {isSubmitted ? (
             /* Estado de Éxito / Confirmación */
             <div className="text-center py-6 space-y-5 animate-fade-in">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto ring-8 ring-emerald-500/10 shadow-lg">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-success/15 text-success flex items-center justify-center mx-auto ring-8 ring-success/5 shadow-md">
                 <IconCheckCircle className="w-10 h-10 sm:w-12 sm:h-12" />
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                  ¡Muchas gracias por tu calificación!
+                <h2 className="text-xl sm:text-2xl font-black text-base-content tracking-tight">
+                  ¡Muchas gracias por tu opinión!
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-                  Hola <strong className="text-teal-400">{patientName}</strong>, tu opinión es fundamental para que en <strong className="text-white">{labName}</strong> continuemos mejorando nuestros protocolos y calidez de atención.
+                <p className="text-xs sm:text-sm text-base-content/70 max-w-md mx-auto leading-relaxed">
+                  Hola <strong className="text-primary font-bold">{patientName}</strong>, tu evaluación es fundamental para que en <strong className="text-base-content">{labName}</strong> continuemos perfeccionando nuestros protocolos clínicos y calidez de atención.
                 </p>
               </div>
 
               {/* Resumen de Calificación */}
-              <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700/60 max-w-sm mx-auto flex items-center justify-center gap-2">
+              <div className="bg-base-200/60 rounded-2xl p-4 border border-base-300 max-w-sm mx-auto flex items-center justify-center gap-2">
                 <div className="flex items-center gap-1 text-amber-400">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <IconStar
                       key={i}
                       className={`w-5 h-5 ${
-                        i < rating ? 'fill-amber-400 text-amber-400' : 'text-slate-600'
+                        i < rating ? 'fill-amber-400 text-amber-400' : 'text-base-300'
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-xs font-bold text-slate-200">
+                <span className="text-xs font-bold text-base-content">
                   ({rating} de 5 estrellas)
                 </span>
               </div>
@@ -288,7 +291,7 @@ export default function SatisfactionSurveyView() {
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
                   to={`/results/${orderId}`}
-                  className="btn btn-primary bg-teal-600 hover:bg-teal-500 border-none text-white font-bold rounded-2xl gap-2 shadow-lg w-full sm:w-auto"
+                  className="btn btn-primary text-primary-content font-bold rounded-2xl gap-2 shadow-md w-full sm:w-auto"
                 >
                   <IconFileText className="w-4 h-4" />
                   Ver Reporte Clínico en PDF
@@ -299,22 +302,22 @@ export default function SatisfactionSurveyView() {
             /* Formulario de Evaluación */
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Bienvenida al Paciente */}
-              <div className="space-y-1 border-b border-slate-800 pb-4">
-                <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+              <div className="space-y-1 border-b border-base-200 pb-4">
+                <h2 className="text-lg sm:text-xl font-black text-base-content tracking-tight">
                   ¿Cómo fue tu experiencia médica hoy?
                 </h2>
-                <p className="text-xs text-slate-300">
-                  Paciente: <strong className="text-teal-300">{patientName}</strong>. Te tomará menos de 30 segundos calificar nuestro servicio.
+                <p className="text-xs text-base-content/60">
+                  Paciente: <strong className="text-primary font-semibold">{patientName}</strong>. Te tomará menos de 30 segundos calificar la atención.
                 </p>
               </div>
 
               {/* Calificación General con Estrellas Grandes */}
-              <div className="text-center space-y-3 bg-slate-800/40 p-5 rounded-2xl border border-slate-700/60">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block">
+              <div className="text-center space-y-3 bg-base-200/50 p-5 rounded-2xl border border-base-300/70">
+                <label className="text-xs font-bold uppercase tracking-wider text-base-content/70 block">
                   Calificación General del Laboratorio
                 </label>
 
-                <div className="flex items-center justify-center gap-2 sm:gap-3 py-2">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 py-1">
                   {[1, 2, 3, 4, 5].map((star) => {
                     const isFilled = (hoverRating || rating) >= star;
                     return (
@@ -329,7 +332,9 @@ export default function SatisfactionSurveyView() {
                       >
                         <IconStar
                           className={`w-8 h-8 sm:w-10 sm:h-10 transition-colors ${
-                            isFilled ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 'text-slate-600'
+                            isFilled
+                              ? 'fill-amber-400 text-amber-400 drop-shadow-sm'
+                              : 'text-base-300 hover:text-amber-300'
                           }`}
                         />
                       </button>
@@ -337,37 +342,37 @@ export default function SatisfactionSurveyView() {
                   })}
                 </div>
 
-                <p className="text-xs sm:text-sm font-bold text-amber-300 h-5 transition-all">
+                <p className="text-xs sm:text-sm font-bold text-primary h-5 transition-all">
                   {getRatingLabel(hoverRating || rating)}
                 </p>
               </div>
 
               {/* Criterios Clave de la Experiencia Clínica */}
-              <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-base-content/70">
                   Aspectos Clave de la Atención
                 </h3>
 
                 {/* 1. Toma de Muestra / Punción */}
-                <div className="bg-slate-800/30 p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="bg-base-200/40 p-4 rounded-2xl border border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-base-content flex items-center gap-1.5">
                       <span>💉</span> Toma de Muestra y Venopunción
                     </p>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-base-content/60">
                       ¿La extracción fue rápida y con el menor dolor posible?
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 self-end sm:self-auto">
+                  <div className="flex items-center gap-1.5 self-end sm:self-auto">
                     {[1, 2, 3, 4, 5].map((val) => (
                       <button
                         key={val}
                         type="button"
                         onClick={() => setSampleRating(val)}
-                        className={`w-7 h-7 rounded-xl text-xs font-bold transition-all ${
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
                           sampleRating === val
-                            ? 'bg-teal-500 text-white shadow-md'
-                            : 'bg-slate-700/60 text-slate-300 hover:bg-slate-700'
+                            ? 'bg-primary text-primary-content shadow-xs'
+                            : 'bg-base-100 border border-base-300 text-base-content/70 hover:bg-base-200'
                         }`}
                       >
                         {val}
@@ -377,25 +382,25 @@ export default function SatisfactionSurveyView() {
                 </div>
 
                 {/* 2. Tiempo de Espera y Entrega */}
-                <div className="bg-slate-800/30 p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="bg-base-200/40 p-4 rounded-2xl border border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-base-content flex items-center gap-1.5">
                       <span>⏱️</span> Tiempo de Espera y Entrega
                     </p>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-base-content/60">
                       ¿Los tiempos de atención y entrega de resultados fueron rápidos?
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 self-end sm:self-auto">
+                  <div className="flex items-center gap-1.5 self-end sm:self-auto">
                     {[1, 2, 3, 4, 5].map((val) => (
                       <button
                         key={val}
                         type="button"
                         onClick={() => setWaitRating(val)}
-                        className={`w-7 h-7 rounded-xl text-xs font-bold transition-all ${
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
                           waitRating === val
-                            ? 'bg-teal-500 text-white shadow-md'
-                            : 'bg-slate-700/60 text-slate-300 hover:bg-slate-700'
+                            ? 'bg-primary text-primary-content shadow-xs'
+                            : 'bg-base-100 border border-base-300 text-base-content/70 hover:bg-base-200'
                         }`}
                       >
                         {val}
@@ -405,25 +410,25 @@ export default function SatisfactionSurveyView() {
                 </div>
 
                 {/* 3. Limpieza e Higiene */}
-                <div className="bg-slate-800/30 p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="bg-base-200/40 p-4 rounded-2xl border border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-base-content flex items-center gap-1.5">
                       <span>🧼</span> Limpieza e Instalaciones
                     </p>
-                    <p className="text-[11px] text-slate-400">
-                      ¿Las instalaciones y el área de toma se encontraban higiénicas?
+                    <p className="text-[11px] text-base-content/60">
+                      ¿Las instalaciones y el área de toma estaban limpias y ordenadas?
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 self-end sm:self-auto">
+                  <div className="flex items-center gap-1.5 self-end sm:self-auto">
                     {[1, 2, 3, 4, 5].map((val) => (
                       <button
                         key={val}
                         type="button"
                         onClick={() => setCleanRating(val)}
-                        className={`w-7 h-7 rounded-xl text-xs font-bold transition-all ${
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
                           cleanRating === val
-                            ? 'bg-teal-500 text-white shadow-md'
-                            : 'bg-slate-700/60 text-slate-300 hover:bg-slate-700'
+                            ? 'bg-primary text-primary-content shadow-xs'
+                            : 'bg-base-100 border border-base-300 text-base-content/70 hover:bg-base-200'
                         }`}
                       >
                         {val}
@@ -433,25 +438,25 @@ export default function SatisfactionSurveyView() {
                 </div>
 
                 {/* 4. Amabilidad del Personal */}
-                <div className="bg-slate-800/30 p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="bg-base-200/40 p-4 rounded-2xl border border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-base-content flex items-center gap-1.5">
                       <span>🤝</span> Amabilidad del Personal
                     </p>
-                    <p className="text-[11px] text-slate-400">
-                      ¿El personal de recepción y químicos te atendió con calidez?
+                    <p className="text-[11px] text-base-content/60">
+                      ¿El personal de recepción y químicos te atendió con calidez y respeto?
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 self-end sm:self-auto">
+                  <div className="flex items-center gap-1.5 self-end sm:self-auto">
                     {[1, 2, 3, 4, 5].map((val) => (
                       <button
                         key={val}
                         type="button"
                         onClick={() => setStaffRating(val)}
-                        className={`w-7 h-7 rounded-xl text-xs font-bold transition-all ${
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
                           staffRating === val
-                            ? 'bg-teal-500 text-white shadow-md'
-                            : 'bg-slate-700/60 text-slate-300 hover:bg-slate-700'
+                            ? 'bg-primary text-primary-content shadow-xs'
+                            : 'bg-base-100 border border-base-300 text-base-content/70 hover:bg-base-200'
                         }`}
                       >
                         {val}
@@ -463,9 +468,9 @@ export default function SatisfactionSurveyView() {
 
               {/* Comentarios Adicionales */}
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-base-content/70 flex items-center justify-between">
                   <span>Comentarios o Sugerencias (Opcional)</span>
-                  <span className="text-[10px] text-slate-500 lowercase">máx. 300 caracteres</span>
+                  <span className="text-[10px] text-base-content/40 lowercase">máx. 300 caracteres</span>
                 </label>
                 <textarea
                   rows={3}
@@ -473,7 +478,7 @@ export default function SatisfactionSurveyView() {
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
                   placeholder="Escribe alguna felicitación, queja o recomendación sobre el servicio recibido..."
-                  className="textarea textarea-bordered w-full bg-slate-800/60 border-slate-700 text-white text-xs rounded-2xl focus:border-teal-500 focus:outline-none p-3 placeholder:text-slate-500"
+                  className="textarea textarea-bordered w-full bg-base-100 border-base-300 text-base-content text-xs rounded-2xl focus:border-primary focus:outline-none p-3.5 placeholder:text-base-content/40"
                 ></textarea>
               </div>
 
@@ -482,7 +487,7 @@ export default function SatisfactionSurveyView() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="btn btn-primary bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 border-none text-white font-bold w-full rounded-2xl shadow-xl shadow-teal-500/20 py-3 text-sm flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform disabled:opacity-50"
+                  className="btn btn-primary text-primary-content font-bold w-full rounded-2xl shadow-lg shadow-primary/20 py-3 text-sm flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -498,15 +503,15 @@ export default function SatisfactionSurveyView() {
                 </button>
               </div>
 
-              <p className="text-[11px] text-center text-slate-500">
-                Tus respuestas son seguras y nos ayudan a mantener los estándares de acreditación sanitaria.
+              <p className="text-[11px] text-center text-base-content/50">
+                Tus respuestas son confidenciales y nos ayudan a mantener los estándares de acreditación sanitaria.
               </p>
             </form>
           )}
         </div>
 
         {/* Footer simple */}
-        <p className="text-center text-xs text-slate-500">
+        <p className="text-center text-xs text-base-content/50">
           © {new Date().getFullYear()} {labName} • Plataforma Clínica Integral
         </p>
       </div>
