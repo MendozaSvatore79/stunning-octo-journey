@@ -223,9 +223,16 @@ export default function MedicalReportPDF({
   const categoriesMap = parseAnalysesToCategories();
   const categoryKeys = Object.keys(categoriesMap);
 
-  // Renderizar el documento compacto directamente a document.body
-  const renderPrintableDocument = () => (
-    <div id="printable-pdf-document" className="bg-white text-slate-900 p-2 font-sans text-[11px] leading-tight space-y-2">
+  // Renderizar el documento (para vista previa en pantalla o para impresión limpia)
+  const renderPrintableDocument = (isPrintVersion: boolean = false) => (
+    <div
+      id={isPrintVersion ? 'printable-pdf-document' : 'screen-pdf-document'}
+      className={
+        isPrintVersion
+          ? 'hidden print:block w-full bg-white text-slate-900 font-sans text-[10px] leading-tight space-y-2 p-0'
+          : 'print:hidden w-full bg-white text-slate-900 font-sans text-[11px] leading-tight space-y-2.5'
+      }
+    >
       
       {/* ENCABEZADO COMPACTO DE LABORATORIO */}
       <div className="flex items-start justify-between border-b-2 border-slate-900 pb-1.5">
@@ -392,10 +399,10 @@ export default function MedicalReportPDF({
   if (isPublic) {
     return (
       <>
-        <div className="w-full bg-white text-slate-900 rounded-3xl p-4 sm:p-8 border border-slate-200 shadow-xl overflow-hidden">
-          {renderPrintableDocument()}
+        <div className="w-full bg-white text-slate-900 rounded-3xl p-4 sm:p-8 border border-slate-200 shadow-xl overflow-hidden print:hidden">
+          {renderPrintableDocument(false)}
         </div>
-        {typeof document !== 'undefined' && createPortal(renderPrintableDocument(), document.body)}
+        {typeof document !== 'undefined' && createPortal(renderPrintableDocument(true), document.body)}
       </>
     );
   }
@@ -403,7 +410,7 @@ export default function MedicalReportPDF({
   return (
     <>
       {/* VISTA PREVIA EN PANTALLA DENTRO DEL MODAL WEB */}
-      <dialog className="modal modal-open backdrop-blur-xs z-[150]">
+      <dialog className="modal modal-open backdrop-blur-xs z-[150] print:hidden">
         <div className="modal-box w-full max-w-[96vw] sm:max-w-4xl bg-white text-slate-900 rounded-3xl p-3.5 sm:p-8 border border-slate-200 shadow-2xl overflow-y-auto max-h-[92vh]">
           {/* Barra de Acciones Superior */}
           <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-3 sm:pb-4 sm:mb-4 print:hidden gap-2 sm:gap-3 flex-wrap">
@@ -442,7 +449,7 @@ export default function MedicalReportPDF({
           </div>
 
           {/* VISTA PREVIA WEB */}
-          {renderPrintableDocument()}
+          {renderPrintableDocument(false)}
         </div>
         <form method="dialog" className="modal-backdrop print:hidden">
           <button onClick={onClose}>close</button>
@@ -458,8 +465,8 @@ export default function MedicalReportPDF({
         />
       )}
 
-      {/* PORTAL REAL A DOCUMENT.BODY PARA IMPRESIÓN IMPECABLE DE 2 PÁGINAS EXACTAS */}
-      {typeof document !== 'undefined' && createPortal(renderPrintableDocument(), document.body)}
+      {/* PORTAL REAL A DOCUMENT.BODY PARA IMPRESIÓN COMPLETA MULTIPÁGINA */}
+      {typeof document !== 'undefined' && createPortal(renderPrintableDocument(true), document.body)}
     </>
   );
 }
