@@ -1,7 +1,19 @@
-// src/pages/Home.tsx
+import { useEffect } from "react";
 import { SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
 import { IconFlask } from "../components/icons";
+
+function NavigateToDashboard() {
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('lab_session_alive', 'true');
+      localStorage.setItem('lab_last_active_time', Date.now().toString());
+    } catch {
+      // Ignorar en storage bloqueado
+    }
+  }, []);
+  return <Navigate to="/dashboard" replace />;
+}
 
 export default function Home() {
   const brandName = 'Synova Lab';
@@ -137,7 +149,7 @@ export default function Home() {
       </SignedOut>
 
       <SignedIn>
-        <Navigate to="/dashboard" replace />
+        <NavigateToDashboard />
       </SignedIn>
     </div>
   );
