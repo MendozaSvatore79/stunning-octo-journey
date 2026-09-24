@@ -4,6 +4,7 @@ import type { WorkOrder } from '../types/order';
 import {
   IconClipboardList,
   IconCheckCircle,
+  IconCheck,
   IconAlertCircle,
   IconAlertTriangle,
   IconPrinter,
@@ -14,11 +15,18 @@ import {
   IconFlask,
   IconSparkles,
   IconShieldCheck,
+  IconAward,
 } from './icons';
 import {
   evaluatePanicValues,
   generateAICorrelationNote,
 } from '../utils/panicValues';
+import {
+  getSanitarySignatureConfig,
+  type SanitarySignatureConfig,
+} from '../utils/cryptoSecurity';
+import DigitalSignatureModal from './DigitalSignatureModal';
+import { useLabBranding } from '../context/LabBrandingContext';
 
 interface CaptureResultsModalProps {
   order: WorkOrder;
@@ -108,6 +116,10 @@ export default function CaptureResultsModal({
 }: CaptureResultsModalProps) {
   const api = useApi();
   const patient = order.patient;
+  const { activeBranding } = useLabBranding();
+
+  const [signatureConfig, setSignatureConfig] = useState<SanitarySignatureConfig>(getSanitarySignatureConfig);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
   // Estado ÚNICO para la plantilla maestra con todos los campos
   const [fields, setFields] = useState<ClinicalField[]>(() => {
@@ -116,12 +128,20 @@ export default function CaptureResultsModal({
 
   // Campos globales del reporte médico
   const [method, setMethod] = useState<string>('( Citometría de flujo / Cinético / Espectrofotometría / Físico / Químico / Microscópico )');
-  const [responsibleName, setResponsibleName] = useState<string>(
-    order.laboratory?.createdBy
-      ? `Q.F.B. ${order.laboratory.createdBy.firstName || ''} ${order.laboratory.createdBy.lastName || ''}`.trim()
-      : 'Q.F.B. JUAN CARLOS MENDOZA HERNÁNDEZ'
-  );
-  const [professionalId, setProfessionalId] = useState<string>('5518954');
+  const [responsibleName, setResponsibleName] = useState<string>(() => {
+    const savedConfig = getSanitarySignatureConfig();
+    return (
+      savedConfig.responsibleName ||
+      activeBranding?.responsibleName ||
+      (order.laboratory?.createdBy
+        ? `Q.F.B. ${order.laboratory.createdBy.firstName || ''} ${order.laboratory.createdBy.lastName || ''}`.trim()
+        : 'Q.F.B. JUAN CARLOS MENDOZA HERNÁNDEZ')
+    );
+  });
+  const [professionalId, setProfessionalId] = useState<string>(() => {
+    const savedConfig = getSanitarySignatureConfig();
+    return savedConfig.professionalLicense || activeBranding?.sanitaryLicense || '5518954';
+  });
   const [generalNotes, setGeneralNotes] = useState<string>(
     order.notes?.includes('Observaciones:')
       ? order.notes.split('Observaciones:')?.[1]?.trim()
@@ -411,11 +431,73 @@ export default function CaptureResultsModal({
               );
             })}
 
-            {/* SECCIÓN DE METODOLOGÍA, RESPONSABLE Y OBSERVACIONES GLOBALES */}
+            {/* SECCIÓN DE METODOLOGÍA, RESPONSABLE, FIRMA Y OBSERVACIONES GLOBALES */}
             <div className="bg-base-200/50 p-5 rounded-2xl border border-base-200 space-y-4">
-              <h3 className="text-xs font-black uppercase text-base-content/70 tracking-wider">
-                Datos Clínicos Complementarios para el PDF
-              </h3>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h3 className="text-xs font-black uppercase text-base-content/80 tracking-wider">
+                    Datos Clínicos Complementarios & Firma Sanitaria
+                  </h3>
+                  <p className="text-[11px] text-base-content/60 font-medium">
+                    Aparecerán impresos al pie del informe médico con validez oficial
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSignatureModalOpen(true)}
+                  className="btn btn-xs sm:btn-sm btn-outline btn-primary rounded-xl gap-1.5 font-bold shadow-xs hover:scale-[1.02] transition-transform"
+                  title="Configurar o dibujar la firma del Responsable Sanitario"
+                >
+                  <IconAward className="w-4 h-4 text-primary" />
+                  <span>{signatureConfig.signatureDataUrl ? 'Editar Firma Sanitaria' : 'Dibujar / Asignar Firma'}</span>
+                </button>
+              </div>
+
+              {/* Tarjeta Visual de Estado de Firma Digital del Responsable */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-base-100 p-3.5 rounded-2xl border border-base-300/80 shadow-xs">
+                <div className="flex items-center gap-3">
+                  {signatureConfig.signatureDataUrl ? (
+                    <div className="p-1.5 bg-white rounded-xl border border-slate-200 shadow-xs shrink-0">
+                      <img
+                        src={signatureConfig.signatureDataUrl}
+                        alt="Firma Digital"
+                        className="h-9 max-w-[130px] object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-11 h-11 rounded-xl bg-base-200/80 border border-dashed border-base-content/20 flex items-center justify-center text-base-content/40 shrink-0">
+                      <IconAward className="w-5 h-5 text-base-content/40" />
+                    </div>
+                  )}
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-black text-base-content uppercase">
+                        {signatureConfig.responsibleName || responsibleName}
+                      </span>
+                      {signatureConfig.signatureDataUrl ? (
+                        <span className="badge badge-xs badge-success text-white font-bold gap-1 py-1 px-1.5">
+                          <IconCheck className="w-2.5 h-2.5" /> Firma Lista
+                        </span>
+                      ) : (
+                        <span className="badge badge-xs badge-warning text-white font-bold py-1 px-1.5">
+                          Pendiente de Firma
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10.5px] text-base-content/70 font-mono font-semibold">
+                      CÉD. PROF. {signatureConfig.professionalLicense || professionalId} {signatureConfig.digitalCertificateId ? `• ${signatureConfig.digitalCertificateId}` : ''}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSignatureModalOpen(true)}
+                  className="btn btn-xs btn-ghost text-primary font-bold hover:bg-primary/10 rounded-xl"
+                >
+                  {signatureConfig.signatureDataUrl ? 'Cambiar Trazo' : '+ Dibujar Firma Ahora'}
+                </button>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
@@ -432,7 +514,10 @@ export default function CaptureResultsModal({
                   <input
                     type="text"
                     value={responsibleName}
-                    onChange={(e) => setResponsibleName(e.target.value)}
+                    onChange={(e) => {
+                      setResponsibleName(e.target.value);
+                      setSignatureConfig((prev) => ({ ...prev, responsibleName: e.target.value }));
+                    }}
                     className="input input-sm input-bordered w-full rounded-xl text-xs font-bold"
                   />
                 </div>
@@ -441,7 +526,10 @@ export default function CaptureResultsModal({
                   <input
                     type="text"
                     value={professionalId}
-                    onChange={(e) => setProfessionalId(e.target.value)}
+                    onChange={(e) => {
+                      setProfessionalId(e.target.value);
+                      setSignatureConfig((prev) => ({ ...prev, professionalLicense: e.target.value }));
+                    }}
                     className="input input-sm input-bordered w-full rounded-xl text-xs font-mono"
                   />
                 </div>
@@ -692,6 +780,17 @@ export default function CaptureResultsModal({
           </div>
         </dialog>
       )}
+
+      {/* MODAL PARA DIBUJAR O CARGAR FIRMA SANITARIA DIGITAL */}
+      <DigitalSignatureModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onSaved={(newCfg) => {
+          setSignatureConfig(newCfg);
+          setResponsibleName(newCfg.responsibleName);
+          setProfessionalId(newCfg.professionalLicense);
+        }}
+      />
     </>
   );
 }
