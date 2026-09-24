@@ -1,19 +1,10 @@
 // src/pages/Home.tsx
 import { SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
-import { useLabBranding } from "../context/LabBrandingContext";
 import { IconFlask } from "../components/icons";
 
 export default function Home() {
-  const { activeBranding } = useLabBranding();
-
-  // Nombre de identidad institucional estilizado y profesional
-  const brandName =
-    activeBranding?.name &&
-    activeBranding.name !== 'LAB-CENTROL OS' &&
-    activeBranding.name !== 'LabSystem'
-      ? activeBranding.name
-      : 'Synova Lab';
+  const brandName = 'Synova Lab';
 
   return (
     <div className="min-h-screen font-sans bg-base-100 text-base-content selection:bg-primary selection:text-primary-content">
@@ -25,19 +16,11 @@ export default function Home() {
             {/* Sutil halo ambiental en esquina */}
             <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
 
-            {/* Encabezado Institucional con Emblema de Laboratorio */}
+            {/* Encabezado Institucional con Emblema de la Plataforma */}
             <div className="relative z-10 flex items-center gap-4">
-              {activeBranding?.logo ? (
-                <img
-                  src={activeBranding.logo}
-                  alt={brandName}
-                  className="w-12 h-12 rounded-2xl object-contain bg-white p-1.5 shadow-md border border-slate-700 shrink-0"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-teal-500/20 ring-2 ring-teal-400/20 shrink-0">
-                  <IconFlask className="w-6 h-6 text-white drop-shadow-sm" />
-                </div>
-              )}
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-teal-500/20 ring-2 ring-teal-400/20 shrink-0">
+                <IconFlask className="w-6 h-6 text-white drop-shadow-sm" />
+              </div>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-black tracking-tight text-white block leading-none">
@@ -77,17 +60,9 @@ export default function Home() {
             {/* Cabecera Móvil (solo visible en pantallas pequeñas) */}
             <div className="lg:hidden flex items-center justify-between pb-4 border-b border-base-200">
               <div className="flex items-center gap-2.5 min-w-0">
-                {activeBranding?.logo ? (
-                  <img
-                    src={activeBranding.logo}
-                    alt={brandName}
-                    className="w-9 h-9 rounded-xl object-contain bg-white border border-base-300 p-1 shrink-0"
-                  />
-                ) : (
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-600 text-white flex items-center justify-center shadow-sm shrink-0">
-                    <IconFlask className="w-4 h-4 text-white" />
-                  </div>
-                )}
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-cyan-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                  <IconFlask className="w-4 h-4 text-white" />
+                </div>
                 <div className="min-w-0">
                   <span className="font-black text-base sm:text-lg text-base-content block leading-tight truncate">
                     {brandName}

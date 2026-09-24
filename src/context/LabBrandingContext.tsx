@@ -46,7 +46,9 @@ const DEFAULT_BRANDING: LabBrandingConfig = {
 };
 
 const STORAGE_PREFIX = 'lab_branding_config_';
-const SELECTED_LAB_STORAGE_KEY = 'lab_selected_active_id';
+const LEGACY_STORAGE_KEY = 'lab_selected_active_id';
+
+const getSelectedLabKey = (userId?: string) => (userId ? `lab_selected_active_id_${userId}` : null);
 
 const LabBrandingContext = createContext<LabBrandingContextType | undefined>(undefined);
 
@@ -61,16 +63,31 @@ export function LabBrandingProvider({
   const api = useApi();
   const [labs, setLabs] = useState<Laboratory[]>(initialLabs);
 
-  // Cargar labs automáticamente si no se proporcionaron
+  // Limpiar clave legada no aislada si existe para evitar filtraciones
   useEffect(() => {
+    try {
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+    } catch {
+      // Ignorar errores en entornos con storage restringido
+    }
+  }, []);
+
+  // Cargar labs automáticamente solo cuando el usuario está autenticado
+  useEffect(() => {
+    if (!userProfile?.id) {
+      setLabs(initialLabs);
+      return;
+    }
+
     if (initialLabs.length > 0) {
       setLabs(initialLabs);
       return;
     }
+
     const loadLabs = async () => {
       try {
         const res = await api.get<Laboratory[]>('/lab');
-        if (res.data && res.data.length > 0) {
+        if (res.data && Array.isArray(res.data)) {
           setLabs(res.data);
         }
       } catch (e) {
@@ -78,31 +95,43 @@ export function LabBrandingProvider({
       }
     };
     loadLabs();
-  }, [initialLabs, api]);
+  }, [userProfile?.id, initialLabs, api]);
 
-  // ID del laboratorio activo seleccionado
+  // ID del laboratorio activo seleccionado (aislado por usuario)
   const [selectedLabId, setSelectedLabIdState] = useState<string>(() => {
-    const saved = localStorage.getItem(SELECTED_LAB_STORAGE_KEY);
+    if (!userProfile?.id) return 'default';
+    const userKey = getSelectedLabKey(userProfile.id);
+    const saved = userKey ? localStorage.getItem(userKey) : null;
     return saved || (initialLabs.length > 0 ? initialLabs[0].id : 'default');
   });
 
-  // Si cambia la lista de labs y no hay seleccionado válido o apunta a un ID obsoleto, fijar el primero de la lista
+  // Reaccionar al cambio o inicio de sesión del usuario
   useEffect(() => {
-    if (labs.length > 0) {
-      const isValid = selectedLabId && selectedLabId !== 'default' && labs.some((l) => l.id === selectedLabId);
-      if (!isValid) {
-        const saved = localStorage.getItem(SELECTED_LAB_STORAGE_KEY);
-        const targetId = (saved && labs.some((l) => l.id === saved)) ? saved : labs[0].id;
-        setSelectedLabIdState(targetId);
-        localStorage.setItem(SELECTED_LAB_STORAGE_KEY, targetId);
-      }
+    if (!userProfile?.id) {
+      setSelectedLabIdState('default');
+      setLabs([]);
+      return;
     }
-  }, [labs, selectedLabId]);
+
+    const userKey = getSelectedLabKey(userProfile.id);
+    const saved = userKey ? localStorage.getItem(userKey) : null;
+    if (saved && labs.some((l) => l.id === saved)) {
+      setSelectedLabIdState(saved);
+    } else if (labs.length > 0) {
+      setSelectedLabIdState(labs[0].id);
+      if (userKey) localStorage.setItem(userKey, labs[0].id);
+    } else {
+      setSelectedLabIdState('default');
+    }
+  }, [userProfile?.id, labs]);
 
   const setSelectedLabId = useCallback((id: string) => {
     setSelectedLabIdState(id);
-    localStorage.setItem(SELECTED_LAB_STORAGE_KEY, id);
-  }, []);
+    const userKey = getSelectedLabKey(userProfile?.id);
+    if (userKey) {
+      localStorage.setItem(userKey, id);
+    }
+  }, [userProfile?.id]);
 
   // Cargar branding del laboratorio seleccionado
   const [brandingState, setBrandingState] = useState<LabBrandingConfig>(() => {
@@ -175,7 +204,8 @@ export function LabBrandingProvider({
       setBrandingState(updated);
       try {
         localStorage.setItem(`${STORAGE_PREFIX}${targetLabId}`, JSON.stringify(updated));
-        localStorage.setItem(SELECTED_LAB_STORAGE_KEY, targetLabId);
+        const userKey = getSelectedLabKey(userProfile?.id);
+        if (userKey) localStorage.setItem(userKey, targetLabId);
       } catch (storageErr) {
         console.warn('No se pudo guardar en localStorage (cuota o navegación privada):', storageErr);
       }
@@ -205,7 +235,8 @@ export function LabBrandingProvider({
             });
             if (targetLabId !== returnedLab.id) {
               setSelectedLabIdState(returnedLab.id);
-              localStorage.setItem(SELECTED_LAB_STORAGE_KEY, returnedLab.id);
+              const userKey = getSelectedLabKey(userProfile?.id);
+              if (userKey) localStorage.setItem(userKey, returnedLab.id);
             }
           }
           return { success: true, savedToDb: true };
@@ -226,7 +257,8 @@ export function LabBrandingProvider({
               });
               if (targetLabId !== returnedLab.id) {
                 setSelectedLabIdState(returnedLab.id);
-                localStorage.setItem(SELECTED_LAB_STORAGE_KEY, returnedLab.id);
+                const userKey = getSelectedLabKey(userProfile?.id);
+                if (userKey) localStorage.setItem(userKey, returnedLab.id);
               }
             }
             return { success: true, savedToDb: true };
@@ -243,7 +275,7 @@ export function LabBrandingProvider({
 
       return { success: true, savedToDb: false };
     },
-    [brandingState, labs, api]
+    [brandingState, labs, api, userProfile?.id]
   );
 
   const resetToDefault = useCallback((labId: string) => {
