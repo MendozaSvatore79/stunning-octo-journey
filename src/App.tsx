@@ -13,11 +13,15 @@ import { LabBrandingProvider } from './context/LabBrandingContext.tsx';
 import GlobalMaintenanceLanding from './components/GlobalMaintenanceLanding.tsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useSessionTimeout } from './hooks/useSessionTimeout';
 
 function AppContent() {
   const clerk = useClerk();
   const { isSignedIn, isLoaded } = useAuth();
   const { config, isVipPassed, isPreviewingMaintenance } = useMaintenance();
+
+  // Control automático de expiración de sesión por inactividad (5 min) o abandono/cierre de página
+  useSessionTimeout();
   
   // Inicializar estado persistente para mantener el overlay activo incluso durante recargas o redirecciones
   const [isSigningOut, setIsSigningOut] = useState(() => {
@@ -54,6 +58,13 @@ function AppContent() {
     const originalSignOut = clerk.signOut.bind(clerk);
 
     clerk.signOut = async (options?: any) => {
+      if (options?.immediate) {
+        sessionStorage.removeItem('lab_signing_out');
+        setIsSigningOut(false);
+        wasSignedInRef.current = false;
+        return originalSignOut(options);
+      }
+
       sessionStorage.setItem('lab_signing_out', 'true');
       setIsSigningOut(true);
       
