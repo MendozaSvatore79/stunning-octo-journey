@@ -24,6 +24,7 @@ import {
   IconQrCode,
   IconCreditCard,
   IconSparkles,
+  IconShield,
 } from './icons';
 
 export type DashboardViewType =
@@ -98,6 +99,17 @@ export default function Sidebar({
   const isOrdersActive = ['create-order', 'pending-orders', 'completed-orders'].includes(activeView);
   const isQCActive = ['qc-controls', 'qc-results', 'qc-levey-jennings'].includes(activeView);
   const isCatalogActive = ['analysis-catalog', 'add-analysis'].includes(activeView);
+  const isGovernanceActive = [
+    'network-metrics',
+    'subscriptions-billing',
+    'audit-logs',
+    'system-health',
+    'announcements',
+    'price-agreements',
+    'report-templates',
+    'tickets',
+    'general-settings',
+  ].includes(activeView);
 
   return (
     <div className="drawer lg:drawer-open">
@@ -483,129 +495,110 @@ export default function Sidebar({
                   </button>
                 </li>
 
+                {/* SUBMENÚ DROPDOWN: GOBERNANZA Y CONTROL CENTRAL */}
                 <li className="mt-2 pt-2 border-t border-base-200">
-                  <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
-                    Gobernanza y Control Central
-                  </span>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('network-metrics')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'network-metrics' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Métricas consolidadas a nivel nacional, volumen de órdenes, semáforo sanitario y TAT"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
-                      <IconChartLine className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Métricas de la Red</span>
-                    <span className="badge badge-primary badge-xs font-bold text-[9px]">KPIs</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('subscriptions-billing')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'subscriptions-billing' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Gestión de planes SaaS, límites de cuotas mensuales y facturación"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
-                      <IconCreditCard className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Suscripciones SaaS</span>
-                    <span className="badge badge-success text-white badge-xs font-bold text-[9px]">PLANES</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('audit-logs')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'audit-logs' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Bitácora inmutable de auditoría y trazabilidad ISO 15189"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                      <IconHistory className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Bitácora de Auditoría</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('system-health')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'system-health' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Monitor en vivo de infraestructura, latencia de base de datos y memoria"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
-                      <IconHeartPulse className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Salud del Sistema</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('announcements')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'announcements' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Emisión y control de comunicados globales y alertas operativas"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
-                      <IconMegaphone className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Comunicados Globales</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('price-agreements')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'price-agreements' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Gestión de convenios, tarifas especiales y aseguradoras"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
-                      <IconHandshake className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Convenios y Precios</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('report-templates')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'report-templates' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Personalización de plantilla médica, firmas y código QR"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20">
-                      <IconQrCode className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Plantilla Oficial & QR</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('tickets')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'tickets' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Gestión y supervisión de tickets de soporte técnico generados por Synova IA"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
-                      <IconTicket className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Tickets de Soporte</span>
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    onClick={() => handleNav('general-settings')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                    title="Configuración de identidad institucional de la sede activa"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                      <IconBuilding className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Configuración General</span>
-                  </button>
+                  <details open={isGovernanceActive}>
+                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isGovernanceActive ? 'bg-base-200 font-bold' : ''}`}>
+                      <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                        <IconShield className="w-4 h-4" />
+                      </div>
+                      <span className="truncate flex-1 font-semibold text-left">Gobernanza y Control</span>
+                    </summary>
+                    <ul className="mt-1 space-y-0.5">
+                      <li>
+                        <button
+                          onClick={() => handleNav('network-metrics')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'network-metrics' ? 'active font-bold' : ''}`}
+                          title="Métricas consolidadas a nivel nacional, volumen de órdenes, semáforo sanitario y TAT"
+                        >
+                          <IconChartLine className="w-3.5 h-3.5 opacity-80 shrink-0 text-indigo-500" />
+                          <span className="truncate flex-1 text-left">Métricas de la Red</span>
+                          <span className="badge badge-primary badge-xs font-bold text-[8px]">KPIs</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('subscriptions-billing')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'subscriptions-billing' ? 'active font-bold' : ''}`}
+                          title="Gestión de planes SaaS, límites de cuotas mensuales y facturación"
+                        >
+                          <IconCreditCard className="w-3.5 h-3.5 opacity-80 shrink-0 text-amber-500" />
+                          <span className="truncate flex-1 text-left">Suscripciones SaaS</span>
+                          <span className="badge badge-success text-white badge-xs font-bold text-[8px]">PLANES</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('audit-logs')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'audit-logs' ? 'active font-bold' : ''}`}
+                          title="Bitácora inmutable de auditoría y trazabilidad ISO 15189"
+                        >
+                          <IconHistory className="w-3.5 h-3.5 opacity-80 shrink-0 text-emerald-500" />
+                          <span className="truncate flex-1 text-left">Bitácora de Auditoría</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('system-health')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'system-health' ? 'active font-bold' : ''}`}
+                          title="Monitor en vivo de infraestructura, latencia de base de datos y memoria"
+                        >
+                          <IconHeartPulse className="w-3.5 h-3.5 opacity-80 shrink-0 text-rose-500" />
+                          <span className="truncate flex-1 text-left">Salud del Sistema</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('announcements')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'announcements' ? 'active font-bold' : ''}`}
+                          title="Emisión y control de comunicados globales y alertas operativas"
+                        >
+                          <IconMegaphone className="w-3.5 h-3.5 opacity-80 shrink-0 text-indigo-500" />
+                          <span className="truncate flex-1 text-left">Comunicados Globales</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('price-agreements')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'price-agreements' ? 'active font-bold' : ''}`}
+                          title="Gestión de convenios, tarifas especiales y aseguradoras"
+                        >
+                          <IconHandshake className="w-3.5 h-3.5 opacity-80 shrink-0 text-teal-500" />
+                          <span className="truncate flex-1 text-left">Convenios y Precios</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('report-templates')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'report-templates' ? 'active font-bold' : ''}`}
+                          title="Personalización de plantilla médica, firmas y código QR"
+                        >
+                          <IconQrCode className="w-3.5 h-3.5 opacity-80 shrink-0 text-cyan-500" />
+                          <span className="truncate flex-1 text-left">Plantilla Oficial & QR</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('tickets')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'tickets' ? 'active font-bold' : ''}`}
+                          title="Gestión y supervisión de tickets de soporte técnico generados por Synova IA"
+                        >
+                          <IconTicket className="w-3.5 h-3.5 opacity-80 shrink-0 text-amber-500" />
+                          <span className="truncate flex-1 text-left">Tickets de Soporte</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('general-settings')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'general-settings' ? 'active font-bold' : ''}`}
+                          title="Configuración de identidad institucional de la sede activa"
+                        >
+                          <IconBuilding className="w-3.5 h-3.5 opacity-80 shrink-0 text-primary" />
+                          <span className="truncate flex-1 text-left">Configuración General</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </details>
                 </li>
               </>
             )}
