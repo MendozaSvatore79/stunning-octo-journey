@@ -24,6 +24,16 @@ function AppContent() {
     return sessionStorage.getItem('lab_signing_out') === 'true';
   });
 
+  // Detección y auto-recuperación si la URL de WhatsApp vino con prefijos residuales
+  useEffect(() => {
+    const fullHref = window.location.href;
+    const surveyIdx = fullHref.indexOf('/survey/');
+    if (surveyIdx !== -1 && !window.location.pathname.startsWith('/survey')) {
+      const targetPath = fullHref.substring(surveyIdx).split('?')[0];
+      window.location.replace(targetPath);
+    }
+  }, []);
+
   const wasSignedInRef = useRef(false);
 
   // Auto-cerrar el overlay de salida tras 2.5 segundos con desvanecimiento

@@ -10,6 +10,7 @@ import AdminDashboardView from '../components/AdminDashboardView';
 import OperatorDashboardView from '../components/OperatorDashboardView';
 import ModuleMaintenanceView from '../components/ModuleMaintenanceView';
 import { IconSparkles, IconMenu, IconSettings, IconFlask } from '../components/icons';
+import { toast } from 'react-toastify';
 
 // Carga perezosa (Code Splitting) de vistas pesadas
 const CreateLabModal = lazy(() => import('../components/CreateLabModal'));
@@ -105,8 +106,17 @@ export default function Dashboard() {
     // Detección de retorno de pasarela de pago Polar Checkout
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout_success') === 'true') {
-      const plan = params.get('plan') || '';
-      alert(`🎉 ¡Pago procesado con éxito! Tu plan ${plan} está activo con tus 14 días de prueba gratis.`);
+      const rawPlan = params.get('plan') || '';
+      // Si por URL residual el parámetro contiene /survey/, redirigir de inmediato a la vista pública de la encuesta
+      if (rawPlan.includes('/survey/')) {
+        const surveyPath = rawPlan.substring(rawPlan.indexOf('/survey/')).split('?')[0];
+        window.location.replace(surveyPath);
+        return;
+      }
+      const cleanPlan = rawPlan.split('/')[0].replace(/[^A-Za-z0-9_-]/g, '');
+      toast.success(`🎉 ¡Pago procesado con éxito! Tu plan ${cleanPlan || 'seleccionado'} está activo con tus 14 días de prueba gratis.`, {
+        autoClose: 5000,
+      });
       window.history.replaceState({}, document.title, window.location.pathname);
       fetchUserSubscription();
     }
