@@ -453,7 +453,7 @@ export default function Sidebar({
               <>
                 <li className="mt-2 pt-2 border-t border-base-200">
                   <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
-                    Red Hospitalaria y Catálogo
+                    Red Hospitalaria y Sedes
                   </span>
                 </li>
 
@@ -468,38 +468,6 @@ export default function Sidebar({
                     </div>
                     <span className="truncate flex-1 text-left">Directorio de Sedes</span>
                   </button>
-                </li>
-
-                <li>
-                  <details open={isCatalogActive}>
-                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isCatalogActive ? 'bg-base-200 font-bold' : ''}`}>
-                      <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
-                        <IconMicroscope className="w-4 h-4" />
-                      </div>
-                      <span className="truncate">Catálogo de Servicios</span>
-                    </summary>
-                    <ul className="mt-1 space-y-0.5">
-                      <li>
-                        <button
-                          onClick={() => handleNav('analysis-catalog')}
-                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'analysis-catalog' ? 'active font-bold' : ''}`}
-                        >
-                          <IconFlask className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                          <span className="truncate">Lista de Estudios</span>
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() => handleNav('add-analysis')}
-                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'add-analysis' ? 'active font-bold' : ''}`}
-                        >
-                          <IconPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
-                          <span className="truncate">Dar de Alta Estudio</span>
-                          <span className="badge badge-primary badge-xs font-bold text-[8px]">NUEVO</span>
-                        </button>
-                      </li>
-                    </ul>
-                  </details>
                 </li>
 
                 <li>

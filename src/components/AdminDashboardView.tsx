@@ -281,40 +281,34 @@ export default function AdminDashboardView({
               </div>
             </div>
 
-            {/* Card: Catálogo y Servicios */}
+            {/* Card: Sedes y Personal */}
             <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                    <IconFlask className="w-4 h-4" />
+                    <IconBuilding className="w-4 h-4" />
                   </div>
                   <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
-                    Parámetros
+                    Gobernanza
                   </span>
                 </div>
                 <h3 className="font-bold text-base text-base-content mb-1">
-                  Catálogo de Servicios
+                  Directorio de Sedes y Personal
                 </h3>
                 <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                  Configuración de estudios clínicos, valores de referencia y precios del laboratorio.
+                  Supervisión general de laboratorios de la red, asignación de personal y control institucional.
                 </p>
               </div>
               <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
                 <button
-                  onClick={() => onNavigate?.('add-analysis')}
+                  onClick={() => onNavigate?.('labs')}
                   className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs shadow-xs"
                 >
-                  <IconPlus className="w-4 h-4" /> Dar de Alta Estudio
-                </button>
-                <button
-                  onClick={() => onNavigate?.('analysis-catalog')}
-                  className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 text-base-content/80 rounded-xl gap-2 font-semibold justify-start text-xs"
-                >
-                  <IconArrowRight className="w-4 h-4 text-primary" /> Ver Catálogo de Estudios
+                  <IconBuilding className="w-4 h-4" /> Ver Directorio de Sedes
                 </button>
                 <button
                   onClick={() => onNavigate?.('add-user')}
-                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
+                  className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 text-base-content/80 rounded-xl gap-2 font-semibold justify-start text-xs"
                 >
                   <IconUsers className="w-4 h-4 text-primary" /> Gestión de Personal
                 </button>
