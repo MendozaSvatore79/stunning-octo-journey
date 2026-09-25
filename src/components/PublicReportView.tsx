@@ -15,6 +15,14 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
   const [order, setOrder] = useState<WorkOrder | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+
+  const handleDownloadPDF = async () => {
+    if (!order) return;
+    const folio = order.folio || order.id.slice(0, 6);
+    const pName = `${order.patient?.firstName || ''}_${order.patient?.lastName || ''}`.trim().replace(/\s+/g, '_') || 'Paciente';
+    await downloadReportPDF('screen-pdf-document', `Reporte_Folio_${folio}_${pName}.pdf`, setIsDownloading);
+  };
 
   // Extraer el orderId desde los parámetros de React Router, props o URL limpia
   const getOrderId = (): string => {
@@ -147,15 +155,6 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
       </div>
     );
   }
-
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  const handleDownloadPDF = async () => {
-    if (!order) return;
-    const folio = order.folio || order.id.slice(0, 6);
-    const pName = `${order.patient?.firstName || ''}_${order.patient?.lastName || ''}`.trim().replace(/\s+/g, '_') || 'Paciente';
-    await downloadReportPDF('screen-pdf-document', `Reporte_Folio_${folio}_${pName}.pdf`, setIsDownloading);
-  };
 
   const labLogo = order.laboratory?.logo;
   const labName = order.laboratory?.name || 'LABORATORIO CLÍNICO CENTRAL';
