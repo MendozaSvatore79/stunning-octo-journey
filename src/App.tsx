@@ -131,6 +131,7 @@ function AppContent() {
         {/* Rutas Públicas de Consulta de PDF y Encuesta de Satisfacción Sin Necesidad de Iniciar Sesión */}
         <Route path="/results/:orderId" element={<PublicReportView />} />
         <Route path="/results" element={<PublicReportView />} />
+        <Route path="/verify/:orderId" element={<PublicReportView />} />
         <Route path="/verify" element={<PublicReportView />} />
         <Route path="/survey/:orderId" element={<SatisfactionSurveyView />} />
         <Route path="/survey" element={<SatisfactionSurveyView />} />
