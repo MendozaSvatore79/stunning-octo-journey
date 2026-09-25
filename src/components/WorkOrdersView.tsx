@@ -23,7 +23,6 @@ import {
   IconX,
   IconClock,
   IconPhone,
-  IconSend,
   IconSearch,
   IconFilter,
 } from './icons';
@@ -99,7 +98,6 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   };
 
   const [sendingWhatsAppOrderId, setSendingWhatsAppOrderId] = useState<string | null>(null);
-  const [sendingSmsOrderId, setSendingSmsOrderId] = useState<string | null>(null);
 
   // Sistema de Notificaciones Flotantes Tipo Toastify
   interface ToastNotification {
@@ -162,37 +160,6 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       }
     } finally {
       setSendingWhatsAppOrderId(null);
-    }
-  };
-
-  // Despacho Automático de SMS mediante AWS SNS
-  const handleSendAutomatedSms = async (ord: WorkOrder) => {
-    if (!ord.patient?.phone) {
-      addToast('El paciente no cuenta con un número de celular registrado.', 'error', '⚠️ Sin Teléfono');
-      return;
-    }
-    setSendingSmsOrderId(ord.id);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    try {
-      const res = await api.post<{ success: boolean; phone: string; folio: string | number; message: string }>(
-        `/orders/${ord.id}/sms`
-      );
-      const rawDigits = (res.data?.phone || ord.patient.phone || '').replace(/[^\d]/g, '');
-      const cleanFormattedPhone = rawDigits.startsWith('52') ? `+${rawDigits}` : `+52${rawDigits}`;
-      const folioNumber = ord.folio || ord.id.slice(0, 6);
-
-      addToast(
-        `SMS de AWS SNS enviado con éxito al paciente ${cleanFormattedPhone} (Folio #${folioNumber}).`,
-        'success',
-        '✅ SMS AWS Enviado'
-      );
-    } catch (err: any) {
-      console.error('Error al enviar SMS de AWS:', err);
-      const msg = err?.response?.data?.message || err?.message || 'Error de conexión con AWS SNS';
-      addToast(`No se pudo enviar el SMS de AWS: ${msg}.`, 'error', '⚠️ Error AWS SMS');
-    } finally {
-      setSendingSmsOrderId(null);
     }
   };
 
@@ -1311,22 +1278,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                             ) : (
                               <IconPhone className="w-3.5 h-3.5" />
                             )}
-                            <span>WhatsApp</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleSendAutomatedSms(order)}
-                            disabled={sendingSmsOrderId === order.id}
-                            className="btn btn-xs sm:btn-sm btn-info text-info-content font-bold gap-1.5 rounded-xl shadow-xs"
-                            title="Despachar notificación oficial por SMS vía AWS SNS"
-                          >
-                            {sendingSmsOrderId === order.id ? (
-                              <span className="loading loading-spinner loading-xs"></span>
-                            ) : (
-                              <IconSend className="w-3.5 h-3.5" />
-                            )}
-                            <span>SMS (AWS)</span>
+                            <span>WhatsApp Auto</span>
                           </button>
 
                           <button

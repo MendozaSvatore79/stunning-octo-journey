@@ -11,7 +11,6 @@ import {
   IconX,
   IconPlus,
   IconPhone,
-  IconSend,
   IconMail,
   IconFlask,
   IconSparkles,
@@ -306,28 +305,6 @@ export default function CaptureResultsModal({
       alert('No se pudo re-enviar el WhatsApp automático con UltraMsg. Puedes usar la opción de respaldo.');
     } finally {
       setIsSendingAutoWA(false);
-    }
-  };
-
-  const [isSendingSms, setIsSendingSms] = useState(false);
-  const [smsSuccessMsg, setSmsSuccessMsg] = useState<string | null>(null);
-
-  // Disparo por SMS mediante AWS SNS
-  const handleTriggerSms = async () => {
-    setIsSendingSms(true);
-    setSmsSuccessMsg(null);
-    try {
-      const res = await api.post<{ success: boolean; phone: string; folio: string | number; message: string }>(
-        `/orders/${order.id}/sms`
-      );
-      setSmsSuccessMsg(
-        `✅ SMS de AWS SNS enviado exitosamente a +${res.data?.phone || cleanPhone}.`
-      );
-    } catch (err: any) {
-      console.error('Error enviando SMS de AWS:', err);
-      alert('No se pudo enviar el SMS con AWS SNS.');
-    } finally {
-      setIsSendingSms(false);
     }
   };
 
@@ -652,28 +629,13 @@ export default function CaptureResultsModal({
                 <IconCheckCircle className="w-5 h-5 text-success shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold block text-success text-xs sm:text-sm">
-                    {smsSuccessMsg || autoWASuccessMsg || '¡Notificación automática despachada en segundo plano!'}
+                    {autoWASuccessMsg || '¡WhatsApp automático despachado en segundo plano!'}
                   </span>
                   <p className="text-[11px] text-base-content/70 mt-0.5">
-                    El sistema notificó a <strong>+{patientPhone}</strong> con el folio #{folioNumber} y el enlace al reporte oficial.
+                    El sistema envió la notificación por UltraMsg a <strong>+{patientPhone}</strong> con el folio #{folioNumber} y el enlace al reporte oficial.
                   </p>
                 </div>
               </div>
-
-              {/* Botón Envío por SMS de AWS SNS */}
-              <button
-                type="button"
-                onClick={handleTriggerSms}
-                disabled={isSendingSms}
-                className="btn btn-info text-white w-full rounded-2xl font-bold gap-2 shadow-md hover:scale-[1.01] transition-transform"
-              >
-                {isSendingSms ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  <IconSend className="w-5 h-5" />
-                )}
-                <span>Enviar Notificación por SMS (AWS SNS)</span>
-              </button>
 
               {/* Botón Re-enviar Automático por UltraMsg */}
               <button
