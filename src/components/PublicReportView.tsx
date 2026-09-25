@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import type { WorkOrder } from '../types/order';
 import MedicalReportPDF from './MedicalReportPDF';
-import { IconPrinter, IconAlertCircle } from './icons';
+import { IconPrinter, IconAlertCircle, IconDownload } from './icons';
+import { downloadReportPDF } from '../utils/pdfDownloader';
 
 interface PublicReportViewProps {
   orderId?: string;
@@ -147,34 +148,84 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
     );
   }
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    if (!order) return;
+    const folio = order.folio || order.id.slice(0, 6);
+    const pName = `${order.patient?.firstName || ''}_${order.patient?.lastName || ''}`.trim().replace(/\s+/g, '_') || 'Paciente';
+    await downloadReportPDF('screen-pdf-document', `Reporte_Folio_${folio}_${pName}.pdf`, setIsDownloading);
+  };
+
+  const labLogo = order.laboratory?.logo;
+  const labName = order.laboratory?.name || 'LABORATORIO CLÍNICO CENTRAL';
+
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col items-center justify-start p-4 sm:p-8 space-y-6">
-      {/* Barra de Encabezado Público */}
-      <div className="w-full max-w-4xl bg-slate-900 text-white p-4 sm:p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-700 flex items-center justify-center text-white font-black text-xl shadow-md shrink-0">
-            L
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-black tracking-tight">{order.laboratory?.name || 'LABORATORIO CLÍNICO CENTRAL'}</h1>
-              <span className="badge badge-success text-white font-mono text-xs font-bold">
+    <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col items-center justify-start p-2.5 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+      {/* Barra de Encabezado Público (Blanco Clínico Pulcro y Responsivo) */}
+      <div className="w-full max-w-4xl bg-white text-slate-900 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 sm:gap-4 print:hidden">
+        <div className="flex items-center gap-3 min-w-0">
+          {labLogo ? (
+            <img
+              src={labLogo}
+              alt={labName}
+              className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-2xl shrink-0 border border-slate-100"
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-teal-700 to-cyan-800 flex items-center justify-center text-white font-black text-xl shadow-xs shrink-0">
+              {labName?.[0] || 'L'}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900 uppercase truncate">
+                {labName}
+              </h1>
+              <span className="badge badge-success text-white font-mono text-[11px] sm:text-xs font-black shadow-xs">
                 FOLIO #{order.folio || order.id.slice(0, 6)}
               </span>
             </div>
-            <p className="text-xs text-slate-300 font-medium">
-              Paciente: <strong>{order.patient?.firstName} {order.patient?.lastName}</strong> | Reporte Clínico Validado
+            <p className="text-[11px] sm:text-xs text-slate-600 font-medium truncate mt-0.5">
+              Paciente: <strong className="text-slate-900 font-bold">{order.patient?.firstName} {order.patient?.lastName}</strong> <span className="hidden xs:inline text-slate-400">| Reporte Clínico Validado</span>
             </p>
           </div>
         </div>
 
-        <button
-          onClick={() => window.print()}
-          className="btn btn-primary text-white font-bold rounded-2xl gap-2 shadow-lg w-full sm:w-auto"
-        >
-          <IconPrinter className="w-5 h-5" />
-          Descargar / Imprimir PDF
-        </button>
+        {/* Acciones de Descarga e Impresión */}
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            className="btn btn-primary text-white font-bold rounded-xl sm:rounded-2xl gap-2 shadow-sm hover:shadow-md flex-1 sm:flex-initial btn-sm sm:btn-md"
+            title="Descargar archivo PDF directamente a tu dispositivo"
+          >
+            {isDownloading ? (
+              <>
+                <span className="loading loading-spinner loading-xs"></span>
+                <span>Generando PDF...</span>
+              </>
+            ) : (
+              <>
+                <IconDownload className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Descargar PDF</span>
+              </>
+            )}
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="btn btn-outline btn-ghost text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl sm:rounded-2xl gap-1.5 btn-sm sm:btn-md shrink-0"
+            title="Abrir diálogo de impresión o enviar a impresora"
+          >
+            <IconPrinter className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden md:inline">Imprimir</span>
+          </button>
+        </div>
       </div>
 
       {/* RENDERIZADO COMPLETO DEL DOCUMENTO MÉDICO PDF EN MODO PÚBLICO (SOLO LECTURA) */}

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '@clerk/clerk-react';
 import type { WorkOrder } from '../types/order';
 import QRCodeSVG from './QRCodeSVG';
-import { IconPrinter, IconX, IconAward } from './icons';
+import { IconPrinter, IconX, IconAward, IconDownload } from './icons';
 import {
   getSanitarySignatureConfig,
   generateOrderCryptoHash,
@@ -11,6 +11,7 @@ import {
 } from '../utils/cryptoSecurity';
 import DigitalSignatureModal from './DigitalSignatureModal';
 import { useLabBranding } from '../context/LabBrandingContext';
+import { downloadReportPDF } from '../utils/pdfDownloader';
 
 interface MedicalReportPDFProps {
   order: WorkOrder;
@@ -51,6 +52,13 @@ export default function MedicalReportPDF({
   const [signatureConfig, setSignatureConfig] = useState<SanitarySignatureConfig>(getSanitarySignatureConfig);
   const [cryptoHash, setCryptoHash] = useState<string>('');
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    const folio = currentOrder.folio || currentOrder.id.slice(0, 6);
+    const pName = `${patient?.firstName || ''}_${patient?.lastName || ''}`.trim().replace(/\s+/g, '_') || 'Paciente';
+    await downloadReportPDF('screen-pdf-document', `Reporte_Folio_${folio}_${pName}.pdf`, setIsDownloading);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -230,33 +238,35 @@ export default function MedicalReportPDF({
       className={
         isPrintVersion
           ? 'hidden print:block w-full bg-white text-slate-900 font-sans text-[10px] leading-tight space-y-2 p-0'
-          : 'print:hidden w-full bg-white text-slate-900 font-sans text-[11px] leading-tight space-y-2.5'
+          : 'print:hidden w-full bg-white text-slate-900 font-sans text-[10.5px] sm:text-[11px] leading-tight space-y-2.5'
       }
     >
       
       {/* ENCABEZADO COMPACTO DE LABORATORIO */}
-      <div className="flex items-start justify-between border-b-2 border-slate-900 pb-1.5">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-start justify-between border-b-2 border-slate-900 pb-1.5 gap-2">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
           {effectiveLogo ? (
             <img
               src={effectiveLogo}
               alt={effectiveLabName}
-              className="w-11 h-11 object-contain rounded-xl"
+              className="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-xl shrink-0"
               onError={(e) => {
                 (e.target as HTMLElement).style.display = 'none';
               }}
             />
           ) : (
-            <div className="w-11 h-11 bg-gradient-to-tr from-teal-700 to-cyan-800 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-sm shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-tr from-teal-700 to-cyan-800 text-white rounded-xl flex items-center justify-center font-black text-lg sm:text-xl shadow-sm shrink-0">
               {effectiveLabName?.[0] || 'L'}
             </div>
           )}
-          <div>
-            <h1 className="text-base font-black uppercase text-slate-900 tracking-tight leading-none">{effectiveLabName}</h1>
-            <p className="text-[10px] text-slate-600 font-medium mt-0.5">
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-black uppercase text-slate-900 tracking-tight leading-tight truncate sm:whitespace-normal">
+              {effectiveLabName}
+            </h1>
+            <p className="text-[9px] sm:text-[10px] text-slate-600 font-medium mt-0.5 line-clamp-2 sm:line-clamp-none">
               {effectiveAddress}
             </p>
-            <p className="text-[8.5px] text-slate-500 font-semibold">
+            <p className="text-[8px] sm:text-[8.5px] text-slate-500 font-semibold hidden xs:block">
               Certificado de Calidad y Registro Sanitario Oficial
             </p>
           </div>
@@ -264,38 +274,38 @@ export default function MedicalReportPDF({
 
         {/* Código QR de Autenticidad */}
         <div className="text-center shrink-0">
-          <QRCodeSVG value={verificationUrl} size={70} />
-          <span className="block text-[7px] font-mono font-bold text-slate-600 mt-0.5 uppercase tracking-tighter">
+          <QRCodeSVG value={verificationUrl} size={isPrintVersion ? 70 : 64} />
+          <span className="block text-[6.5px] sm:text-[7px] font-mono font-bold text-slate-600 mt-0.5 uppercase tracking-tighter">
             QR DE AUTENTICIDAD
           </span>
         </div>
       </div>
 
       {/* FICHA TÉCNICA DEL PACIENTE */}
-      <div className="border border-slate-300 rounded-lg p-2 bg-slate-50/60 grid grid-cols-12 gap-1 text-[10.5px] font-semibold uppercase leading-tight">
-        <div className="col-span-8">
+      <div className="border border-slate-300 rounded-lg p-2 bg-slate-50/60 grid grid-cols-2 sm:grid-cols-12 gap-1.5 sm:gap-1 text-[10px] sm:text-[10.5px] font-semibold uppercase leading-tight">
+        <div className="col-span-2 sm:col-span-8">
           <span className="text-slate-500 font-bold">PACIENTE:</span>{' '}
           <span className="text-slate-900 font-black">{patient?.firstName} {patient?.lastName}</span>
         </div>
-        <div className="col-span-4 text-right">
+        <div className="col-span-2 sm:col-span-4 sm:text-right">
           <span className="text-slate-500 font-bold">FECHA INGRESO:</span>{' '}
           <span className="text-slate-900">{fechaIngreso}</span>
         </div>
 
-        <div className="col-span-4">
+        <div className="col-span-1 sm:col-span-4">
           <span className="text-slate-500 font-bold">EDAD:</span>{' '}
           <span className="text-slate-900">{age} AÑOS</span>
         </div>
-        <div className="col-span-4 text-center">
+        <div className="col-span-1 sm:col-span-4 sm:text-center">
           <span className="text-slate-500 font-bold">SEXO:</span>{' '}
           <span className="text-slate-900">{patient?.gender === 'M' ? 'MASCULINO' : patient?.gender === 'F' ? 'FEMENINO' : 'OTRO'}</span>
         </div>
-        <div className="col-span-4 text-right">
+        <div className="col-span-2 sm:col-span-4 sm:text-right">
           <span className="text-slate-500 font-bold">FECHA IMPRESIÓN:</span>{' '}
           <span className="text-slate-900">{fechaImpresion}</span>
         </div>
 
-        <div className="col-span-12 border-t border-slate-200 pt-1 mt-0.5">
+        <div className="col-span-2 sm:col-span-12 border-t border-slate-200 pt-1 mt-0.5">
           <span className="text-slate-500 font-bold">MÉDICO:</span>{' '}
           <span className="text-slate-900 font-bold">{currentOrder.notes?.split('|')?.[0]?.replace('Médico:', '')?.trim() || 'A QUIEN CORRESPONDA'}</span>
         </div>
@@ -313,31 +323,33 @@ export default function MedicalReportPDF({
               style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
             >
               <div className="text-center border-b border-slate-900 pb-0.5">
-                <h2 className="text-[11px] font-black tracking-wider uppercase text-slate-900">
+                <h2 className="text-[10.5px] sm:text-[11px] font-black tracking-wider uppercase text-slate-900">
                   {catName}
                 </h2>
               </div>
 
-              <table className="w-full text-left text-[10.5px] border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-700 text-slate-700 uppercase font-black text-[9.5px]">
-                    <th className="py-0.5 w-2/5">ESTUDIO</th>
-                    <th className="py-0.5 text-center w-1/5">RESULTADOS</th>
-                    <th className="py-0.5 text-center w-1/6">UNIDADES</th>
-                    <th className="py-0.5 text-right w-1/4">VALORES REFERENCIA</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {itemsList.map((item, idx) => (
-                    <tr key={idx} className="py-0">
-                      <td className="py-0.5 font-bold uppercase text-slate-900">{item.name}</td>
-                      <td className="py-0.5 text-center font-mono font-black text-[11px] text-slate-900">{item.val}</td>
-                      <td className="py-0.5 text-center font-medium text-slate-600">{item.units}</td>
-                      <td className="py-0.5 text-right font-mono text-slate-700 font-semibold">{item.ref}</td>
+              <div className="overflow-x-auto -mx-0.5 sm:mx-0">
+                <table className="w-full min-w-[320px] text-left text-[10px] sm:text-[10.5px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-700 text-slate-700 uppercase font-black text-[9px] sm:text-[9.5px]">
+                      <th className="py-1 sm:py-0.5 w-[38%]">ESTUDIO</th>
+                      <th className="py-1 sm:py-0.5 text-center w-[22%]">RESULTADOS</th>
+                      <th className="py-1 sm:py-0.5 text-center w-[18%]">UNIDADES</th>
+                      <th className="py-1 sm:py-0.5 text-right w-[22%]">VALORES REFERENCIA</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {itemsList.map((item, idx) => (
+                      <tr key={idx} className="py-0 hover:bg-slate-50/50">
+                        <td className="py-1 sm:py-0.5 font-bold uppercase text-slate-900 pr-1 break-words">{item.name}</td>
+                        <td className="py-1 sm:py-0.5 text-center font-mono font-black text-[10.5px] sm:text-[11px] text-slate-900 px-1">{item.val}</td>
+                        <td className="py-1 sm:py-0.5 text-center font-medium text-slate-600 text-[9.5px] sm:text-[10px] px-1">{item.units}</td>
+                        <td className="py-1 sm:py-0.5 text-right font-mono text-slate-700 font-semibold text-[9.5px] sm:text-[10px] pl-1">{item.ref}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           );
         })}
@@ -345,7 +357,7 @@ export default function MedicalReportPDF({
 
       {/* OBSERVACIONES Y MÉTODOS ANALÍTICOS (Protegidos de cortes) */}
       <div
-        className="border-t border-b border-slate-800 py-1.5 space-y-0.5 text-[9.5px] break-inside-avoid"
+        className="border-t border-b border-slate-800 py-1.5 space-y-0.5 text-[9px] sm:text-[9.5px] break-inside-avoid"
         style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
       >
         <p className="font-bold text-slate-900">
@@ -366,27 +378,27 @@ export default function MedicalReportPDF({
             <img
               src={signatureConfig.signatureDataUrl}
               alt="Firma Digital"
-              className="h-12 max-w-[200px] object-contain mb-0.5"
+              className="h-10 sm:h-12 max-w-[180px] sm:max-w-[200px] object-contain mb-0.5"
             />
           ) : (
-            <div className="h-9"></div>
+            <div className="h-8 sm:h-9"></div>
           )}
-          <div className="w-56 border-t-2 border-slate-800 mx-auto mb-0.5"></div>
-          <p className="font-bold text-slate-700 text-[9px] uppercase tracking-widest">RESPONSABLE SANITARIO</p>
-          <p className="font-black text-slate-900 text-[10.5px] uppercase">{signatureConfig.responsibleName || responsableStr}</p>
-          <p className="text-[9px] text-slate-600 font-mono font-bold">CED. PROF. {signatureConfig.professionalLicense || cedulaStr}</p>
+          <div className="w-48 sm:w-56 border-t-2 border-slate-800 mx-auto mb-0.5"></div>
+          <p className="font-bold text-slate-700 text-[8.5px] sm:text-[9px] uppercase tracking-widest">RESPONSABLE SANITARIO</p>
+          <p className="font-black text-slate-900 text-[10px] sm:text-[10.5px] uppercase">{signatureConfig.responsibleName || responsableStr}</p>
+          <p className="text-[8.5px] sm:text-[9px] text-slate-600 font-mono font-bold">CED. PROF. {signatureConfig.professionalLicense || cedulaStr}</p>
           {signatureConfig.digitalCertificateId && (
-            <p className="text-[8px] text-slate-500 font-mono leading-none">CERTIFICADO: {signatureConfig.digitalCertificateId}</p>
+            <p className="text-[7.5px] sm:text-[8px] text-slate-500 font-mono leading-none mt-0.5">CERTIFICADO: {signatureConfig.digitalCertificateId}</p>
           )}
         </div>
 
         {/* Sello Digital Criptográfico SHA-256 */}
         <div className="mt-1.5 pt-1 border-t border-slate-200 text-left px-1">
-          <div className="flex items-center justify-between text-[7px] font-mono text-slate-500 leading-none">
+          <div className="flex flex-col xs:flex-row xs:items-center justify-between text-[6.5px] sm:text-[7px] font-mono text-slate-500 leading-tight gap-0.5">
             <span>SELLO DIGITAL DE AUTENTICIDAD CLÍNICA (SHA-256):</span>
             <span className="font-bold text-slate-700">NORMATIVA ISO 15189 / NOM-007-SSA3</span>
           </div>
-          <div className="text-[6.5px] font-mono font-bold text-slate-800 tracking-wider break-all select-all mt-0.5">
+          <div className="text-[6px] sm:text-[6.5px] font-mono font-bold text-slate-800 tracking-wider break-all select-all mt-0.5">
             {cryptoHash || 'CALCULANDO-SELLO-CRIPTOGRAFICO...'}
           </div>
         </div>
@@ -399,7 +411,7 @@ export default function MedicalReportPDF({
   if (isPublic) {
     return (
       <>
-        <div className="w-full bg-white text-slate-900 rounded-3xl p-4 sm:p-8 border border-slate-200 shadow-xl overflow-hidden print:hidden">
+        <div className="w-full bg-white text-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-7 border border-slate-200/90 shadow-md sm:shadow-xl overflow-hidden print:hidden">
           {renderPrintableDocument(false)}
         </div>
         {typeof document !== 'undefined' && createPortal(renderPrintableDocument(true), document.body)}
@@ -419,7 +431,7 @@ export default function MedicalReportPDF({
               <span className="badge badge-success text-white font-mono text-[11px] sm:text-xs">FOLIO #{currentOrder.folio || currentOrder.id.slice(0, 6)}</span>
             </div>
             
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               {/* Botón restringido únicamente al personal clínico autenticado */}
               {canConfigureSignature && (
                 <button
@@ -434,11 +446,27 @@ export default function MedicalReportPDF({
                 </button>
               )}
               <button
-                onClick={() => window.print()}
+                type="button"
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
                 className="btn btn-primary text-white font-bold rounded-xl gap-1.5 sm:gap-2 shadow-md btn-xs sm:btn-sm"
+                title="Descargar archivo PDF directamente"
+              >
+                {isDownloading ? (
+                  <span className="loading loading-spinner loading-xs"></span>
+                ) : (
+                  <IconDownload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                )}
+                <span>Descargar PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="btn btn-ghost text-slate-700 font-bold rounded-xl gap-1.5 shadow-xs btn-xs sm:btn-sm hover:bg-slate-100"
+                title="Abrir diálogo de impresión directa"
               >
                 <IconPrinter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>Imprimir PDF</span>
+                <span className="hidden sm:inline">Imprimir</span>
               </button>
               {onClose && (
                 <button onClick={onClose} className="btn btn-xs sm:btn-sm btn-circle btn-ghost text-slate-500">
