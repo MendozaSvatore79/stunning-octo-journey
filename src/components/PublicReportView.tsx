@@ -244,53 +244,83 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
   // PANTALLA OFICIAL DE VIGENCIA DE PREVISUALIZACIÓN EXPIRADA (15 MINUTOS CUMPLIDOS)
   if (isExpired) {
     const labName = order.laboratory?.name || 'LABORATORIO CLÍNICO CENTRAL';
+    const labLogo = order.laboratory?.logo;
     const labAddress = [order.laboratory?.address, order.laboratory?.city, order.laboratory?.state]
       .filter(Boolean)
       .join(', ') || 'Sede Central del Laboratorio';
     const folio = order.folio || order.id.slice(0, 6);
 
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center">
-        <div className="w-full max-w-lg bg-slate-900 border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center space-y-5">
-          <div className="w-20 h-20 rounded-full bg-amber-500/10 border-2 border-amber-500/30 flex items-center justify-center text-amber-400">
-            <span className="text-3xl">⏰</span>
+      <div className="min-h-screen bg-slate-100/90 text-slate-900 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
+        <div className="w-full max-w-lg bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col items-center space-y-5">
+          {/* Identidad del Laboratorio / Logotipo */}
+          <div className="flex flex-col items-center space-y-3">
+            {labLogo ? (
+              <img
+                src={labLogo}
+                alt={labName}
+                className="w-16 h-16 object-contain rounded-2xl border border-slate-100 shadow-2xs p-1 bg-white"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-teal-700 to-cyan-800 text-white font-black text-2xl flex items-center justify-center shadow-xs">
+                {labName?.[0] || 'L'}
+              </div>
+            )}
+            <span className="badge border border-amber-300 bg-amber-50 text-amber-900 font-bold text-[11px] uppercase tracking-wider py-2.5 px-3.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+              <span>⏱️</span> Vigencia Temporal Finalizada
+            </span>
           </div>
 
-          <div className="space-y-2">
-            <span className="badge badge-warning font-mono font-bold text-xs uppercase tracking-wider">
-              Vigencia Temporal Finalizada
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-white">
+          {/* Título y Datos del Paciente */}
+          <div className="space-y-1.5">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Previsualización Expirada
             </h2>
-            <p className="text-sm font-semibold text-amber-200/90">
-              Folio #{folio} - Plazo de 15 minutos cumplido
+            <p className="text-xs sm:text-sm font-semibold text-slate-500">
+              Folio <span className="font-mono font-bold text-teal-700">#{folio}</span> • Plazo de 15 minutos cumplido
+            </p>
+            <p className="text-xs text-slate-600 font-medium">
+              Paciente: <strong className="text-slate-900 font-bold">{order.patient?.firstName} {order.patient?.lastName}</strong>
             </p>
           </div>
 
-          <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 text-left space-y-2.5">
-            <p>
-              🔒 <strong>Protección de Información Médica:</strong> Por normatividad sanitaria oficial y resguardo de confidencialidad de datos clínicos, la previsualización digital temporal se desactiva tras <strong>15 minutos</strong> de su liberación.
-            </p>
-            <p>
-              🏥 <strong>Recolección de Resultados Oficiales:</strong> Para fines médicos, legales o trámites oficiales, debe acudir a recoger su reporte <strong>impreso, membretado y firmado</strong> de manera física en nuestra sucursal:
-            </p>
-            <div className="p-3 bg-slate-900 rounded-xl border border-slate-700/50 mt-2">
-              <p className="font-bold text-teal-400 text-sm">{labName}</p>
-              <p className="text-slate-400 text-[11px] mt-0.5">{labAddress}</p>
+          {/* Cuadro de Información Médica Oficial */}
+          <div className="w-full bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs text-slate-700 text-left space-y-3 shadow-2xs">
+            <div className="flex items-start gap-2.5">
+              <span className="text-base shrink-0 mt-0.5">🔒</span>
+              <p className="leading-relaxed">
+                <strong className="text-slate-900 font-bold">Protección de Datos Médicos:</strong> Por normatividad sanitaria oficial y confidencialidad clínica, la previsualización digital se desactiva tras <strong>15 minutos</strong> de su emisión.
+              </p>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="text-base shrink-0 mt-0.5">📋</span>
+              <p className="leading-relaxed">
+                <strong className="text-slate-900 font-bold">Resultados Oficiales:</strong> Para fines médicos, legales o trámites oficiales, debe acudir a recoger su reporte <strong>impreso, membretado y firmado</strong> de manera física en nuestra sucursal:
+              </p>
+            </div>
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 mt-1 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-600 shrink-0"></span>
+                <p className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-tight">{labName}</p>
+              </div>
+              <p className="text-slate-500 text-[11px] mt-1 pl-4.5">{labAddress}</p>
             </div>
           </div>
 
-          <div className="w-full pt-2 flex flex-col sm:flex-row gap-3">
+          {/* Botones de Navegación */}
+          <div className="w-full pt-1 flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => (window.location.href = '/')}
-              className="btn btn-outline border-slate-700 text-slate-300 hover:bg-slate-800 rounded-2xl flex-1 text-xs"
+              className="btn btn-outline border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 rounded-xl flex-1 text-xs font-bold"
             >
-              Ir al Portal Principal
+              Ir al Inicio
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="btn btn-warning font-bold rounded-2xl flex-1 text-xs"
+              className="btn bg-teal-700 hover:bg-teal-800 text-white font-bold rounded-xl flex-1 text-xs border-none shadow-xs"
             >
               Reintentar Consulta
             </button>
