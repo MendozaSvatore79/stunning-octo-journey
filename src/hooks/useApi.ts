@@ -11,7 +11,7 @@ export const useApi = () => {
     const rawApiUrl =
       import.meta.env.VITE_API_URL ||
       import.meta.env.API_URL ||
-      'https://lab-backend-1-5ob0.onrender.com';
+      'https://api.synovasystems.com';
     const instance = axios.create({
       baseURL: rawApiUrl,
       timeout: 15000,

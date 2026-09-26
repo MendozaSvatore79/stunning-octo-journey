@@ -55,7 +55,7 @@ export default function SatisfactionSurveyView() {
   const apiBase =
     import.meta.env.VITE_API_URL ||
     import.meta.env.API_URL ||
-    'https://lab-backend-1-5ob0.onrender.com';
+    'https://api.synovasystems.com';
 
   // Extraer el orderId desde los parámetros de React Router o query string
   const getOrderId = (): string => {
