@@ -1,10 +1,8 @@
-// src/components/PublicReportView.tsx
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import type { WorkOrder } from '../types/order';
 import MedicalReportPDF from './MedicalReportPDF';
-import { IconPrinter, IconAlertCircle, IconDownload } from './icons';
-import { downloadReportPDF } from '../utils/pdfDownloader';
+import { IconAlertCircle } from './icons';
 
 interface PublicReportViewProps {
   orderId?: string;
@@ -15,21 +13,8 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
   const [order, setOrder] = useState<WorkOrder | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isExpired, setIsExpired] = useState<boolean>(false);
   const [remainingTimeStr, setRemainingTimeStr] = useState<string>('15:00');
-  const [s3PdfUrl, setS3PdfUrl] = useState<string | null>(null);
-
-  const handleDownloadPDF = async () => {
-    if (!order) return;
-    if (s3PdfUrl) {
-      window.open(s3PdfUrl, '_blank');
-      return;
-    }
-    const folio = order.folio || order.id.slice(0, 6);
-    const pName = `${order.patient?.firstName || ''}_${order.patient?.lastName || ''}`.trim().replace(/\s+/g, '_') || 'Paciente';
-    await downloadReportPDF('screen-pdf-document', `Reporte_Folio_${folio}_${pName}.pdf`, setIsDownloading);
-  };
 
   // Extraer el orderId desde los parámetros de React Router, props o URL limpia
   const getOrderId = (): string => {
@@ -97,10 +82,8 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
     fetch(`${apiBase}/orders/public/${order.id}/pdf-status`)
       .then((res) => (res.ok ? res.json() : null))
       .then((status) => {
-        if (status?.presignedUrl) {
-          setS3PdfUrl(status.presignedUrl);
-        } else if (!status?.isExpired) {
-          // Si no tiene PDF en S3, sincronizarlo en segundo plano usando html2pdf
+        if (!status?.presignedUrl && !status?.isExpired) {
+          // Si no tiene PDF en S3, respaldarlo en segundo plano usando html2pdf
           setTimeout(async () => {
             try {
               // @ts-ignore
@@ -371,37 +354,12 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
           </div>
         </div>
 
-        {/* Acciones de Descarga e Impresión */}
-        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={handleDownloadPDF}
-            disabled={isDownloading}
-            className="btn btn-primary text-white font-bold rounded-xl sm:rounded-2xl gap-2 shadow-sm hover:shadow-md flex-1 sm:flex-initial btn-sm sm:btn-md"
-            title="Descargar archivo PDF directamente a tu dispositivo"
-          >
-            {isDownloading ? (
-              <>
-                <span className="loading loading-spinner loading-xs"></span>
-                <span>Generando PDF...</span>
-              </>
-            ) : (
-              <>
-                <IconDownload className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>Descargar PDF</span>
-              </>
-            )}
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="btn btn-outline btn-ghost text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl sm:rounded-2xl gap-1.5 btn-sm sm:btn-md shrink-0"
-            title="Abrir diálogo de impresión o enviar a impresora"
-          >
-            <IconPrinter className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden md:inline">Imprimir</span>
-          </button>
+        {/* Indicador de Solo Lectura Digital (Sin Descarga ni Impresión) */}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="badge badge-outline border-teal-600/30 bg-teal-50/80 text-teal-800 text-xs font-bold py-2.5 px-3.5 rounded-xl gap-2 shadow-2xs">
+            <span className="w-2 h-2 rounded-full bg-teal-600 animate-pulse"></span>
+            Solo Lectura Digital
+          </span>
         </div>
       </div>
 

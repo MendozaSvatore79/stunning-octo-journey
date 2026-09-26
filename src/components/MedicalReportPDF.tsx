@@ -407,15 +407,12 @@ export default function MedicalReportPDF({
     </div>
   );
 
-  // Si se visualiza desde la URL pública o QR, renderizar directamente sin modal ni botones de edición
+  // Si se visualiza desde la URL pública o QR, renderizar en modo estrictamente de solo lectura y bloqueado para impresión
   if (isPublic) {
     return (
-      <>
-        <div className="w-full bg-white text-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-7 border border-slate-200/90 shadow-md sm:shadow-xl overflow-hidden print:hidden">
-          {renderPrintableDocument(false)}
-        </div>
-        {typeof document !== 'undefined' && createPortal(renderPrintableDocument(true), document.body)}
-      </>
+      <div className="w-full bg-white text-slate-900 rounded-2xl sm:rounded-3xl p-3 sm:p-7 border border-slate-200/90 shadow-md sm:shadow-xl overflow-hidden print:hidden select-none">
+        {renderPrintableDocument(false)}
+      </div>
     );
   }
 
