@@ -258,7 +258,8 @@ export default function PriceAgreementsView({ labs }: PriceAgreementsViewProps) 
   };
 
   // Filtrar por término de búsqueda y por Sede seleccionada
-  const filtered = agreements.filter((a) => {
+  const agreementList = Array.isArray(agreements) ? agreements : [];
+  const filtered = agreementList.filter((a) => {
     const matchesSearch =
       a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -271,7 +272,7 @@ export default function PriceAgreementsView({ labs }: PriceAgreementsViewProps) 
     return a.laboratories?.some((l) => l.id === selectedLabFilter);
   });
 
-  const activeCount = agreements.filter((a) => a.isActive).length;
+  const activeCount = agreementList.filter((a) => a.isActive).length;
   const avgDiscount =
     agreements.length > 0
       ? Math.round(agreements.reduce((acc, curr) => acc + curr.discountPct, 0) / agreements.length)

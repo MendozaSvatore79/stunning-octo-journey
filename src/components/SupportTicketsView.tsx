@@ -77,7 +77,8 @@ export default function SupportTicketsView() {
 
   // Filtrado de tickets
   const filteredTickets = useMemo(() => {
-    return tickets.filter((t) => {
+    const list = Array.isArray(tickets) ? tickets : [];
+    return list.filter((t) => {
       if (statusFilter !== 'ALL' && t.status !== statusFilter) return false;
       if (priorityFilter !== 'ALL' && t.priority !== priorityFilter) return false;
       if (categoryFilter !== 'ALL' && t.category !== categoryFilter) return false;
@@ -98,12 +99,13 @@ export default function SupportTicketsView() {
 
   // Contadores y métricas
   const metrics = useMemo(() => {
+    const list = Array.isArray(tickets) ? tickets : [];
     return {
-      total: tickets.length,
-      open: tickets.filter((t) => t.status === 'ABIERTO').length,
-      inProgress: tickets.filter((t) => t.status === 'EN_PROCESO').length,
-      resolved: tickets.filter((t) => t.status === 'RESUELTO').length,
-      critical: tickets.filter((t) => t.priority === 'CRITICA' && t.status !== 'RESUELTO' && t.status !== 'CERRADO').length,
+      total: list.length,
+      open: list.filter((t) => t.status === 'ABIERTO').length,
+      inProgress: list.filter((t) => t.status === 'EN_PROCESO').length,
+      resolved: list.filter((t) => t.status === 'RESUELTO').length,
+      critical: list.filter((t) => t.priority === 'CRITICA' && t.status !== 'RESUELTO' && t.status !== 'CERRADO').length,
     };
   }, [tickets]);
 

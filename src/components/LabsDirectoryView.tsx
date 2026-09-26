@@ -46,15 +46,16 @@ export default function LabsDirectoryView({
 
   // Para usuarios no admin (ej. LAB_TECHNICIAN), se muestran ESTRICTAMENTE sus sedes dadas de alta
   const baseLabs = useMemo(() => {
+    const list = Array.isArray(labs) ? labs : [];
     if (isAdmin) {
       if (filterOwnerOnly) {
-        return labs.filter((lab) =>
+        return list.filter((lab) =>
           isUserLaboratory(lab, userProfile, user?.id, user?.primaryEmailAddress?.emailAddress)
         );
       }
-      return labs;
+      return list;
     }
-    return labs.filter((lab) =>
+    return list.filter((lab) =>
       isUserLaboratory(lab, userProfile, user?.id, user?.primaryEmailAddress?.emailAddress)
     );
   }, [labs, isAdmin, filterOwnerOnly, userProfile, user]);

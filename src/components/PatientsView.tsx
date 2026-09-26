@@ -56,13 +56,14 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
     setIsLoadingPatients(true);
     try {
       const res = await api.get<Patient[]>('/patients');
-      const data = res.data || [];
+      const data = Array.isArray(res.data) ? res.data : [];
       setPatients(data);
       if (data.length > 0 && !selectedPatient) {
         setSelectedPatient(data[0]);
       }
     } catch (err) {
       console.error('Error al cargar pacientes:', err);
+      setPatients([]);
     } finally {
       setIsLoadingPatients(false);
     }
@@ -74,7 +75,8 @@ export default function PatientsView({ initialTab = 'directory' }: PatientsViewP
 
   // Búsqueda filtrada de pacientes
   const filteredPatients = useMemo(() => {
-    return patients.filter((p) => {
+    const list = Array.isArray(patients) ? patients : [];
+    return list.filter((p) => {
       const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
       const query = searchTerm.toLowerCase();
       return (

@@ -57,13 +57,14 @@ export default function Dashboard() {
   const [labs, setLabs] = useState<Laboratory[]>(() => {
     try {
       const cached = sessionStorage.getItem(LABS_CACHE_KEY);
-      return cached ? JSON.parse(cached) : [];
+      const parsed = cached ? JSON.parse(cached) : [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
   });
 
-  const [isLoadingLabs, setIsLoadingLabs] = useState<boolean>(() => labs.length === 0);
+  const [isLoadingLabs, setIsLoadingLabs] = useState<boolean>(() => !Array.isArray(labs) || labs.length === 0);
   const [isCreateLabOpen, setIsCreateLabOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isMaintenanceControlOpen, setIsMaintenanceControlOpen] = useState(false);
@@ -73,11 +74,14 @@ export default function Dashboard() {
   const fetchLabs = useCallback(async () => {
     try {
       const response = await api.get<Laboratory[]>('/lab');
-      const data = response.data || [];
+      const data = Array.isArray(response.data) ? response.data : [];
       setLabs(data);
-      sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify(data));
+      if (Array.isArray(response.data)) {
+        sessionStorage.setItem(LABS_CACHE_KEY, JSON.stringify(data));
+      }
     } catch (error) {
       console.error('Error al cargar la lista de laboratorios:', error);
+      setLabs([]);
     } finally {
       setIsLoadingLabs(false);
     }

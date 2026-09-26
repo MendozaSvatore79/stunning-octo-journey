@@ -199,10 +199,10 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         api.get<UserSubscription>('/subscription/me'),
       ]);
 
-      const loadedPatients = resPatients.status === 'fulfilled' ? (resPatients.value.data || []) : [];
-      const loadedLabs = resLabs.status === 'fulfilled' ? (resLabs.value.data || []) : [];
-      const loadedStudies = resStudies.status === 'fulfilled' ? (resStudies.value.data || []) : [];
-      const loadedOrders = resOrders.status === 'fulfilled' ? (resOrders.value.data || []) : [];
+      const loadedPatients = resPatients.status === 'fulfilled' && Array.isArray(resPatients.value.data) ? resPatients.value.data : [];
+      const loadedLabs = resLabs.status === 'fulfilled' && Array.isArray(resLabs.value.data) ? resLabs.value.data : [];
+      const loadedStudies = resStudies.status === 'fulfilled' && Array.isArray(resStudies.value.data) ? resStudies.value.data : [];
+      const loadedOrders = resOrders.status === 'fulfilled' && Array.isArray(resOrders.value.data) ? resOrders.value.data : [];
       if (resSub.status === 'fulfilled') {
         setSubscription(resSub.value.data);
       }

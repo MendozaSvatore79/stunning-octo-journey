@@ -49,7 +49,10 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
       setErrorMsg(null);
 
       try {
-        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        const apiBase =
+          import.meta.env.VITE_API_URL ||
+          import.meta.env.API_URL ||
+          'https://lab-backend-1-5ob0.onrender.com';
         const response = await fetch(`${apiBase}/orders/public/${idToFetch}`);
         
         if (!response.ok) {

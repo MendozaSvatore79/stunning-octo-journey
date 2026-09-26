@@ -8,9 +8,13 @@ export const useApi = () => {
 
   // useMemo asegura que la instancia de Axios no se recree en cada renderizado
   const api = useMemo(() => {
+    const rawApiUrl =
+      import.meta.env.VITE_API_URL ||
+      import.meta.env.API_URL ||
+      'https://lab-backend-1-5ob0.onrender.com';
     const instance = axios.create({
-      baseURL: import.meta.env.VITE_API_URL,
-      timeout: 10000, // Timeout de 10 segundos para evitar bloqueos prolongados si el servidor de Render está dormido
+      baseURL: rawApiUrl,
+      timeout: 15000,
     });
 
     // Interceptor que se ejecuta ANTES de cada petición

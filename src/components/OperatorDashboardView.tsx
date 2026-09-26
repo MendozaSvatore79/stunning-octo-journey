@@ -48,7 +48,8 @@ export default function OperatorDashboardView({
 
   // Filtrar estrictamente solo las sedes pertenecientes o asignadas a este operador
   const myLabs = useMemo(() => {
-    return labs.filter((lab) =>
+    const list = Array.isArray(labs) ? labs : [];
+    return list.filter((lab) =>
       isUserLaboratory(lab, userProfile, user?.id, user?.primaryEmailAddress?.emailAddress)
     );
   }, [labs, userProfile, user]);
