@@ -71,6 +71,7 @@ export default function SatisfactionSurveyView() {
 
   useEffect(() => {
     if (!orderId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setErrorMsg('No se especificó un número de orden o folio válido.');
       setIsLoading(false);
       return;
@@ -101,7 +102,7 @@ export default function SatisfactionSurveyView() {
         } catch {
           // Ignorar si no existe encuesta previa
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn('Error al cargar orden para encuesta:', err);
         // Fallback demostrativo
         setOrder({
@@ -160,7 +161,7 @@ export default function SatisfactionSurveyView() {
       }
 
       setIsSubmitted(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error enviando encuesta:', err);
       // Permitir feedback positivo incluso con modo local/offline
       setIsSubmitted(true);

@@ -39,6 +39,7 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
 
   useEffect(() => {
     if (!idToFetch) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setErrorMsg('No se especificó un ID de orden o folio válido.');
       setIsLoading(false);
       return;
@@ -61,7 +62,7 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
 
         const data: WorkOrder = await response.json();
         setOrder(data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.warn('Backend API /orders/public no respondió, activando renderizado resiliente...', err);
         
         // Fallback de demostración médica resiliente si el id es local o la base de datos se restableció
