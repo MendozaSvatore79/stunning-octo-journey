@@ -164,13 +164,32 @@ export default function CaptureResultsModal({
   const [hasRecheckedSample, setHasRecheckedSample] = useState(false);
   const [isGeneratingCorrelation, setIsGeneratingCorrelation] = useState(false);
 
-  const handleSuggestCorrelation = () => {
+  const handleSuggestCorrelation = async () => {
     setIsGeneratingCorrelation(true);
-    setTimeout(() => {
-      const aiNote = generateAICorrelationNote(fields, patient?.dateOfBirth, patient?.gender);
-      setGeneralNotes(aiNote);
+    try {
+      const age = patient?.dateOfBirth
+        ? Math.abs(new Date(Date.now() - new Date(patient.dateOfBirth).getTime()).getUTCFullYear() - 1970)
+        : undefined;
+
+      const res = await api.post<{ success: boolean; correlation: string }>('/ai/correlation', {
+        patientAge: age,
+        patientGender: patient?.gender,
+        fields,
+      });
+
+      if (res.data?.correlation) {
+        setGeneralNotes(res.data.correlation);
+      } else {
+        const fallback = generateAICorrelationNote(fields, patient?.dateOfBirth, patient?.gender);
+        setGeneralNotes(fallback);
+      }
+    } catch (err) {
+      console.warn('Fallback a correlación clínica heurística:', err);
+      const fallback = generateAICorrelationNote(fields, patient?.dateOfBirth, patient?.gender);
+      setGeneralNotes(fallback);
+    } finally {
       setIsGeneratingCorrelation(false);
-    }, 350);
+    }
   };
 
   // Formatear datos de contacto del paciente
@@ -305,6 +324,28 @@ export default function CaptureResultsModal({
       alert('No se pudo re-enviar el WhatsApp automático con UltraMsg. Puedes usar la opción de respaldo.');
     } finally {
       setIsSendingAutoWA(false);
+    }
+  };
+
+  const [isSendingEmailSES, setIsSendingEmailSES] = useState(false);
+  const [emailSESSuccessMsg, setEmailSESSuccessMsg] = useState<string | null>(null);
+
+  // Disparo Oficial de Correo mediante Amazon SES
+  const handleTriggerEmailSES = async () => {
+    setIsSendingEmailSES(true);
+    setEmailSESSuccessMsg(null);
+    try {
+      const res = await api.post<{ success: boolean; email: string; folio: string | number; message: string }>(
+        `/orders/${order.id}/email`
+      );
+      setEmailSESSuccessMsg(
+        `✅ Correo oficial enviado a ${res.data?.email || patientEmail} vía Amazon SES.`
+      );
+    } catch (err: any) {
+      console.error('Error enviando correo con Amazon SES:', err);
+      alert('No se pudo enviar el correo mediante Amazon SES. Verifique que el correo o dominio esté verificado en AWS.');
+    } finally {
+      setIsSendingEmailSES(false);
     }
   };
 
@@ -652,16 +693,23 @@ export default function CaptureResultsModal({
                 <span>Re-enviar WhatsApp Automático (UltraMsg)</span>
               </button>
 
-              {/* Botón Correo Electrónico */}
-              <a
-                href={mailtoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-neutral text-white w-full rounded-2xl font-bold gap-2 shadow-sm"
-              >
-                <IconMail className="w-5 h-5" />
-                Enviar Reporte por Correo ({patientEmail})
-              </a>
+              {/* Botón Correo Electrónico Oficial con Amazon SES */}
+              {emailSESSuccessMsg ? (
+                <div className="alert alert-success text-xs py-2.5 px-3.5 rounded-2xl shadow-xs text-white font-medium">
+                  <span>{emailSESSuccessMsg}</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleTriggerEmailSES}
+                  disabled={isSendingEmailSES}
+                  className="btn bg-cyan-700 hover:bg-cyan-800 text-white w-full rounded-2xl font-bold gap-2 shadow-sm border-none"
+                  title="Enviar correo electrónico oficial formateado mediante Amazon SES"
+                >
+                  <IconMail className="w-5 h-5" />
+                  {isSendingEmailSES ? 'Enviando por Amazon SES...' : `Enviar Correo Oficial (${patientEmail})`}
+                </button>
+              )}
 
               {/* Opciones secundarias de respaldo */}
               <div className="pt-1 flex items-center justify-between text-xs text-base-content/60">
@@ -682,7 +730,18 @@ export default function CaptureResultsModal({
                   title="Abrir WhatsApp Web manualmente como respaldo si UltraMsg no estuviera disponible"
                 >
                   <IconPhone className="w-3.5 h-3.5" />
-                  Abrir WhatsApp Web (Respaldo manual)
+                  WhatsApp Web (manual)
+                </a>
+
+                <a
+                  href={mailtoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link link-hover inline-flex items-center gap-1 font-semibold text-slate-500 hover:text-primary"
+                  title="Abrir cliente de correo local como respaldo"
+                >
+                  <IconMail className="w-3.5 h-3.5" />
+                  Email manual
                 </a>
               </div>
             </div>

@@ -34,6 +34,7 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
     if (!order) return;
 
     if (order.status !== 'COMPLETED') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsExpired(false);
       return;
     }
@@ -86,7 +87,7 @@ export default function PublicReportView({ orderId: propOrderId }: PublicReportV
           // Si no tiene PDF en S3, respaldarlo en segundo plano usando html2pdf
           setTimeout(async () => {
             try {
-              // @ts-ignore
+              
               const html2pdfModule = await import('html2pdf.js');
               const html2pdf = html2pdfModule.default || html2pdfModule;
               const element = document.getElementById('screen-pdf-document');
