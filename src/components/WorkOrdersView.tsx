@@ -8,6 +8,7 @@ import type { PriceAgreement } from '../types/agreement';
 import CaptureResultsModal from './CaptureResultsModal';
 import MedicalReportPDF from './MedicalReportPDF';
 import BarcodeThermalLabelModal from './BarcodeThermalLabelModal';
+import PrescriptionScannerModal from './PrescriptionScannerModal';
 import QRCodeSVG from './QRCodeSVG';
 import {
   IconClipboardList,
@@ -25,6 +26,7 @@ import {
   IconPhone,
   IconSearch,
   IconFilter,
+  IconSparkles,
 } from './icons';
 import { PlanSelectionModal } from './PlanSelectionModal';
 import type { UserSubscription } from '../types/subscription';
@@ -64,6 +66,39 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
 
   const [createdOrderTicket, setCreatedOrderTicket] = useState<WorkOrder | null>(null);
   const [isQuickPatientOpen, setIsQuickPatientOpen] = useState(false);
+  const [isPrescriptionScannerOpen, setIsPrescriptionScannerOpen] = useState(false);
+
+  // Manejar aplicación automática de datos de la receta médica escaneada con Textract
+  const handleApplyPrescription = (data: {
+    doctorName?: string;
+    patientName?: string;
+    selectedStudyIds: string[];
+  }) => {
+    if (data.doctorName) {
+      setDoctorName(data.doctorName);
+    }
+
+    if (data.patientName && (!selectedPatientId || selectedPatientId === '')) {
+      const found = patients.find((p) =>
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(data.patientName!.toLowerCase())
+      );
+      if (found) {
+        setSelectedPatientId(found.id);
+      }
+    }
+
+    if (data.selectedStudyIds && data.selectedStudyIds.length > 0) {
+      const toAdd = studies.filter(
+        (s) => data.selectedStudyIds.includes(s.id) && !selectedStudiesList.some((existing) => existing.id === s.id)
+      );
+      if (toAdd.length > 0) {
+        setSelectedStudiesList((prev) => [...prev, ...toAdd]);
+      }
+    }
+
+    setSuccessMsg(`¡Receta digitalizada con Amazon Textract! ${data.selectedStudyIds.length} estudio(s) vinculados a la orden.`);
+    setTimeout(() => setSuccessMsg(null), 5000);
+  };
 
   // Estados para modal de Captura de Resultados, PDF Oficial y Etiquetas Térmicas
   const [selectedOrderForCapture, setSelectedOrderForCapture] = useState<WorkOrder | null>(null);
@@ -167,6 +202,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   const [quickPatientData, setQuickPatientData] = useState({
     firstName: '',
     lastName: '',
+    curp: '',
     dateOfBirth: '',
     gender: 'M',
     phone: '',
@@ -377,6 +413,7 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       setQuickPatientData({
         firstName: '',
         lastName: '',
+        curp: '',
         dateOfBirth: '',
         gender: 'M',
         phone: '',
@@ -697,9 +734,20 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
           <div className="lg:col-span-7 space-y-6">
             <div className="card bg-base-100 border border-base-200 shadow-xs rounded-2xl p-5 sm:p-6 space-y-5">
               
-              <h2 className="text-xs sm:text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2 border-b border-base-200 pb-3">
-                <IconUsers className="w-4 h-4" /> 1. Datos del Paciente y Médico Tratante
-              </h2>
+              <div className="flex items-center justify-between border-b border-base-200 pb-3">
+                <h2 className="text-xs sm:text-sm font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+                  <IconUsers className="w-4 h-4" /> 1. Datos del Paciente y Médico Tratante
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsPrescriptionScannerOpen(true)}
+                  className="btn btn-xs bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 rounded-xl font-bold gap-1.5 shadow-xs transition-all hover:scale-105"
+                  title="Tomar foto o subir receta médica para autocompletar la orden con Amazon Textract"
+                >
+                  <IconSparkles className="w-3.5 h-3.5" />
+                  <span>Escanear Receta (IA Textract)</span>
+                </button>
+              </div>
 
               {/* Campo Paciente con Select y Botón Agregar */}
               <div className="space-y-1.5">
@@ -1515,15 +1563,33 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                 </div>
               </div>
 
-              <div className="form-control">
-                <label className="label py-1"><span className="label-text font-bold">Teléfono</span></label>
-                <input
-                  type="tel"
-                  placeholder="Ej. +52 33 1234 5678"
-                  className="input input-bordered input-sm rounded-xl font-medium"
-                  value={quickPatientData.phone}
-                  onChange={(e) => setQuickPatientData((prev) => ({ ...prev, phone: e.target.value }))}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="form-control">
+                  <label className="label py-1"><span className="label-text font-bold">Teléfono</span></label>
+                  <input
+                    type="tel"
+                    placeholder="Ej. +52 33 1234 5678"
+                    className="input input-bordered input-sm rounded-xl font-medium"
+                    value={quickPatientData.phone}
+                    onChange={(e) => setQuickPatientData((prev) => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text font-bold flex items-center gap-1">
+                      CURP <span className="badge badge-xs badge-neutral text-[9px] font-mono">Cifrado AES-256</span>
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="18 caracteres alfanuméricos"
+                    maxLength={18}
+                    className="input input-bordered input-sm rounded-xl font-medium uppercase"
+                    value={quickPatientData.curp}
+                    onChange={(e) => setQuickPatientData((prev) => ({ ...prev, curp: e.target.value.toUpperCase() }))}
+                  />
+                </div>
               </div>
 
               <div className="modal-action border-t border-base-200 pt-3 mt-4">
@@ -1554,6 +1620,14 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         onPlanChanged={loadInitialData}
+      />
+
+      {/* MODAL DE ESCANEO DE RECETA MÉDICA CON AMAZON TEXTRACT (IA) */}
+      <PrescriptionScannerModal
+        isOpen={isPrescriptionScannerOpen}
+        onClose={() => setIsPrescriptionScannerOpen(false)}
+        availableStudies={studies}
+        onApplyPrescription={handleApplyPrescription}
       />
 
     </div>
