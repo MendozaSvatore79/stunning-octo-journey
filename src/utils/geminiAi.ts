@@ -11,7 +11,7 @@ export interface SynovaAnalysisResult {
     likelyCause: string;
     suggestedAction: string;
   };
-  source: 'gemini' | 'clinical_engine';
+  source: 'bedrock' | 'gemini' | 'clinical_engine';
 }
 
 const STORAGE_KEY = 'synova_gemini_api_key';
@@ -244,9 +244,30 @@ export async function querySynovaGemini(
   userName: string,
   apiClient?: { post: (url: string, data: any) => Promise<any> }
 ): Promise<SynovaAnalysisResult> {
+  // CASO 1 (PRIORITARIO): Consultar al Backend con Amazon Bedrock (Claude 3 Haiku)
+  if (apiClient) {
+    try {
+      const backendRes = await apiClient.post('/support/ai-chat', {
+        message: userInput,
+        history,
+        userName,
+      });
+
+      if (backendRes?.data && (backendRes.data.source === 'bedrock' || backendRes.data.source === 'gemini') && backendRes.data.reply) {
+        return {
+          reply: backendRes.data.reply,
+          suggestedTicket: backendRes.data.suggestedTicket,
+          source: backendRes.data.source,
+        };
+      }
+    } catch (err) {
+      console.warn('Backend ai-chat no disponible o sin credenciales, evaluando alternativa:', err);
+    }
+  }
+
   const apiKey = getGeminiApiKey();
 
-  // CASO 1: Hay API Key en el Frontend
+  // CASO 2: Respaldo directo en Frontend si hay API Key de Gemini
   if (apiKey) {
     const systemInstruction = `
 Eres Synova, la especialista de soporte técnico clínico del sistema y analizadores de LabSystem Clinique.
@@ -407,27 +428,6 @@ Responde siempre en español.
       }
     } catch (err) {
       console.warn('Error llamando a Gemini desde frontend:', err);
-    }
-  }
-
-  // CASO 2: Consultar al Backend (donde Render tiene las variables de entorno como GEMINI_API_KEY)
-  if (apiClient) {
-    try {
-      const backendRes = await apiClient.post('/support/ai-chat', {
-        message: userInput,
-        history,
-        userName,
-      });
-
-      if (backendRes?.data && backendRes.data.source === 'gemini' && backendRes.data.reply) {
-        return {
-          reply: backendRes.data.reply,
-          suggestedTicket: backendRes.data.suggestedTicket,
-          source: 'gemini',
-        };
-      }
-    } catch (err) {
-      console.warn('Backend ai-chat no disponible o sin API key, usando motor clínico local.');
     }
   }
 

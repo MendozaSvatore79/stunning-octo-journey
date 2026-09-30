@@ -58,6 +58,7 @@ function AppContent() {
     const originalSignOut = clerk.signOut.bind(clerk);
 
     clerk.signOut = async (options?: any) => {
+      sessionStorage.removeItem('lab_user_profile_cache');
       if (options?.immediate) {
         sessionStorage.removeItem('lab_signing_out');
         setIsSigningOut(false);

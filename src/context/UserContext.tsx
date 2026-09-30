@@ -63,13 +63,45 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [isSignedIn, api]);
 
+  // Si cambia el usuario autenticado (o se cierra sesión), invalidar cache ajeno
   useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
+    if (!isSignedIn) {
+      setUserProfile(null);
+      sessionStorage.removeItem(CACHE_KEY);
+      return;
+    }
 
-  // Extraer el rol de forma INSTANTÁNEA (0ms) desde userProfile -> Clerk metadata -> Fallback a TECH
+    if (user?.id) {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          const currentEmail = user.primaryEmailAddress?.emailAddress;
+          // Si el cache almacenado pertenece a otro usuario o correo, limpiarlo inmediatamente
+          if (
+            (parsed.clerkId && parsed.clerkId !== user.id) ||
+            (parsed.email && currentEmail && parsed.email !== currentEmail)
+          ) {
+            sessionStorage.removeItem(CACHE_KEY);
+            setUserProfile(null);
+          }
+        } catch {
+          sessionStorage.removeItem(CACHE_KEY);
+          setUserProfile(null);
+        }
+      }
+    }
+
+    fetchUserProfile();
+  }, [user?.id, isSignedIn, fetchUserProfile]);
+
+  // Extraer el rol validando que el perfil corresponda al usuario actual
+  const currentEmail = user?.primaryEmailAddress?.emailAddress;
+  const isProfileValid = userProfile && (!userProfile.email || !currentEmail || userProfile.email === currentEmail);
+  const activeProfile = isProfileValid ? userProfile : null;
+
   const clerkRole = (user?.publicMetadata?.role as UserRole) || (user?.unsafeMetadata?.role as UserRole);
-  const role: UserRole = userProfile?.role || clerkRole || 'TECH';
+  const role: UserRole = activeProfile?.role || clerkRole || 'LAB_TECHNICIAN';
   const isAdmin = role === 'ADMIN';
   const isTech = role === 'TECH' || role === 'LAB_TECHNICIAN' || role === 'RECEPTIONIST';
 

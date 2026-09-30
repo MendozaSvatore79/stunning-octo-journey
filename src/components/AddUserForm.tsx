@@ -76,7 +76,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
     password: '',
     firstName: '',
     lastName: '',
-    role: 'TECH',
+    role: 'LAB_TECHNICIAN',
     laboratoryId: '',
   });
   const [showCreatePassword, setShowCreatePassword] = useState(false);
@@ -200,7 +200,7 @@ export default function AddUserForm({ labs, onCancel }: AddUserFormProps) {
       password: '',
       firstName: '',
       lastName: '',
-      role: 'TECH',
+      role: 'LAB_TECHNICIAN',
       laboratoryId: validInitialLab,
     });
     setShowCreatePassword(false);
