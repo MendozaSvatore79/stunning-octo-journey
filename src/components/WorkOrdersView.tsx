@@ -202,7 +202,6 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
   const [quickPatientData, setQuickPatientData] = useState({
     firstName: '',
     lastName: '',
-    curp: '',
     dateOfBirth: '',
     gender: 'M',
     phone: '',
@@ -413,7 +412,6 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
       setQuickPatientData({
         firstName: '',
         lastName: '',
-        curp: '',
         dateOfBirth: '',
         gender: 'M',
         phone: '',
@@ -1563,33 +1561,15 @@ export default function WorkOrdersView({ initialTab = 'create' }: WorkOrdersView
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="form-control">
-                  <label className="label py-1"><span className="label-text font-bold">Teléfono</span></label>
-                  <input
-                    type="tel"
-                    placeholder="Ej. +52 33 1234 5678"
-                    className="input input-bordered input-sm rounded-xl font-medium"
-                    value={quickPatientData.phone}
-                    onChange={(e) => setQuickPatientData((prev) => ({ ...prev, phone: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label py-1">
-                    <span className="label-text font-bold flex items-center gap-1">
-                      CURP <span className="badge badge-xs badge-neutral text-[9px] font-mono">Cifrado AES-256</span>
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="18 caracteres alfanuméricos"
-                    maxLength={18}
-                    className="input input-bordered input-sm rounded-xl font-medium uppercase"
-                    value={quickPatientData.curp}
-                    onChange={(e) => setQuickPatientData((prev) => ({ ...prev, curp: e.target.value.toUpperCase() }))}
-                  />
-                </div>
+              <div className="form-control">
+                <label className="label py-1"><span className="label-text font-bold">Teléfono</span></label>
+                <input
+                  type="tel"
+                  placeholder="Ej. +52 33 1234 5678"
+                  className="input input-bordered input-sm rounded-xl font-medium"
+                  value={quickPatientData.phone}
+                  onChange={(e) => setQuickPatientData((prev) => ({ ...prev, phone: e.target.value }))}
+                />
               </div>
 
               <div className="modal-action border-t border-base-200 pt-3 mt-4">

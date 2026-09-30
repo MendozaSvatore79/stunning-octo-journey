@@ -4,7 +4,6 @@ export interface Patient {
   id: string;
   firstName: string;
   lastName: string;
-  curp?: string | null;
   dateOfBirth: string;
   gender: string;
   phone?: string | null;
@@ -17,7 +16,6 @@ export interface Patient {
 export interface CreatePatientDto {
   firstName: string;
   lastName: string;
-  curp?: string;
   dateOfBirth: string;
   gender: string;
   phone?: string;
@@ -27,7 +25,6 @@ export interface CreatePatientDto {
 export interface UpdatePatientDto {
   firstName?: string;
   lastName?: string;
-  curp?: string;
   dateOfBirth?: string;
   gender?: string;
   phone?: string;
