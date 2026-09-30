@@ -74,6 +74,38 @@ export default function PrescriptionScannerModal({
     onClose();
   };
 
+  // Comprimir imagen para optimizar el envío a Textract y evitar exceder límites de WAF
+  const compressImage = (dataUrl: string, maxDim = 1280, quality = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
   // Manejar selección de archivo
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -85,9 +117,10 @@ export default function PrescriptionScannerModal({
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setImagePreview(base64);
+    reader.onload = async (event) => {
+      const rawBase64 = event.target?.result as string;
+      const optimized = await compressImage(rawBase64);
+      setImagePreview(optimized);
       setErrorMessage(null);
     };
     reader.readAsDataURL(file);
@@ -124,13 +157,29 @@ export default function PrescriptionScannerModal({
   const capturePhoto = () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth || 1280;
-    canvas.height = videoRef.current.videoHeight || 720;
+    const sourceW = videoRef.current.videoWidth || 1280;
+    const sourceH = videoRef.current.videoHeight || 720;
+    const maxDim = 1280;
+    let targetW = sourceW;
+    let targetH = sourceH;
+
+    if (sourceW > maxDim || sourceH > maxDim) {
+      if (sourceW > sourceH) {
+        targetH = Math.round((sourceH * maxDim) / sourceW);
+        targetW = maxDim;
+      } else {
+        targetW = Math.round((sourceW * maxDim) / sourceH);
+        targetH = maxDim;
+      }
+    }
+
+    canvas.width = targetW;
+    canvas.height = targetH;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    ctx.drawImage(videoRef.current, 0, 0, targetW, targetH);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
     setImagePreview(dataUrl);
     stopCamera();
   };
