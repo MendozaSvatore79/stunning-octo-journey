@@ -181,53 +181,54 @@ export function runLocalClinicalDiagnosis(
     };
   }
 
-  // 5. Errores al guardar, captura o resultados
+  // 4. Códigos de error específicos (501, 500, 403, 502, 504, 404)
   if (
-    text.includes('guardar') ||
-    text.includes('error 500') ||
-    text.includes('no me deja') ||
-    text.includes('capturar') ||
-    text.includes('resultados') ||
-    text.includes('folio')
+    text.includes('501') ||
+    text.includes('500') ||
+    text.includes('403') ||
+    text.includes('502') ||
+    text.includes('504') ||
+    text.includes('error')
   ) {
+    let errorDetail = '';
+    if (text.includes('501')) {
+      errorDetail = 'El código **HTTP 501 (Not Implemented)** indica que el servicio o endpoint solicitado en el servidor no está implementado o el proxy/CloudFront bloqueó el método HTTP. Suele ocurrir tras un despliegue pendiente de backend o desincronización de rutas.';
+    } else if (text.includes('500')) {
+      errorDetail = 'El código **HTTP 500 (Internal Server Error)** indica una excepción en el contenedor del backend o un fallo de conexión transitorio con la base de datos PostgreSQL.';
+    } else if (text.includes('403')) {
+      errorDetail = 'El código **HTTP 403 (Forbidden)** indica que la petición fue rechazada por políticas de seguridad (permisos insuficientes, expiración de token de sesión o bloqueo perimetral de AWS WAF).';
+    } else if (text.includes('502') || text.includes('504')) {
+      errorDetail = 'El código **HTTP 502/504 (Bad Gateway / Gateway Timeout)** indica que el proxy no logró comunicarse a tiempo con el contenedor de la API en Lightsail.';
+    } else {
+      errorDetail = 'He detectado el mensaje de error reportado en la sesión de trabajo.';
+    }
+
+    // Revisar si en los mensajes anteriores ya veníamos hablando de un módulo o acción (guardar folios, resultados, etc.)
+    const lastBotMsg = history.filter((h) => h.sender === 'bot').pop()?.text || '';
+    const lastUserIssue = history.filter((h) => h.sender === 'user').slice(-2)[0]?.text || '';
+    const hasPriorContext = lastBotMsg.includes('guardar') || lastBotMsg.includes('folio') || lastUserIssue.length > 5;
+
     return {
       reply:
-        'Entendido. Si el sistema no te permite guardar resultados o folios:\n\n1. ¿Te ocurre con una orden o paciente específico, o con todas las órdenes de la sesión?\n2. Si presionas Ctrl+F5 (o Command+Shift+R) para forzar la recarga limpia, ¿persiste el mensaje?\n\nIndícame si te muestra algún aviso en pantalla para indicarte la solución o escalar el reporte técnico a desarrollo.',
+        `${errorDetail}\n\n` +
+        (hasPriorContext ? `Tomando en cuenta lo que me mencionabas sobre la dificultad para guardar o capturar:\n` : '') +
+        `1. Intenta forzar una recarga limpia del navegador con **Ctrl+F5** (o **Cmd+Shift+R** en Mac) para renovar el token de sesión.\n` +
+        `2. Si el problema persiste, ¿deseas que levantemos el ticket técnico con prioridad alta para que el equipo de desarrollo lo revise de inmediato?`,
       source: 'clinical_engine',
     };
   }
 
-  // 6. Reactivos, calibraciones y control de calidad
-  if (
-    text.includes('reactivo') ||
-    text.includes('lote') ||
-    text.includes('control') ||
-    text.includes('calibr') ||
-    text.includes('caduc') ||
-    text.includes('westgard') ||
-    text.includes('levey') ||
-    text.includes('sesgo')
-  ) {
+  // Respuesta conversacional guiada por el contexto previo
+  const lastUserTopic = history.filter((h) => h.sender === 'user' && h.text.trim().length > 6).pop()?.text;
+  if (lastUserTopic) {
     return {
-      reply:
-        'En temas de calibración y control de calidad:\n\n¿Qué analito o prueba específica está mostrando desvío (por ejemplo Glucosa, Colesterol, TGO/TGP) y qué regla de Westgard infringió (1:3s o 2:2s)?\n\nTe recomiendo verificar:\n- La fecha de reconstitución y temperatura del calibrador (debe estar atemperado a 20-25°C antes de leer).\n- Realizar una corrida previa con blanco de agua desionizada.\n\nSi tras esto continúa el desvío, confírmame y gestionamos soporte de aplicaciones.',
+      reply: `Entendido. Con respecto a lo que mencionas sobre "${lastUserTopic.slice(0, 50)}...": ¿El síntoma persiste tras recargar o deseas que canalicemos el reporte formalmente al equipo técnico?`,
       source: 'clinical_engine',
     };
   }
 
-  // 7. Impresiones, PDF o etiquetas
-  if (text.includes('impres') || text.includes('pdf') || text.includes('etiqueta') || text.includes('termica') || text.includes('térmica')) {
-    return {
-      reply:
-        'Respecto a la impresión:\n\n¿El problema se presenta con las etiquetas térmicas de tubos (50x25 mm) o con el reporte clínico oficial membretado en PDF?\n\nVerifica que la impresora predeterminada esté encendida y conectada. Si el PDF no genera el membrete o la firma digital, avísame para revisarlo de inmediato.',
-      source: 'clinical_engine',
-    };
-  }
-
-  // 8. Respuesta conversacional general
   return {
-    reply:
-      'Te escucho atentamente. Para brindarte la mejor orientación clínica o técnica, ¿podrías darme un poco más de detalle sobre lo que sucede o qué observas en el equipo o en pantalla? Cuéntame con confianza.',
+    reply: 'Te escucho atentamente. Cuéntame los detalles del error o síntoma que observas en el equipo o en pantalla para ayudarte a resolverlo.',
     source: 'clinical_engine',
   };
 }
