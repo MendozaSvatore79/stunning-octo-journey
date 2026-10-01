@@ -9,8 +9,8 @@ import {
   IconUserPlus,
   IconChartLine,
   IconHeadphones,
-  IconArrowRight,
   IconMicroscope,
+  IconActivity,
 } from './icons';
 
 interface OperatorDashboardViewProps {
@@ -39,40 +39,49 @@ export default function OperatorDashboardView({
       : 'Personal Clínico';
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* 1. Cabecera Principal Limpia y Despejada */}
-      <section className="card bg-base-100 border border-base-200 p-5 sm:p-6 shadow-xs rounded-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+    <div className="space-y-6 max-w-6xl mx-auto pb-6">
+      {/* ========================================================================= */}
+      {/* 1. CABECERA CLÍNICA MINIMALISTA Y ELEGANTE */}
+      {/* ========================================================================= */}
+      <section className="card bg-base-100 border border-teal-500/15 p-5 sm:p-6 shadow-xs rounded-2xl relative overflow-hidden">
+        {/* Acento de brillo clínico de fondo */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-teal-500/10 via-sky-500/5 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative z-10">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="badge badge-sm badge-outline text-primary border-primary/30 font-semibold gap-1.5 py-2.5 px-3">
-                <IconFlask className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-200 border border-teal-200/80 dark:border-teal-800/80 shadow-xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                </span>
                 {roleLabel}
               </span>
-              <span className="badge badge-sm badge-ghost text-base-content/60 font-medium">
-                Panel Operativo
+              <span className="text-xs text-base-content/50 font-medium">
+                • Estación Analítica
               </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-base-content tracking-tight">
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-base-content tracking-tight">
               Hola, {userName || 'Colega'} 👋
             </h1>
-            <p className="text-xs sm:text-sm text-base-content/70 max-w-xl leading-relaxed">
-              Bienvenida a tu espacio de trabajo. Aquí tienes los accesos directos y esenciales para gestionar tus actividades del día.
+            <p className="text-xs sm:text-sm text-base-content/70 max-w-lg leading-relaxed">
+              Panel de control simplificado para la gestión diaria de pacientes, recepción de muestras y aseguramiento analítico.
             </p>
           </div>
 
-          {/* Acciones Rápidas Principales */}
+          {/* Acciones Clínicas de Mayor Prioridad */}
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={() => onNavigate?.('create-order')}
-              className="btn btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
+              className="btn btn-sm text-white font-semibold rounded-xl gap-2 shadow-sm transition-all border-none bg-teal-600 hover:bg-teal-700 hover:shadow-teal-600/25"
             >
               <IconPlus className="w-4 h-4" />
               Nueva Orden
             </button>
             <button
               onClick={() => onNavigate?.('add-patient')}
-              className="btn btn-outline btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
+              className="btn btn-sm font-semibold rounded-xl gap-2 transition-all border border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 bg-sky-50/60 hover:bg-sky-100/80 dark:bg-sky-950/30 dark:hover:bg-sky-950/60"
             >
               <IconUserPlus className="w-4 h-4" />
               Registrar Paciente
@@ -81,244 +90,194 @@ export default function OperatorDashboardView({
         </div>
       </section>
 
-      {/* 2. Métricas Operativas Clave (Solo lo esencial) */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Métrica 1: Órdenes de Trabajo */}
-        <div
-          onClick={() => onNavigate?.('pending-orders')}
-          className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer flex flex-row items-center justify-between"
-        >
-          <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold text-base-content/60 uppercase tracking-wider">
+      {/* ========================================================================= */}
+      {/* 2. CUADRÍCULA DE MÓDULOS ESENCIALES CON CÓDIGO DE COLOR CLÍNICO (2x2) */}
+      {/* ========================================================================= */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        
+        {/* MÓDULO 1: ÓRDENES DE TRABAJO (TEAL BIO-CLÍNICO) */}
+        <div className="card bg-base-100 border border-teal-500/20 hover:border-teal-500/50 p-6 rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center transition-transform group-hover:scale-105">
+                <IconClipboardList className="w-6 h-6" />
+              </div>
+              <span className="badge badge-sm py-2 px-2.5 font-semibold text-teal-800 bg-teal-50 dark:bg-teal-950/50 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[11px]">
+                Recepción & Muestras
+              </span>
+            </div>
+
+            <h2 className="text-lg font-bold text-base-content group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
               Órdenes de Trabajo
-            </span>
-            <div className="text-base font-bold text-base-content">
-              Flujo Diario
-            </div>
-            <p className="text-[11px] text-base-content/50">
-              Recepción, tomas y captura analítica
+            </h2>
+            <p className="text-xs text-base-content/65 mt-1.5 leading-relaxed">
+              Genera solicitudes de análisis clínicos, imprime fichas térmicas de toma de muestra y captura resultados validados.
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <IconClipboardList className="w-5 h-5" />
+
+          <div className="pt-5 mt-4 border-t border-teal-500/10 flex items-center justify-between gap-3">
+            <button
+              onClick={() => onNavigate?.('create-order')}
+              className="btn btn-sm rounded-xl gap-2 font-semibold text-xs text-white bg-teal-600 hover:bg-teal-700 border-none shadow-xs flex-1"
+            >
+              <IconPlus className="w-4 h-4" /> Crear Orden
+            </button>
+            <button
+              onClick={() => onNavigate?.('pending-orders')}
+              className="btn btn-sm btn-ghost hover:bg-teal-50 dark:hover:bg-teal-950/40 text-teal-700 dark:text-teal-300 rounded-xl text-xs font-semibold flex-1"
+            >
+              Ver Pendientes →
+            </button>
           </div>
         </div>
 
-        {/* Métrica 2: Pacientes */}
-        <div
-          onClick={() => onNavigate?.('patients')}
-          className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs hover:border-sky-500/40 hover:shadow-sm transition-all cursor-pointer flex flex-row items-center justify-between"
-        >
-          <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold text-base-content/60 uppercase tracking-wider">
-              Pacientes
-            </span>
-            <div className="text-base font-bold text-base-content">
-              Expedientes Clínicos
+        {/* MÓDULO 2: PACIENTES Y EXPEDIENTES (AZUL COBALTO DIAGNÓSTICO) */}
+        <div className="card bg-base-100 border border-sky-500/20 hover:border-sky-500/50 p-6 rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60 flex items-center justify-center transition-transform group-hover:scale-105">
+                <IconUsers className="w-6 h-6" />
+              </div>
+              <span className="badge badge-sm py-2 px-2.5 font-semibold text-sky-800 bg-sky-50 dark:bg-sky-950/50 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[11px]">
+                Padrón Clínico
+              </span>
             </div>
-            <p className="text-[11px] text-base-content/50">
-              Padrón y búsqueda de pacientes
+
+            <h2 className="text-lg font-bold text-base-content group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+              Pacientes y Registro
+            </h2>
+            <p className="text-xs text-base-content/65 mt-1.5 leading-relaxed">
+              Alta rápida de pacientes, consulta del historial clínico, datos demográficos, antecedentes y expedientes médicos.
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center shrink-0">
-            <IconUsers className="w-5 h-5" />
+
+          <div className="pt-5 mt-4 border-t border-sky-500/10 flex items-center justify-between gap-3">
+            <button
+              onClick={() => onNavigate?.('add-patient')}
+              className="btn btn-sm rounded-xl gap-2 font-semibold text-xs text-white bg-sky-600 hover:bg-sky-700 border-none shadow-xs flex-1"
+            >
+              <IconUserPlus className="w-4 h-4" /> Registrar Paciente
+            </button>
+            <button
+              onClick={() => onNavigate?.('patients')}
+              className="btn btn-sm btn-ghost hover:bg-sky-50 dark:hover:bg-sky-950/40 text-sky-700 dark:text-sky-300 rounded-xl text-xs font-semibold flex-1"
+            >
+              Directorio Clínico →
+            </button>
           </div>
         </div>
 
-        {/* Métrica 3: Control de Calidad */}
-        <div
-          onClick={() => onNavigate?.('qc-controls')}
-          className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer flex flex-row items-center justify-between"
-        >
-          <div className="space-y-0.5">
-            <span className="text-[11px] font-semibold text-base-content/60 uppercase tracking-wider">
-              Control de Calidad
-            </span>
-            <div className="text-base font-bold text-base-content">
-              Calidad Analítica
+        {/* MÓDULO 3: CONTROL DE CALIDAD (BIO-MINT / ESMERALDA ANALÍTICO) */}
+        <div className="card bg-base-100 border border-emerald-500/20 hover:border-emerald-500/50 p-6 rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center transition-transform group-hover:scale-105">
+                <IconFlask className="w-6 h-6" />
+              </div>
+              <span className="badge badge-sm py-2 px-2.5 font-semibold text-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px]">
+                Garantía Analítica
+              </span>
             </div>
-            <p className="text-[11px] text-base-content/50">
-              Lotes QC y gráficas Levey-Jennings
+
+            <h2 className="text-lg font-bold text-base-content group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+              Control de Calidad (QC)
+            </h2>
+            <p className="text-xs text-base-content/65 mt-1.5 leading-relaxed">
+              Captura de corridas analíticas de calibradores, evaluación de reglas de Westgard y gráficas de Levey-Jennings.
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-            <IconFlask className="w-5 h-5" />
+
+          <div className="pt-5 mt-4 border-t border-emerald-500/10 flex items-center justify-between gap-3">
+            <button
+              onClick={() => onNavigate?.('qc-controls')}
+              className="btn btn-sm rounded-xl gap-2 font-semibold text-xs text-white bg-emerald-600 hover:bg-emerald-700 border-none shadow-xs flex-1"
+            >
+              <IconFlask className="w-4 h-4" /> Lotes de Control
+            </button>
+            <button
+              onClick={() => onNavigate?.('qc-levey-jennings')}
+              className="btn btn-sm btn-ghost hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-semibold gap-1.5 flex-1"
+            >
+              <IconChartLine className="w-4 h-4" /> Levey-Jennings →
+            </button>
           </div>
         </div>
+
+        {/* MÓDULO 4: CATÁLOGO DE SERVICIOS (ÍNDIGO / PÚRPURA DE DIAGNÓSTICO) */}
+        <div className="card bg-base-100 border border-indigo-500/20 hover:border-indigo-500/50 p-6 rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 flex items-center justify-center transition-transform group-hover:scale-105">
+                <IconMicroscope className="w-6 h-6" />
+              </div>
+              <span className="badge badge-sm py-2 px-2.5 font-semibold text-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px]">
+                Pruebas & Parámetros
+              </span>
+            </div>
+
+            <h2 className="text-lg font-bold text-base-content group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              Catálogo de Servicios
+            </h2>
+            <p className="text-xs text-base-content/65 mt-1.5 leading-relaxed">
+              Catálogo oficial de estudios clínicos, valores de referencia por edad y sexo, unidades de medida y metodologías.
+            </p>
+          </div>
+
+          <div className="pt-5 mt-4 border-t border-indigo-500/10 flex items-center justify-between gap-3">
+            <button
+              onClick={() => onNavigate?.('analysis-catalog')}
+              className="btn btn-sm rounded-xl gap-2 font-semibold text-xs text-white bg-indigo-600 hover:bg-indigo-700 border-none shadow-xs flex-1"
+            >
+              <IconMicroscope className="w-4 h-4" /> Ver Catálogo
+            </button>
+            <button
+              onClick={() => onNavigate?.('add-analysis')}
+              className="btn btn-sm btn-ghost hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded-xl text-xs font-semibold flex-1"
+            >
+              + Alta de Prueba →
+            </button>
+          </div>
+        </div>
+
       </section>
 
-      {/* 3. Cuadrícula de Módulos Esenciales (2x2 Limpio, sin barra lateral) */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-bold text-base-content/70 uppercase tracking-wider">
-            Módulos de Trabajo Diario
-          </h2>
-          <span className="text-xs text-base-content/40">
-            Accesos directos
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Card 1: Órdenes de Trabajo */}
-          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                  <IconClipboardList className="w-5 h-5" />
-                </div>
-                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
-                  Recepción & Muestras
-                </span>
-              </div>
-              <h3 className="font-bold text-base text-base-content mb-1">
-                Órdenes de Trabajo
-              </h3>
-              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                Genera solicitudes de análisis, asigna estudios, imprime fichas de toma y captura los resultados analíticos.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
-              <button
-                onClick={() => onNavigate?.('create-order')}
-                className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold text-xs flex-1 shadow-xs"
-              >
-                <IconPlus className="w-4 h-4" /> Crear Orden
-              </button>
-              <button
-                onClick={() => onNavigate?.('pending-orders')}
-                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl text-xs font-semibold text-base-content/80 flex-1"
-              >
-                Ver Pendientes
-              </button>
-            </div>
-          </div>
-
-          {/* Card 2: Pacientes y Expedientes */}
-          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-sky-500/40 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center">
-                  <IconUsers className="w-5 h-5" />
-                </div>
-                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
-                  Padrón Clínico
-                </span>
-              </div>
-              <h3 className="font-bold text-base text-base-content mb-1">
-                Pacientes y Registro
-              </h3>
-              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                Alta rápida de pacientes, consulta del padrón clínico, actualización de datos demográficos e historial.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
-              <button
-                onClick={() => onNavigate?.('add-patient')}
-                className="btn btn-sm rounded-xl gap-2 font-semibold text-xs flex-1 text-white bg-sky-600 hover:bg-sky-700 border-none shadow-xs"
-              >
-                <IconUserPlus className="w-4 h-4" /> Registrar Paciente
-              </button>
-              <button
-                onClick={() => onNavigate?.('patients')}
-                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl text-xs font-semibold text-base-content/80 flex-1"
-              >
-                Directorio
-              </button>
-            </div>
-          </div>
-
-          {/* Card 3: Control de Calidad (QC) */}
-          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-emerald-500/40 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
-                  <IconFlask className="w-5 h-5" />
-                </div>
-                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
-                  Garantía Analítica
-                </span>
-              </div>
-              <h3 className="font-bold text-base text-base-content mb-1">
-                Control de Calidad (QC)
-              </h3>
-              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                Captura de corridas analíticas para lotes de control, evaluación de reglas Westgard y gráficas Levey-Jennings.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
-              <button
-                onClick={() => onNavigate?.('qc-controls')}
-                className="btn btn-sm rounded-xl gap-2 font-semibold text-xs flex-1 text-white bg-emerald-600 hover:bg-emerald-700 border-none shadow-xs"
-              >
-                <IconFlask className="w-4 h-4" /> Lotes de Control
-              </button>
-              <button
-                onClick={() => onNavigate?.('qc-levey-jennings')}
-                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-1.5 text-xs font-semibold text-base-content/80 flex-1"
-              >
-                <IconChartLine className="w-3.5 h-3.5 text-emerald-600" /> Levey-Jennings
-              </button>
-            </div>
-          </div>
-
-          {/* Card 4: Catálogo de Servicios */}
-          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-teal-500/40 transition-all flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center">
-                  <IconMicroscope className="w-5 h-5" />
-                </div>
-                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
-                  Estudios & Tarifas
-                </span>
-              </div>
-              <h3 className="font-bold text-base text-base-content mb-1">
-                Catálogo de Servicios
-              </h3>
-              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                Consulta rápida de pruebas de laboratorio, valores de referencia, unidades de medida y metodologías.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
-              <button
-                onClick={() => onNavigate?.('analysis-catalog')}
-                className="btn btn-sm rounded-xl gap-2 font-semibold text-xs flex-1 text-white bg-teal-600 hover:bg-teal-700 border-none shadow-xs"
-              >
-                <IconMicroscope className="w-4 h-4" /> Ver Catálogo
-              </button>
-              <button
-                onClick={() => onNavigate?.('add-analysis')}
-                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl text-xs font-semibold text-base-content/80 flex-1"
-              >
-                + Alta de Prueba
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Banner Minimalista de Soporte Técnico (Sutil y elegante) */}
-      <section className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs">
+      {/* ========================================================================= */}
+      {/* 3. DOCK CLÍNICO DE ATAJOS RÁPIDOS EN 1 SOLO CLIC */}
+      {/* ========================================================================= */}
+      <section className="bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <IconHeadphones className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-base-content">
-                ¿Necesitas soporte técnico o asistencia clínica?
-              </p>
-              <p className="text-[11px] text-base-content/60">
-                Resuelve fallas de analizadores, dudas del sistema o genera tickets con Synova en tiempo real.
-              </p>
-            </div>
+          <div className="flex items-center gap-2 text-xs font-bold text-base-content/75 uppercase tracking-wider">
+            <IconActivity className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <span>Atajos Rápidos de Turno</span>
           </div>
-          <button
-            onClick={() => onNavigate?.('support')}
-            className="btn btn-xs btn-outline btn-primary rounded-xl font-semibold gap-1.5 self-start sm:self-auto shrink-0"
-          >
-            Abrir Soporte <IconArrowRight className="w-3.5 h-3.5" />
-          </button>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => onNavigate?.('pending-orders')}
+              className="btn btn-xs rounded-xl font-medium border border-teal-200 dark:border-teal-800 bg-teal-50/50 hover:bg-teal-100/70 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300"
+            >
+              Captura de Resultados
+            </button>
+            <button
+              onClick={() => onNavigate?.('completed-orders')}
+              className="btn btn-xs rounded-xl font-medium border border-base-300 bg-base-200/50 hover:bg-base-200 text-base-content/70"
+            >
+              Órdenes Completadas
+            </button>
+            <button
+              onClick={() => onNavigate?.('reagents')}
+              className="btn btn-xs rounded-xl font-medium border border-base-300 bg-base-200/50 hover:bg-base-200 text-base-content/70"
+            >
+              Inventario de Reactivos
+            </button>
+            <button
+              onClick={() => onNavigate?.('support')}
+              className="btn btn-xs rounded-xl font-medium border border-primary/20 text-primary hover:bg-primary/10 gap-1"
+            >
+              <IconHeadphones className="w-3.5 h-3.5" />
+              Soporte Synova
+            </button>
+          </div>
         </div>
       </section>
     </div>
