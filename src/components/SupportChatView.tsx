@@ -419,6 +419,7 @@ export default function SupportChatView() {
         userId: user?.id || 'usr-anon',
         userName: realUserName,
         userEmail: user?.primaryEmailAddress?.emailAddress,
+        ticketNumber,
         subject: formSubject,
         category: formCategory,
         priority: formPriority,

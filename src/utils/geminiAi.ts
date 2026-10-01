@@ -66,6 +66,37 @@ export function runLocalClinicalDiagnosis(
     /(hello|hi\b|error|ticket|save|results|please|analyzer|broken|failing|issue|problem|help|not working|cannot|can't)/i.test(input) &&
     !/(hola|buenos|buenas|ayuda|falla|equipo|orden|reactivo|guardar|resultado|folio)/i.test(input);
 
+  // 0. SEGUIMIENTO DE TICKETS EXISTENTES (TCK-XXXXX, TICK-XXXX, sobre mi ticket, seguimiento)
+  const isTicketFollowUp =
+    /sobre\s+(mi\s+)?ticket/i.test(input) ||
+    /seguimiento/i.test(input) ||
+    /status\s+ticket/i.test(input) ||
+    /follow\s*-?up/i.test(input) ||
+    /#?(tck-\d+|tick-\d+)/i.test(input);
+
+  if (isTicketFollowUp) {
+    const match = input.match(/#?(tck-\d+|tick-\d+)/i);
+    const folio = match ? match[0].toUpperCase() : 'indicado';
+
+    if (isEnglish) {
+      return {
+        reply:
+          `Understood! I am tracking your ticket **${folio}**.\n\n` +
+          `Our technical and clinical engineering team is actively following up on this incident. ` +
+          `What questions, additional details, or updates would you like to provide on this ticket?`,
+        source: 'clinical_engine',
+      };
+    }
+
+    return {
+      reply:
+        `¡Entendido! Estoy dando seguimiento a tu ticket **${folio}**.\n\n` +
+        `Este reporte se encuentra registrado y asignado a nuestro equipo técnico de ingeniería. ` +
+        `¿Tienes algún síntoma adicional, código de error o actualización que desees agregar a la consulta de este ticket?`,
+      source: 'clinical_engine',
+    };
+  }
+
   if (isEnglish) {
     const isError = text.includes('501') || text.includes('500') || text.includes('403') || text.includes('502') || text.includes('504') || text.includes('error');
     const isTicket = text.includes('ticket') || text.includes('report') || text.includes('support');
@@ -384,13 +415,19 @@ CORE BEHAVIOR RULES (CRITICAL):
    - If the user speaks in Spanish, respond natively and fluently in Spanish.
    - Never force the user to pick a language.
 
-2. ZERO RUNAROUND - IMMEDIATE TICKET PROPOSAL:
-   - When the user mentions an error code (501, 500, 403, 502, 504), a system crash, saving failure, analyzer alarm, or requests a ticket/report:
+2. EXISTING TICKET FOLLOW-UP (CRITICAL - DO NOT CREATE NEW TICKET):
+   - If the user's message mentions an existing ticket (e.g. "sobre mi ticket #TCK-...", "seguimiento", "ticket #TCK-19779", "status of ticket", or "follow-up on ticket #..."):
+     * NEVER append the \`\`\`ticket_json block.
+     * NEVER propose creating a duplicate ticket.
+     * Acknowledge the ticket number, confirm that you are tracking that specific report, and answer their query directly.
+
+3. ZERO RUNAROUND - IMMEDIATE TICKET PROPOSAL FOR NEW ISSUES:
+   - When the issue is NOT a follow-up, and the user mentions an error code (501, 500, 403, 502, 504), a system crash, saving failure, analyzer alarm, or requests a new ticket:
      * Provide a brief, decisive 1-to-2 sentence clinical or technical tip (e.g. reload with Ctrl+F5, check sample probe/coagulation).
      * DO NOT interrogate the user with surveys or questionnaires.
      * IMMEDIATELY append the \`\`\`ticket_json block at the end of your response so the user can submit the ticket in 1 click!
 
-3. TICKET JSON FORMAT:
+4. TICKET JSON FORMAT:
 When generating a ticket proposal, append this block at the end:
 \`\`\`ticket_json
 {

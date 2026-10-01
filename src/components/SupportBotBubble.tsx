@@ -198,11 +198,13 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
   // Crear ticket automáticamente con confirmación
   const handleConfirmCreateTicket = async (ticketData: NonNullable<BotMessage['suggestedTicket']>) => {
     setIsSubmittingTicket(true);
-    const ticketNumber = `TICK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const randomCode = Math.floor(10000 + Math.random() * 90000);
+    const generatedTicketNumber = `TCK-${randomCode}`;
+    let finalTicketNumber = generatedTicketNumber;
 
-    const newTicket: SupportTicket = {
+    let savedTicket: SupportTicket = {
       id: `local-${Date.now()}`,
-      ticketNumber,
+      ticketNumber: generatedTicketNumber,
       userId: user?.id || 'usr-anon',
       userName: realUserName,
       userEmail: user?.primaryEmailAddress?.emailAddress,
@@ -222,15 +224,6 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
       updatedAt: Date.now(),
     };
 
-    // Actualizar almacenamiento local
-    setTicketsList((prev) => {
-      const updated = [newTicket, ...prev];
-      try {
-        localStorage.setItem('lab_support_tickets', JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-
     // Enviar a la base de datos Neon PostgreSQL mediante el backend
     try {
       const res = await api.post('/support/tickets', {
@@ -238,30 +231,43 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
         userId: user?.id || 'usr-anon',
         userName: realUserName,
         userEmail: user?.primaryEmailAddress?.emailAddress,
+        ticketNumber: generatedTicketNumber,
         subject: ticketData.subject,
         category: ticketData.category,
         priority: ticketData.priority,
         description: ticketData.description,
       });
 
-      if (res.data && res.data.id) {
-        setTicketsList((prev) =>
-          prev.map((t) => (t.ticketNumber === ticketNumber ? res.data : t))
-        );
+      if (res.data && res.data.ticketNumber) {
+        finalTicketNumber = res.data.ticketNumber;
+        savedTicket = {
+          ...savedTicket,
+          ...res.data,
+        };
       }
     } catch (err) {
       console.warn('Ticket respaldado localmente mientras el backend se sincroniza:', err);
     } finally {
       setIsSubmittingTicket(false);
 
-      // Agregar confirmación de ticket al chat
+      // Actualizar almacenamiento local y lista de tickets con el folio definitivo
+      setTicketsList((prev) => {
+        const filtered = prev.filter((t) => t.ticketNumber !== finalTicketNumber && t.id !== savedTicket.id);
+        const updated = [savedTicket, ...filtered];
+        try {
+          localStorage.setItem('lab_support_tickets', JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+
+      // Agregar confirmación de ticket al chat usando EXACTAMENTE el folio sincronizado
       const confirmationMsg: BotMessage = {
         id: `bot-confirm-${Date.now()}`,
         sender: 'bot',
-        text: `✅ **¡Ticket levantado exitosamente!**\n\nHe registrado tu solicitud con el folio **#${ticketNumber}**. El equipo de soporte técnico ha recibido la notificación prioritaria y le dará seguimiento a la brevedad.`,
+        text: `✅ **¡Ticket levantado exitosamente!**\n\nHe registrado tu solicitud con el folio **#${finalTicketNumber}**. El equipo de soporte técnico ha recibido la notificación prioritaria y le dará seguimiento a la brevedad.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         createdTicket: {
-          ticketNumber,
+          ticketNumber: finalTicketNumber,
           subject: ticketData.subject,
           category: ticketData.category,
           priority: ticketData.priority,
@@ -812,7 +818,8 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
                       const t = selectedTicket;
                       setSelectedTicket(null);
                       setActiveTab('chat');
-                      handleSendMessage(`Hola Synova, sobre mi ticket #${t.ticketNumber} (${t.subject}): `);
+                      setInputText(`Hola Synova, sobre mi ticket #${t.ticketNumber} (${t.subject}): `);
+                      setTimeout(() => inputRef.current?.focus(), 150);
                     }}
                     className="btn btn-xs btn-primary text-white rounded-xl gap-1.5 w-full font-bold shadow-xs py-2 h-auto mt-2"
                   >
