@@ -23,7 +23,6 @@ import {
   IconHandshake,
   IconQrCode,
   IconCreditCard,
-  IconSparkles,
   IconShield,
 } from './icons';
 
@@ -98,7 +97,16 @@ export default function Sidebar({
   const isPatientsActive = ['patients', 'add-patient', 'patient-history'].includes(activeView);
   const isOrdersActive = ['create-order', 'pending-orders', 'completed-orders'].includes(activeView);
   const isQCActive = ['qc-controls', 'qc-results', 'qc-levey-jennings'].includes(activeView);
+  const isEquipmentActive = ['analyzers', 'reagents'].includes(activeView);
   const isCatalogActive = ['analysis-catalog', 'add-analysis'].includes(activeView);
+  const isLabsActive = [
+    'labs',
+    'create-lab',
+    'general-settings',
+    'report-templates',
+    'price-agreements',
+    'my-subscription',
+  ].includes(activeView);
   const isGovernanceActive = [
     'network-metrics',
     'subscriptions-billing',
@@ -290,32 +298,38 @@ export default function Sidebar({
                   </details>
                 </li>
 
-                {/* INVENTARIO DE REACTIVOS (ISO 15189) */}
+                {/* SUBMENÚ DROPDOWN 1: EQUIPOS Y REACTIVOS */}
                 <li>
-                  <button
-                    onClick={() => handleNav('reagents')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'reagents' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
-                      <IconFlask className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Reactivos e Insumos</span>
-                    <span className="badge badge-primary badge-xs font-bold text-[9px]">STOCK</span>
-                  </button>
-                </li>
-
-                {/* ANALIZADORES CLÍNICOS (ASTM / HL7) */}
-                <li>
-                  <button
-                    onClick={() => handleNav('analyzers')}
-                    className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'analyzers' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
-                      <IconMicroscope className="w-4 h-4" />
-                    </div>
-                    <span className="truncate flex-1 text-left">Analizadores LIS</span>
-                    <span className="badge badge-success text-white badge-xs font-bold text-[9px]">ASTM/HL7</span>
-                  </button>
+                  <details open={isEquipmentActive}>
+                    <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isEquipmentActive ? 'bg-base-200 font-bold' : ''}`}>
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                        <IconMicroscope className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">Equipos y Reactivos</span>
+                    </summary>
+                    <ul className="mt-1 space-y-0.5">
+                      <li>
+                        <button
+                          onClick={() => handleNav('analyzers')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'analyzers' ? 'active font-bold' : ''}`}
+                        >
+                          <IconMicroscope className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="truncate">Analizadores LIS</span>
+                          <span className="badge badge-success text-white badge-xs font-bold text-[8px] ml-auto">ASTM/HL7</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={() => handleNav('reagents')}
+                          className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'reagents' ? 'active font-bold' : ''}`}
+                        >
+                          <IconFlask className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                          <span className="truncate">Reactivos e Insumos</span>
+                          <span className="badge badge-primary badge-xs font-bold text-[8px] ml-auto">STOCK</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </details>
                 </li>
 
                 {/* SUBMENÚ: CATÁLOGO DE SERVICIOS */}
@@ -351,109 +365,89 @@ export default function Sidebar({
                   </details>
                 </li>
 
-                {/* Gestión de Sede para Encargado del Laboratorio */}
+                {/* SUBMENÚ DROPDOWN 2: SEDES Y LABORATORIO */}
                 {(role === 'LAB_TECHNICIAN' || role === 'LAB_ADMIN') && (
-                  <>
-                    <li className="mt-2 pt-2 border-t border-base-200">
-                      <span className="menu-title text-[10px] uppercase font-bold text-primary tracking-widest px-3">
-                        Sedes y Laboratorio
-                      </span>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('labs')}
-                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'labs' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                        title="Directorio de sedes y laboratorios registrados"
-                      >
+                  <li>
+                    <details open={isLabsActive}>
+                      <summary className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${isLabsActive ? 'bg-base-200 font-bold' : ''}`}>
                         <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
                           <IconBuilding className="w-4 h-4" />
                         </div>
-                        <span className="truncate flex-1 text-left">Sedes</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => {
-                          if (onOpenCreateLab) {
-                            onOpenCreateLab();
-                          } else {
-                            handleNav('create-lab');
-                          }
-                        }}
-                        className="py-2.5 rounded-xl gap-3 text-base-content/85 hover:bg-base-200"
-                        title="Dar de alta una nueva sede o laboratorio con permisos sanitarios"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
-                          <IconPlus className="w-4 h-4" />
-                        </div>
-                        <span className="truncate flex-1 text-left">Dar de Alta Sede</span>
-                        <span className="badge badge-primary badge-xs font-bold text-[9px]">REGISTRO</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('general-settings')}
-                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'general-settings' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                        title="Configurar logotipo y datos de esta sede"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-base-300 text-base-content flex items-center justify-center shrink-0 border border-base-content/10">
-                          <IconBuilding className="w-4 h-4" />
-                        </div>
-                        <span className="truncate flex-1 text-left">Configuración de Sede</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('report-templates')}
-                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'report-templates' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                        title="Personalización de plantilla médica, firmas y código QR de esta sede"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 border border-cyan-500/20">
-                          <IconQrCode className="w-4 h-4" />
-                        </div>
-                        <span className="truncate flex-1 text-left">Plantilla Oficial & QR</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('price-agreements')}
-                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'price-agreements' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                        title="Gestión de convenios, aseguradoras y descuentos por sede clínica"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <IconHandshake className="w-4 h-4" />
-                        </div>
-                        <span className="truncate flex-1 text-left">Convenios y Descuentos</span>
-                        <span className="badge badge-success text-white badge-xs font-bold text-[9px]">TARIFAS</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => handleNav('my-subscription')}
-                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'my-subscription' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                        title="Ver límites de órdenes mensuales y sedes contratadas en tu plan SaaS"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
-                          <IconCreditCard className="w-4 h-4" />
-                        </div>
-                        <span className="truncate flex-1 text-left">Mi Plan y Cuota</span>
-                        <span className="badge badge-warning badge-xs font-bold text-[9px]">SAAS</span>
-                      </button>
-                    </li>
-                    <li className="block lg:hidden">
-                      <button
-                        onClick={() => handleNav('support')}
-                        className={`py-2.5 rounded-xl gap-3 text-base-content/85 ${activeView === 'support' ? 'active font-bold' : 'hover:bg-base-200'}`}
-                        title="Asistencia y soporte técnico especializado"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 border border-teal-500/20">
-                          <IconSparkles className="w-4 h-4" />
-                        </div>
-                        <span className="truncate flex-1 text-left">Soporte Técnico</span>
-                        <span className="badge badge-info badge-outline badge-xs font-bold text-[9px]">24/7</span>
-                      </button>
-                    </li>
-                  </>
+                        <span className="truncate">Sedes y Laboratorio</span>
+                      </summary>
+                      <ul className="mt-1 space-y-0.5">
+                        <li>
+                          <button
+                            onClick={() => handleNav('labs')}
+                            className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'labs' ? 'active font-bold' : ''}`}
+                            title="Directorio de sedes y laboratorios registrados"
+                          >
+                            <IconBuilding className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                            <span className="truncate">Directorio de Sedes</span>
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() => {
+                              if (onOpenCreateLab) {
+                                onOpenCreateLab();
+                              } else {
+                                handleNav('create-lab');
+                              }
+                            }}
+                            className="gap-2.5 text-xs py-2 rounded-lg"
+                            title="Dar de alta una nueva sede o laboratorio con permisos sanitarios"
+                          >
+                            <IconPlus className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                            <span className="truncate">Dar de Alta Sede</span>
+                            <span className="badge badge-primary badge-xs font-bold text-[8px] ml-auto">REGISTRO</span>
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() => handleNav('general-settings')}
+                            className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'general-settings' ? 'active font-bold' : ''}`}
+                            title="Configurar logotipo y datos de esta sede"
+                          >
+                            <IconBuilding className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                            <span className="truncate">Configuración de Sede</span>
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() => handleNav('report-templates')}
+                            className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'report-templates' ? 'active font-bold' : ''}`}
+                            title="Personalización de plantilla médica, firmas y código QR de esta sede"
+                          >
+                            <IconQrCode className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                            <span className="truncate">Plantilla Oficial & QR</span>
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() => handleNav('price-agreements')}
+                            className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'price-agreements' ? 'active font-bold' : ''}`}
+                            title="Gestión de convenios, aseguradoras y descuentos por sede clínica"
+                          >
+                            <IconHandshake className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                            <span className="truncate">Convenios y Descuentos</span>
+                            <span className="badge badge-success text-white badge-xs font-bold text-[8px] ml-auto">TARIFAS</span>
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            onClick={() => handleNav('my-subscription')}
+                            className={`gap-2.5 text-xs py-2 rounded-lg ${activeView === 'my-subscription' ? 'active font-bold' : ''}`}
+                            title="Ver límites de órdenes mensuales y sedes contratadas en tu plan SaaS"
+                          >
+                            <IconCreditCard className="w-3.5 h-3.5 opacity-80 shrink-0" />
+                            <span className="truncate">Mi Plan y Cuota</span>
+                            <span className="badge badge-warning badge-xs font-bold text-[8px] ml-auto">SAAS</span>
+                          </button>
+                        </li>
+                      </ul>
+                    </details>
+                  </li>
                 )}
               </>
             )}
