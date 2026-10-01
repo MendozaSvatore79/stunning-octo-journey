@@ -12,6 +12,9 @@ import {
   IconFlask,
   IconRefresh,
   IconArrowsHorizontal,
+  IconArrowLeft,
+  IconCalendar,
+  IconUsers,
 } from './icons';
 import type { TicketCategory, TicketPriority, TicketStatus, SupportTicket } from './SupportChatView';
 import { querySynovaGemini } from '../utils/geminiAi';
@@ -53,6 +56,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [ticketsList, setTicketsList] = useState<SupportTicket[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
   // Posición del Bot: 'right' (predeterminada) o 'left' (esquina opuesta para no tapar los totales)
   const [positionSide, setPositionSide] = useState<'right' | 'left'>(() => {
@@ -433,7 +437,10 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
           {/* Barra de Pestañas: Chat de Soporte vs Mis Tickets */}
           <div className="flex border-b border-base-200 bg-base-200/50 p-1 shrink-0">
             <button
-              onClick={() => setActiveTab('chat')}
+              onClick={() => {
+                setActiveTab('chat');
+                setSelectedTicket(null);
+              }}
               className={`flex-1 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === 'chat'
                   ? 'bg-base-100 text-primary shadow-xs'
@@ -691,15 +698,142 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
                     Levantar mi primer ticket
                   </button>
                 </div>
+              ) : selectedTicket ? (
+                /* ========================================================================= */
+                /* VISTA DETALLADA DEL TICKET SELECCIONADO */
+                /* ========================================================================= */
+                <div className="space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between pb-2 border-b border-base-200">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTicket(null)}
+                      className="btn btn-xs btn-ghost gap-1.5 px-2 rounded-xl text-base-content/70 hover:text-base-content font-bold"
+                    >
+                      <IconArrowLeft className="w-3.5 h-3.5" />
+                      <span>Volver a la lista</span>
+                    </button>
+                    <span className="font-mono font-black text-primary text-xs bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
+                      #{selectedTicket.ticketNumber}
+                    </span>
+                  </div>
+
+                  {/* Badges de Estado, Prioridad y Categoría */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      className={`badge badge-xs font-bold text-[9px] py-2 px-2.5 ${
+                        selectedTicket.priority === 'CRITICA'
+                          ? 'badge-error text-white'
+                          : selectedTicket.priority === 'ALTA'
+                          ? 'badge-warning text-slate-900'
+                          : 'badge-ghost text-base-content/70'
+                      }`}
+                    >
+                      Prioridad: {selectedTicket.priority}
+                    </span>
+                    <span
+                      className={`badge badge-xs font-bold text-[9px] py-2 px-2.5 ${
+                        selectedTicket.status === 'ABIERTO'
+                          ? 'badge-primary text-white'
+                          : selectedTicket.status === 'RESUELTO'
+                          ? 'badge-success text-white'
+                          : 'badge-neutral text-white'
+                      }`}
+                    >
+                      Estado: {selectedTicket.status}
+                    </span>
+                    <span className="badge badge-xs badge-outline font-semibold text-[9px] py-2 px-2.5 text-base-content/80">
+                      Cat: {selectedTicket.category}
+                    </span>
+                  </div>
+
+                  {/* Título de la Incidencia */}
+                  <div>
+                    <h4 className="font-extrabold text-sm sm:text-base text-base-content leading-snug">
+                      {selectedTicket.subject}
+                    </h4>
+                  </div>
+
+                  {/* Metadatos: Fecha y Reportado por */}
+                  <div className="flex items-center justify-between text-[10px] text-base-content/60 bg-base-200/50 p-2.5 rounded-xl border border-base-300/40">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <IconCalendar className="w-3.5 h-3.5 text-primary" />
+                      {new Date(selectedTicket.createdAt).toLocaleDateString()} • {new Date(selectedTicket.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <span className="flex items-center gap-1.5 font-semibold text-base-content/80 truncate max-w-[140px]">
+                      <IconUsers className="w-3.5 h-3.5 text-primary" />
+                      {selectedTicket.userName || 'Personal Clínico'}
+                    </span>
+                  </div>
+
+                  {/* Descripción completa reportada */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-base-content/50">
+                      Detalle de la Falla
+                    </span>
+                    <div className="p-3 rounded-xl bg-base-100 border border-base-300/70 text-xs text-base-content/90 whitespace-pre-line leading-relaxed shadow-2xs font-sans max-h-48 overflow-y-auto">
+                      {selectedTicket.description}
+                    </div>
+                  </div>
+
+                  {/* Diagnóstico Preliminar de IA si existe */}
+                  {selectedTicket.aiAnalysis && (
+                    <div className="p-3 rounded-2xl bg-teal-500/10 border border-teal-500/25 space-y-2 shadow-2xs">
+                      <div className="flex items-center gap-1.5 text-teal-700 dark:text-teal-400 font-bold text-xs border-b border-teal-500/20 pb-1">
+                        <IconSparkles className="w-3.5 h-3.5 text-teal-600" />
+                        <span>Diagnóstico Clínico Synova (IA)</span>
+                      </div>
+                      {selectedTicket.aiAnalysis.likelyCause && (
+                        <div>
+                          <span className="font-bold text-[10px] uppercase text-teal-800 dark:text-teal-300 block">
+                            Causa Probable:
+                          </span>
+                          <p className="text-[11px] text-base-content/85 leading-relaxed">
+                            {selectedTicket.aiAnalysis.likelyCause}
+                          </p>
+                        </div>
+                      )}
+                      {selectedTicket.aiAnalysis.suggestedAction && (
+                        <div>
+                          <span className="font-bold text-[10px] uppercase text-teal-800 dark:text-teal-300 block">
+                            Acción Recomendada:
+                          </span>
+                          <p className="text-[11px] text-base-content/85 leading-relaxed">
+                            {selectedTicket.aiAnalysis.suggestedAction}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Acción rápida: Continuar consulta en el chat */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = selectedTicket;
+                      setSelectedTicket(null);
+                      setActiveTab('chat');
+                      handleSendMessage(`Hola Synova, sobre mi ticket #${t.ticketNumber} (${t.subject}): `);
+                    }}
+                    className="btn btn-xs btn-primary text-white rounded-xl gap-1.5 w-full font-bold shadow-xs py-2 h-auto mt-2"
+                  >
+                    <IconSparkles className="w-3.5 h-3.5" />
+                    <span>Continuar consulta en el Chat de Soporte</span>
+                  </button>
+                </div>
               ) : (
+                /* ========================================================================= */
+                /* LISTA DE TICKETS */
+                /* ========================================================================= */
                 <div className="space-y-2.5">
                   {ticketsList.map((t) => (
                     <div
                       key={t.id || t.ticketNumber}
-                      className="p-3 rounded-2xl bg-base-200/60 border border-base-300 hover:border-primary/40 transition-colors space-y-1.5"
+                      onClick={() => setSelectedTicket(t)}
+                      className="p-3.5 rounded-2xl bg-base-200/60 border border-base-300 hover:border-primary/50 hover:bg-base-200/90 transition-all cursor-pointer space-y-2 shadow-2xs group"
+                      title="Haz clic para ver todos los detalles de este ticket"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-primary text-[11px]">
+                        <span className="font-mono font-black text-primary text-[11px] group-hover:underline">
                           #{t.ticketNumber}
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -728,7 +862,7 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
                         </div>
                       </div>
 
-                      <h5 className="font-bold text-base-content leading-snug line-clamp-1">
+                      <h5 className="font-bold text-base-content leading-snug line-clamp-1 group-hover:text-primary transition-colors">
                         {t.subject}
                       </h5>
 
@@ -736,9 +870,11 @@ export default function SupportBotBubble({ onNavigateToFullSupport }: SupportBot
                         {t.description}
                       </p>
 
-                      <div className="pt-1 flex items-center justify-between text-[10px] text-base-content/50 border-t border-base-300/50">
+                      <div className="pt-1.5 flex items-center justify-between text-[10px] text-base-content/50 border-t border-base-300/50">
                         <span>Cat: {t.category}</span>
-                        <span>{new Date(t.createdAt).toLocaleDateString()}</span>
+                        <span className="text-primary font-bold group-hover:underline flex items-center gap-0.5">
+                          Ver detalles &rarr;
+                        </span>
                       </div>
                     </div>
                   ))}

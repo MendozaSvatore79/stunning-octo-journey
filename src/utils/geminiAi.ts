@@ -61,7 +61,46 @@ export function runLocalClinicalDiagnosis(
 ): SynovaAnalysisResult {
   const text = input.toLowerCase().trim();
 
-  // 1. Solicitud directa de levantar ticket
+  // Detección automática de idioma Inglés
+  const isEnglish =
+    /(hello|hi\b|error|ticket|save|results|please|analyzer|broken|failing|issue|problem|help|not working|cannot|can't)/i.test(input) &&
+    !/(hola|buenos|buenas|ayuda|falla|equipo|orden|reactivo|guardar|resultado)/i.test(input);
+
+  if (isEnglish) {
+    if (text.includes('ticket')) {
+      return {
+        reply:
+          "I'd be glad to help you submit a technical support ticket to our engineering team.\n\nCould you please provide a few quick details:\n1. What specific error or symptom are you experiencing?\n2. Does it occur on a clinical analyzer (brand/model) or inside the LIS system (orders, results capture, catalog)?\n3. Is there an error code shown on your screen?\n\nOnce you confirm, I will format and submit your ticket immediately.",
+        source: 'clinical_engine',
+      };
+    }
+    if (text.includes('501') || text.includes('500') || text.includes('403') || text.includes('502') || text.includes('error')) {
+      let errTxt = 'An error has been detected in your current session.';
+      if (text.includes('501')) {
+        errTxt = 'HTTP 501 (Not Implemented) indicates that the server or proxy rejected the requested route or method. This typically occurs after a pending deployment or route mismatch.';
+      } else if (text.includes('500')) {
+        errTxt = 'HTTP 500 (Internal Server Error) indicates an exception in the backend container or a database connectivity issue.';
+      } else if (text.includes('403')) {
+        errTxt = 'HTTP 403 (Forbidden) indicates the request was blocked due to permissions, expired session token, or AWS WAF rule.';
+      }
+      return {
+        reply: `${errTxt}\n\n1. Try performing a hard browser refresh with **Ctrl+F5** (or **Cmd+Shift+R** on Mac) to renew your session token.\n2. If the issue persists, let me know if you would like me to open a technical support ticket right away.`,
+        source: 'clinical_engine',
+      };
+    }
+    if (text.includes('save') || text.includes('result') || text.includes('order')) {
+      return {
+        reply: "Understood. If you are having trouble saving results or orders:\n1. Does this happen with a specific patient/order, or across all orders in your session?\n2. Does hard refreshing with Ctrl+F5 resolve the issue?\n\nLet me know what error or alert appears so I can assist you or escalate to development.",
+        source: 'clinical_engine',
+      };
+    }
+    return {
+      reply: "Hello! I'm Synova, your clinical technical support specialist. Please tell me more about what is happening on your analyzer or on screen, and I'll be glad to help you.",
+      source: 'clinical_engine',
+    };
+  }
+
+  // 1. Solicitud directa de levantar ticket (Español)
   if (
     text.includes('levantar ticket') ||
     text.includes('levantar un ticket') ||
