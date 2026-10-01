@@ -64,107 +64,124 @@ export function runLocalClinicalDiagnosis(
   // Detección automática de idioma Inglés
   const isEnglish =
     /(hello|hi\b|error|ticket|save|results|please|analyzer|broken|failing|issue|problem|help|not working|cannot|can't)/i.test(input) &&
-    !/(hola|buenos|buenas|ayuda|falla|equipo|orden|reactivo|guardar|resultado)/i.test(input);
+    !/(hola|buenos|buenas|ayuda|falla|equipo|orden|reactivo|guardar|resultado|folio)/i.test(input);
 
   if (isEnglish) {
-    if (text.includes('ticket')) {
+    const isError = text.includes('501') || text.includes('500') || text.includes('403') || text.includes('502') || text.includes('504') || text.includes('error');
+    const isTicket = text.includes('ticket') || text.includes('report') || text.includes('support');
+    const isSave = text.includes('save') || text.includes('result') || text.includes('order');
+    const isAnalyzer = text.includes('analyzer') || text.includes('alarm') || text.includes('needle') || text.includes('motor') || text.includes('sensor');
+
+    if (isTicket || isError || isSave || isAnalyzer) {
+      let subj = 'Technical Support Request';
+      let cause = 'Technical issue reported during laboratory session.';
+      let category: TicketCategory = 'SISTEMA';
+      let priority: TicketPriority = 'ALTA';
+      let action = 'Immediate priority review by engineering and biomedical team.';
+
+      if (text.includes('501')) {
+        subj = 'HTTP 501 Error in Laboratory System';
+        cause = 'HTTP 501 (Not Implemented): Backend route mismatch or pending deployment.';
+      } else if (text.includes('500')) {
+        subj = 'HTTP 500 Internal Server Error';
+        cause = 'Internal backend exception or database connectivity issue.';
+      } else if (text.includes('403')) {
+        subj = 'HTTP 403 Forbidden Access Error';
+        cause = 'Session token expiration or AWS WAF security block.';
+      } else if (isSave) {
+        subj = 'Issue saving results or patient orders';
+        cause = 'Failure persisting records in clinical database.';
+      } else if (isAnalyzer) {
+        category = 'EQUIPOS';
+        priority = 'CRITICA';
+        subj = 'Clinical Analyzer Alarm / Failure';
+        cause = 'Electromechanical or sensor warning on analyzer equipment.';
+        action = 'Immediate biomedical inspection and fluidics check.';
+      }
+
       return {
         reply:
-          "I'd be glad to help you submit a technical support ticket to our engineering team.\n\nCould you please provide a few quick details:\n1. What specific error or symptom are you experiencing?\n2. Does it occur on a clinical analyzer (brand/model) or inside the LIS system (orders, results capture, catalog)?\n3. Is there an error code shown on your screen?\n\nOnce you confirm, I will format and submit your ticket immediately.",
+          `I have registered the issue and prepared your technical support ticket below.\n\n` +
+          `Quick tip: Try pressing **Ctrl+F5** (or **Cmd+Shift+R**) to refresh the session token and cache.\n\n` +
+          `Click the button below to submit this ticket immediately to our engineering team:`,
+        suggestedTicket: {
+          subject: subj,
+          description: input,
+          category,
+          priority,
+          likelyCause: cause,
+          suggestedAction: action,
+        },
         source: 'clinical_engine',
       };
     }
-    if (text.includes('501') || text.includes('500') || text.includes('403') || text.includes('502') || text.includes('error')) {
-      let errTxt = 'An error has been detected in your current session.';
-      if (text.includes('501')) {
-        errTxt = 'HTTP 501 (Not Implemented) indicates that the server or proxy rejected the requested route or method. This typically occurs after a pending deployment or route mismatch.';
-      } else if (text.includes('500')) {
-        errTxt = 'HTTP 500 (Internal Server Error) indicates an exception in the backend container or a database connectivity issue.';
-      } else if (text.includes('403')) {
-        errTxt = 'HTTP 403 (Forbidden) indicates the request was blocked due to permissions, expired session token, or AWS WAF rule.';
-      }
-      return {
-        reply: `${errTxt}\n\n1. Try performing a hard browser refresh with **Ctrl+F5** (or **Cmd+Shift+R** on Mac) to renew your session token.\n2. If the issue persists, let me know if you would like me to open a technical support ticket right away.`,
-        source: 'clinical_engine',
-      };
-    }
-    if (text.includes('save') || text.includes('result') || text.includes('order')) {
-      return {
-        reply: "Understood. If you are having trouble saving results or orders:\n1. Does this happen with a specific patient/order, or across all orders in your session?\n2. Does hard refreshing with Ctrl+F5 resolve the issue?\n\nLet me know what error or alert appears so I can assist you or escalate to development.",
-        source: 'clinical_engine',
-      };
-    }
+
     return {
-      reply: "Hello! I'm Synova, your clinical technical support specialist. Please tell me more about what is happening on your analyzer or on screen, and I'll be glad to help you.",
+      reply: "Hello! I'm Synova, your clinical technical support specialist. Please tell me what issue or error you are experiencing, and I will prepare a support ticket for you immediately.",
       source: 'clinical_engine',
     };
   }
 
-  // 1. Solicitud directa de levantar ticket (Español)
+  // 1. Solicitud directa de ticket o reporte (Español) -> GENERACIÓN INMEDIATA
   if (
-    text.includes('levantar ticket') ||
-    text.includes('levantar un ticket') ||
+    text.includes('ticket') ||
+    text.includes('reporte') ||
     text.includes('abrir ticket') ||
+    text.includes('levantar ticket') ||
     text.includes('crear ticket') ||
     text.includes('genera ticket') ||
-    text.includes('sí levanta') ||
     text.includes('si levanta') ||
-    text.includes('abrir un reporte') ||
-    text.includes('levantar reporte')
+    text.includes('sí levanta') ||
+    text.includes('generar ticket')
   ) {
-    // Buscar si en los mensajes previos el usuario ya describió un problema real
     const previousIssues = history.filter(
       (h) =>
         h.sender === 'user' &&
         !h.text.toLowerCase().includes('ticket') &&
         !h.text.toLowerCase().includes('reporte') &&
         !h.text.toLowerCase().includes('hola') &&
-        !h.text.toLowerCase().includes('buenos') &&
-        h.text.trim().length > 8
+        h.text.trim().length > 4
     );
 
-    const hasSpecificPriorIssue = previousIssues.length > 0;
-    const lastUserIssue = hasSpecificPriorIssue ? previousIssues[previousIssues.length - 1].text : '';
-
-    // Si NO hay descripción previa de la falla, entablar diálogo para indagar antes de levantar el ticket
-    if (!hasSpecificPriorIssue) {
-      return {
-        reply:
-          'Con gusto te ayudo a registrar tu ticket formal ante nuestro equipo de ingeniería técnica.\n\nPara canalizarlo con la prioridad adecuada, por favor cuéntame brevemente:\n1. ¿Cuál es la falla o síntoma que estás experimentando?\n2. ¿Ocurre en algún analizador clínico (marca/modelo) o en un módulo del sistema (órdenes, resultados, catálogo)?\n3. ¿Aparece algún código de error o alarma en pantalla?\n\nEn cuanto me des estos detalles, te estructuro la propuesta de ticket al instante.',
-        source: 'clinical_engine',
-      };
-    }
+    const contextIssue = previousIssues.length > 0 ? previousIssues[previousIssues.length - 1].text : input;
+    const lowerIssue = contextIssue.toLowerCase();
 
     let category: TicketCategory = 'SISTEMA';
     let priority: TicketPriority = 'ALTA';
-    let likelyCause = 'Incidencia técnica reportada para atención especializada.';
-    let suggestedAction = 'Revisión prioritaria por el departamento de soporte e ingeniería.';
-    let subject = 'Incidencia operativa en laboratorio';
+    let likelyCause = 'Incidencia técnica reportada en la sesión de laboratorio.';
+    let suggestedAction = 'Atención inmediata por la mesa técnica de ingeniería.';
+    let subject = 'Incidencia técnica en sistema';
 
-    const lowerIssue = lastUserIssue.toLowerCase();
     if (lowerIssue.includes('analizador') || lowerIssue.includes('equipo') || lowerIssue.includes('alarma') || lowerIssue.includes('aguja')) {
       category = 'EQUIPOS';
       priority = 'CRITICA';
-      subject = 'Alarma o detención en analizador analítico';
-      likelyCause = 'Alarma de sensor o bloqueo mecánico en analizador analítico.';
-      suggestedAction = 'Inspección electromecánica y verificación de sensores por ingeniería biomédica.';
+      subject = 'Falla o alarma en analizador clínico';
+      likelyCause = 'Bloqueo electromecánico o sensor en analizador.';
+      suggestedAction = 'Inspección biomédica y revisión de sensores.';
     } else if (lowerIssue.includes('reactivo') || lowerIssue.includes('calibr') || lowerIssue.includes('westgard') || lowerIssue.includes('lote')) {
       category = 'CALIDAD';
       priority = 'ALTA';
-      subject = 'Desvío en calibración o lote de reactivo';
-      likelyCause = 'Desvío en control de calidad o lote de reactivo fuera de tolerancia.';
-      suggestedAction = 'Auditoría de lote, verificación de blancos y recalibración técnica.';
+      subject = 'Desvío en calibración o control de calidad';
+      likelyCause = 'Desvío de control o lote de reactivo.';
+      suggestedAction = 'Auditoría de lote y recalibración analítica.';
+    } else if (lowerIssue.includes('501')) {
+      subject = 'Error HTTP 501 en sistema';
+      likelyCause = 'Error HTTP 501: Ruta o método de backend desincronizado.';
+      suggestedAction = 'Reinicio/sincronización de contenedor API por soporte.';
+    } else if (lowerIssue.includes('guardar') || lowerIssue.includes('folio')) {
+      subject = 'Falla al guardar resultados / folios';
+      likelyCause = 'Bloqueo al persistir folios u órdenes en base de datos.';
+      suggestedAction = 'Depuración de endpoint de guardado y revisión de base de datos.';
     } else {
-      subject = `Falla reportada: ${lastUserIssue.slice(0, 45)}...`;
-      likelyCause = 'Inconsistencia en módulo del sistema reportada por laboratorista.';
+      subject = contextIssue.length > 40 ? `${contextIssue.slice(0, 38)}...` : contextIssue;
     }
 
     return {
       reply:
-        'He recopilado los detalles de la falla reportada para estructurar tu ticket ante el equipo de ingeniería. Por favor revisa la tarjeta a continuación y confirma para enviarlo a la cola de atención inmediata:',
+        'He generado de inmediato la propuesta de ticket formal para que nuestro equipo de ingeniería lo atienda con prioridad.\n\nPor favor haz clic en el botón a continuación para registrarlo:',
       suggestedTicket: {
         subject,
-        description: `${lastUserIssue}\n\n[Instrucción de usuario]: ${input}`,
+        description: previousIssues.length > 0 ? `${previousIssues[previousIssues.length - 1].text}\n\n[Instrucción de usuario]: ${input}` : input,
         category,
         priority,
         likelyCause,
@@ -174,16 +191,66 @@ export function runLocalClinicalDiagnosis(
     };
   }
 
-  // 2. Saludos e introducciones
-  if (text === 'hola' || text === 'buenos días' || text === 'buenas tardes' || text === 'buenas noches' || text === 'que tal' || text === 'buenas') {
+  // 2. Códigos de error específicos (501, 500, 403, 502, 504, 404, "error") -> GENERACIÓN INMEDIATA DE TICKET
+  if (
+    text.includes('501') ||
+    text.includes('500') ||
+    text.includes('403') ||
+    text.includes('502') ||
+    text.includes('504') ||
+    text.includes('error')
+  ) {
+    let errorDetail = '';
+    let subject = 'Incidencia por código de error en sistema';
+    let likelyCause = 'Error reportado en sesión de trabajo.';
+    let priority: TicketPriority = 'ALTA';
+
+    if (text.includes('501')) {
+      errorDetail = 'El código **HTTP 501 (Not Implemented)** indica que el endpoint solicitado en el servidor no está disponible o el proxy bloqueó la ruta. Suele resolverse sincronizando la última versión de la API.';
+      subject = 'Error HTTP 501: Servicio no implementado o ruta no encontrada';
+      likelyCause = 'HTTP 501: Endpoint desincronizado en backend o ruta bloqueada por proxy.';
+    } else if (text.includes('500')) {
+      errorDetail = 'El código **HTTP 500 (Internal Server Error)** indica una excepción en el contenedor del backend o falla de base de datos.';
+      subject = 'Error HTTP 500: Excepción interna del servidor';
+      likelyCause = 'Error HTTP 500 en backend o desconexión transitoria con PostgreSQL.';
+    } else if (text.includes('403')) {
+      errorDetail = 'El código **HTTP 403 (Forbidden)** indica que la petición fue rechazada por falta de permisos, token expirado o regla perimetral de AWS WAF.';
+      subject = 'Error HTTP 403: Acceso denegado / Bloqueo WAF';
+      likelyCause = 'Token de sesión expirado o regla de seguridad WAF.';
+    } else if (text.includes('502') || text.includes('504')) {
+      errorDetail = 'El código **HTTP 502/504 (Bad Gateway)** indica que el proxy no logró comunicarse con el contenedor de la API.';
+      subject = 'Error HTTP 502/504: Gateway Timeout en servidor';
+      likelyCause = 'El balanceador de carga o proxy no contactó a tiempo con la API en Lightsail.';
+    } else {
+      errorDetail = 'He detectado el error reportado en la sesión.';
+      subject = `Error en sistema: ${input.slice(0, 35)}`;
+      likelyCause = 'Falla técnica reportada por el usuario.';
+    }
+
+    const previousContext = history
+      .filter((h) => h.sender === 'user' && h.text.trim().length > 4)
+      .slice(-2)
+      .map((h) => h.text)
+      .join(' | ');
+
     return {
       reply:
-        '¡Hola! Qué gusto saludarte. ¿Cómo está marchando la jornada en tu laboratorio? Cuéntame si presentas alguna falla con analizadores, calibraciones, reactivos, folios o el sistema y te apoyo de inmediato.',
+        `${errorDetail}\n\n` +
+        `💡 **Acción recomendada:** Presiona **Ctrl+F5** (o **Cmd+Shift+R**) para forzar una recarga limpia.\n\n` +
+        `Para no demorar la atención, he preparado el ticket con prioridad alta. Solo presiona el botón a continuación para enviarlo a desarrollo:`,
+      suggestedTicket: {
+        subject,
+        description: previousContext ? `${previousContext} -> ${input}` : input,
+        category: 'SISTEMA',
+        priority,
+        likelyCause,
+        suggestedAction: 'Revisión y solución inmediata por el equipo de ingeniería.',
+      },
       source: 'clinical_engine',
     };
   }
 
-  // 3. Alarmas o fallas en analizadores
+  // 3. Alarmas o fallas en analizadores -> GENERACIÓN INMEDIATA DE TICKET
   if (
     text.includes('analizador') ||
     text.includes('alarma') ||
@@ -198,13 +265,27 @@ export function runLocalClinicalDiagnosis(
   ) {
     return {
       reply:
-        'Las alertas en analizadores clínicos son de máxima prioridad para no detener la corrida de pacientes.\n\n¿Qué marca o modelo de equipo tienes (por ejemplo Mindray, Cobas, Beckman Coulter, Sysmex) y qué código o mensaje de alarma exacto te muestra en la pantalla?\n\nMientras me comentas, te sugiero verificar:\n1. Si la aguja de aspiración tiene algún obstáculo físico o coágulo de fibrina.\n2. Si los frascos de desecho y diluyente están en sus niveles correctos.\n3. Si la presión de vacío está dentro del rango seguro.\n\nCuéntame qué observas para guiarte o coordinar la asistencia técnica.',
+        'Las alertas en analizadores clínicos son de máxima prioridad para no detener la corrida de pacientes.\n\n' +
+        '💡 **Verificación de contingencia:**\n' +
+        '1. Verifica si la aguja de aspiración tiene algún obstáculo físico o coágulo de fibrina.\n' +
+        '2. Confirma niveles de desecho y diluyente.\n\n' +
+        'He levantado de inmediato la propuesta de ticket para ingeniería biomédica:',
+      suggestedTicket: {
+        subject: `Alarma / Falla técnica en Analizador: ${input.slice(0, 35)}`,
+        description: input,
+        category: 'EQUIPOS',
+        priority: 'CRITICA',
+        likelyCause: 'Bloqueo electromecánico, sensor o falla de aspiración en analizador.',
+        suggestedAction: 'Intervención técnica de soporte biomédico prioritaria.',
+      },
       source: 'clinical_engine',
     };
   }
 
-  // 4. Fallas generales en el sistema
+  // 4. Fallas al guardar o fallas generales en el sistema -> GENERACIÓN INMEDIATA DE TICKET
   if (
+    text.includes('guardar') ||
+    text.includes('folio') ||
     text.includes('fallas en el sistema') ||
     text.includes('falla en el sistema') ||
     text.includes('el sistema falla') ||
@@ -215,59 +296,43 @@ export function runLocalClinicalDiagnosis(
   ) {
     return {
       reply:
-        'Lamento mucho el inconveniente con el sistema. Para apoyarte a solucionarlo de inmediato:\n\n1. ¿En qué módulo o pantalla específica te está ocurriendo? (¿En Recepción de Órdenes, en Captura de Resultados, en Catálogo o al generar PDF?)\n2. ¿Te aparece algún mensaje de error en color rojo o la pantalla se queda congelada?\n3. ¿Sucede solo en tu equipo o en todas las computadoras del laboratorio?\n\nCuéntame qué notas y te oriento con los pasos de solución.',
+        'Entendido. Para no retrasar la operación del laboratorio con esta falla, he generado la propuesta de ticket de soporte.\n\n' +
+        '💡 Mientras lo atienden, prueba forzar la recarga con **Ctrl+F5** (o **Cmd+Shift+R**).\n\n' +
+        'Haz clic en el botón para enviar el reporte de inmediato a ingeniería:',
+      suggestedTicket: {
+        subject: `Falla en sistema al guardar / procesar: ${input.slice(0, 35)}`,
+        description: input,
+        category: 'SISTEMA',
+        priority: 'ALTA',
+        likelyCause: 'Error de persistencia o bloqueo de interfaz al procesar registros.',
+        suggestedAction: 'Revisión técnica de endpoint y base de datos.',
+      },
       source: 'clinical_engine',
     };
   }
 
-  // 4. Códigos de error específicos (501, 500, 403, 502, 504, 404)
-  if (
-    text.includes('501') ||
-    text.includes('500') ||
-    text.includes('403') ||
-    text.includes('502') ||
-    text.includes('504') ||
-    text.includes('error')
-  ) {
-    let errorDetail = '';
-    if (text.includes('501')) {
-      errorDetail = 'El código **HTTP 501 (Not Implemented)** indica que el servicio o endpoint solicitado en el servidor no está implementado o el proxy/CloudFront bloqueó el método HTTP. Suele ocurrir tras un despliegue pendiente de backend o desincronización de rutas.';
-    } else if (text.includes('500')) {
-      errorDetail = 'El código **HTTP 500 (Internal Server Error)** indica una excepción en el contenedor del backend o un fallo de conexión transitorio con la base de datos PostgreSQL.';
-    } else if (text.includes('403')) {
-      errorDetail = 'El código **HTTP 403 (Forbidden)** indica que la petición fue rechazada por políticas de seguridad (permisos insuficientes, expiración de token de sesión o bloqueo perimetral de AWS WAF).';
-    } else if (text.includes('502') || text.includes('504')) {
-      errorDetail = 'El código **HTTP 502/504 (Bad Gateway / Gateway Timeout)** indica que el proxy no logró comunicarse a tiempo con el contenedor de la API en Lightsail.';
-    } else {
-      errorDetail = 'He detectado el mensaje de error reportado en la sesión de trabajo.';
-    }
-
-    // Revisar si en los mensajes anteriores ya veníamos hablando de un módulo o acción (guardar folios, resultados, etc.)
-    const lastBotMsg = history.filter((h) => h.sender === 'bot').pop()?.text || '';
-    const lastUserIssue = history.filter((h) => h.sender === 'user').slice(-2)[0]?.text || '';
-    const hasPriorContext = lastBotMsg.includes('guardar') || lastBotMsg.includes('folio') || lastUserIssue.length > 5;
-
+  // 5. Saludos e introducciones
+  if (text === 'hola' || text === 'buenos días' || text === 'buenas tardes' || text === 'buenas noches' || text === 'que tal' || text === 'buenas') {
     return {
       reply:
-        `${errorDetail}\n\n` +
-        (hasPriorContext ? `Tomando en cuenta lo que me mencionabas sobre la dificultad para guardar o capturar:\n` : '') +
-        `1. Intenta forzar una recarga limpia del navegador con **Ctrl+F5** (o **Cmd+Shift+R** en Mac) para renovar el token de sesión.\n` +
-        `2. Si el problema persiste, ¿deseas que levantemos el ticket técnico con prioridad alta para que el equipo de desarrollo lo revise de inmediato?`,
+        '¡Hola! Qué gusto saludarte. ¿Cómo está marchando la jornada en tu laboratorio? Cuéntame si presentas alguna falla con analizadores, calibraciones, reactivos, folios o el sistema y te genero el ticket o solución de inmediato.',
       source: 'clinical_engine',
     };
   }
 
-  // Respuesta conversacional guiada por el contexto previo
-  const lastUserTopic = history.filter((h) => h.sender === 'user' && h.text.trim().length > 6).pop()?.text;
-  if (lastUserTopic) {
-    return {
-      reply: `Entendido. Con respecto a lo que mencionas sobre "${lastUserTopic.slice(0, 50)}...": ¿El síntoma persiste tras recargar o deseas que canalicemos el reporte formalmente al equipo técnico?`,
-      source: 'clinical_engine',
-    };
-  }
-
+  // Respuesta por defecto con opción de ticket
   return {
-    reply: 'Te escucho atentamente. Cuéntame los detalles del error o síntoma que observas en el equipo o en pantalla para ayudarte a resolverlo.',
+    reply:
+      'Te escucho atentamente. He recibido tu mensaje y estoy lista para atenderte.\n\n' +
+      'Si se trata de una falla o bloqueo en el laboratorio, puedes generar el ticket de soporte ahora mismo:',
+    suggestedTicket: {
+      subject: `Reporte de incidencia: ${input.slice(0, 40)}`,
+      description: input,
+      category: 'SISTEMA',
+      priority: 'MEDIA',
+      likelyCause: 'Incidencia reportada en chat de soporte.',
+      suggestedAction: 'Seguimiento por mesa técnica de soporte.',
+    },
     source: 'clinical_engine',
   };
 }
@@ -310,31 +375,32 @@ export async function querySynovaGemini(
   // CASO 2: Respaldo directo en Frontend si hay API Key de Gemini
   if (apiKey) {
     const systemInstruction = `
-Eres Synova, la especialista de soporte técnico clínico del sistema y analizadores de LabSystem Clinique.
-Estás conversando directamente con ${userName}, profesional de laboratorio clínico.
+You are Synova, the premier clinical technical support specialist for LabSystem Clinique (LIS, clinical analyzers, quality control, database & system operations).
+You are assisting ${userName}, a clinical laboratory professional.
 
-OBJETIVO PRINCIPAL:
-Tu misión es brindar soporte técnico clínico empático, especializado, indagatorio y resolutivo. Mantén siempre una conversación humana y técnica fluida.
+CORE BEHAVIOR RULES (CRITICAL):
+1. BILINGUAL AUTOMATIC DETECTION:
+   - If the user speaks in English, respond natively and fluently in English.
+   - If the user speaks in Spanish, respond natively and fluently in Spanish.
+   - Never force the user to pick a language.
 
-DIRECTRICES CRÍTICAS:
-1. IDENTIDAD: Comunícate con calidez y seguridad técnica como especialista de soporte. NUNCA digas que eres una inteligencia artificial, bot o modelo de lenguaje.
-2. CONVERSACIÓN E INDAGACIÓN: Si el usuario te saluda, indica una falla genérica ("falla el sistema", "problemas con analizador", "error", etc.) o escribe "levantar ticket" SIN detallar la avería, NO generes un ticket todavía. Pregúntale cordialmente:
-   - ¿Qué analizador (marca/modelo) o módulo del sistema está involucrado?
-   - ¿Qué código de alarma o síntoma específico observa en pantalla?
-   - Si es software: ¿es en recepción de órdenes, captura de resultados o catálogo?
-3. ASISTENCIA TÉCNICA GUIADA: Brinda recomendaciones prácticas de contingencia inmediata según corresponda.
-4. GENERACIÓN DE TICKETS: ÚNICAMENTE cuando el usuario ya haya detallado el problema y confirme que desea abrir un ticket formal ("sí, levanta el ticket", "crea el ticket"), incluye AL FINAL de tu respuesta el bloque delimitado por \`\`\`ticket_json:
+2. ZERO RUNAROUND - IMMEDIATE TICKET PROPOSAL:
+   - When the user mentions an error code (501, 500, 403, 502, 504), a system crash, saving failure, analyzer alarm, or requests a ticket/report:
+     * Provide a brief, decisive 1-to-2 sentence clinical or technical tip (e.g. reload with Ctrl+F5, check sample probe/coagulation).
+     * DO NOT interrogate the user with surveys or questionnaires.
+     * IMMEDIATELY append the \`\`\`ticket_json block at the end of your response so the user can submit the ticket in 1 click!
+
+3. TICKET JSON FORMAT:
+When generating a ticket proposal, append this block at the end:
 \`\`\`ticket_json
 {
-  "subject": "Título conciso y profesional del problema reportado",
+  "subject": "Concise issue summary",
   "category": "EQUIPOS" | "CALIDAD" | "SISTEMA" | "FACTURACION",
   "priority": "BAJA" | "MEDIA" | "ALTA" | "CRITICA",
-  "likelyCause": "Diagnóstico preliminar",
-  "suggestedAction": "Acción técnica recomendada"
+  "likelyCause": "Preliminary diagnosis / root cause",
+  "suggestedAction": "Immediate action recommended"
 }
 \`\`\`
-Si es una charla de soporte en curso, diagnóstico preliminar o preguntas de ayuda, NUNCA incluyas el bloque ticket_json.
-Responde siempre en español.
 `.trim();
 
     // Sanear y alternar roles estrictamente para Gemini API
