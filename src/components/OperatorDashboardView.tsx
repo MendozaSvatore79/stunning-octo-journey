@@ -1,9 +1,4 @@
 // src/components/OperatorDashboardView.tsx
-import { useMemo } from 'react';
-import { useUser } from '@clerk/clerk-react';
-import { useUserContext } from '../hooks/useUserContext';
-import { isUserLaboratory } from '../utils/labOwnership';
-import type { Laboratory } from '../types/lab';
 import type { UserRole } from '../types/user';
 import type { DashboardViewType } from './Sidebar';
 import {
@@ -11,25 +6,20 @@ import {
   IconUsers,
   IconClipboardList,
   IconPlus,
-  IconSparkles,
   IconUserPlus,
-  IconFolder,
-  IconActivity,
-  IconBuilding,
   IconChartLine,
   IconHeadphones,
   IconArrowRight,
-  IconMapPin,
   IconMicroscope,
 } from './icons';
 
 interface OperatorDashboardViewProps {
   userName?: string;
   role: UserRole | null;
-  labs: Laboratory[];
-  isLoadingLabs: boolean;
-  onOpenCreateLab: () => void;
-  onOpenOnboarding: () => void;
+  labs?: any[];
+  isLoadingLabs?: boolean;
+  onOpenCreateLab?: () => void;
+  onOpenOnboarding?: () => void;
   onDeleteLabSuccess?: (id: string) => void;
   onNavigate?: (view: DashboardViewType) => void;
 }
@@ -37,23 +27,8 @@ interface OperatorDashboardViewProps {
 export default function OperatorDashboardView({
   userName,
   role,
-  labs,
-  isLoadingLabs,
-  onOpenCreateLab,
-  onOpenOnboarding,
   onNavigate,
 }: OperatorDashboardViewProps) {
-  const { userProfile } = useUserContext();
-  const { user } = useUser();
-
-  // Filtrar estrictamente solo las sedes pertenecientes o asignadas a este operador
-  const myLabs = useMemo(() => {
-    const list = Array.isArray(labs) ? labs : [];
-    return list.filter((lab) =>
-      isUserLaboratory(lab, userProfile, user?.id, user?.primaryEmailAddress?.emailAddress)
-    );
-  }, [labs, userProfile, user]);
-
   const roleLabel =
     role === 'LAB_TECHNICIAN'
       ? 'Responsable del Laboratorio'
@@ -63,13 +38,11 @@ export default function OperatorDashboardView({
       ? 'Recepcionista Clínico'
       : 'Personal Clínico';
 
-  const previewLabs = myLabs.slice(0, 4);
-
   return (
-    <div className="space-y-6">
-      {/* 1. Cabecera Principal Limpia y Compacta */}
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* 1. Cabecera Principal Limpia y Despejada */}
       <section className="card bg-base-100 border border-base-200 p-5 sm:p-6 shadow-xs rounded-2xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="badge badge-sm badge-outline text-primary border-primary/30 font-semibold gap-1.5 py-2.5 px-3">
@@ -77,397 +50,277 @@ export default function OperatorDashboardView({
                 {roleLabel}
               </span>
               <span className="badge badge-sm badge-ghost text-base-content/60 font-medium">
-                Portal Operativo
+                Panel Operativo
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-base-content tracking-tight">
-              Panel Técnico y Operativo
+              Hola, {userName || 'Colega'} 👋
             </h1>
-            <p className="text-xs sm:text-sm text-base-content/70 max-w-2xl leading-relaxed">
-              Hola, <span className="font-semibold text-base-content">{userName || 'Técnico'}</span>. Tienes acceso a los flujos de recepción de pacientes, registro de órdenes, captura analítica y control de calidad.
+            <p className="text-xs sm:text-sm text-base-content/70 max-w-xl leading-relaxed">
+              Bienvenida a tu espacio de trabajo. Aquí tienes los accesos directos y esenciales para gestionar tus actividades del día.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Acciones Rápidas Principales */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
-              onClick={() => onNavigate?.('analysis-catalog')}
-              className="btn btn-outline btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
-              title="Catálogo de servicios y estudios clínicos"
-            >
-              <IconMicroscope className="w-4 h-4" />
-              Catálogo de Servicios
-            </button>
-
-            <button
-              onClick={onOpenCreateLab}
+              onClick={() => onNavigate?.('create-order')}
               className="btn btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
             >
               <IconPlus className="w-4 h-4" />
-              Nueva Sede
+              Nueva Orden
             </button>
-
             <button
-              onClick={onOpenOnboarding}
-              className="btn btn-ghost btn-sm border border-base-200 hover:bg-base-200 gap-1.5 rounded-xl text-xs font-semibold text-base-content/80"
+              onClick={() => onNavigate?.('add-patient')}
+              className="btn btn-outline btn-primary btn-sm gap-2 font-semibold rounded-xl shadow-xs"
             >
-              <IconSparkles className="w-3.5 h-3.5 text-primary" />
-              Guía
+              <IconUserPlus className="w-4 h-4" />
+              Registrar Paciente
             </button>
           </div>
         </div>
       </section>
 
-      {/* 2. Barra de Indicadores Operativos (DaisyUI Stats Compacto) */}
-      <section className="stats stats-vertical sm:stats-horizontal bg-base-100 border border-base-200 shadow-xs w-full rounded-2xl divide-base-200">
-        <div className="stat py-3.5 px-5">
-          <div className="stat-figure text-primary">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <IconBuilding className="w-4 h-4 text-primary" />
-            </div>
-          </div>
-          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
-            Sedes Habilitadas
-          </div>
-          <div className="stat-value text-xl font-bold text-base-content mt-0.5">
-            {myLabs.length}
-          </div>
-          <div className="stat-desc text-[11px] text-base-content/50">
-            Centros autorizados
-          </div>
-        </div>
-
-        <div className="stat py-3.5 px-5">
-          <div className="stat-figure text-primary">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <IconUsers className="w-4 h-4 text-primary" />
-            </div>
-          </div>
-          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
-            Pacientes
-          </div>
-          <div className="stat-value text-lg font-bold text-base-content mt-0.5">
-            Directorio
-          </div>
-          <div className="stat-desc text-[11px] text-base-content/50">
-            Expedientes clínicos
-          </div>
-        </div>
-
-        <div className="stat py-3.5 px-5">
-          <div className="stat-figure text-primary">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <IconClipboardList className="w-4 h-4 text-primary" />
-            </div>
-          </div>
-          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
-            Órdenes
-          </div>
-          <div className="stat-value text-lg font-bold text-base-content mt-0.5">
-            En Proceso
-          </div>
-          <div className="stat-desc text-[11px] text-base-content/50">
-            Toma y analítica
-          </div>
-        </div>
-
-        <div className="stat py-3.5 px-5">
-          <div className="stat-figure text-success">
-            <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
-              <IconActivity className="w-4 h-4 text-success" />
-            </div>
-          </div>
-          <div className="stat-title text-[11px] font-semibold text-base-content/60 uppercase tracking-wide">
-            Disponibilidad
-          </div>
-          <div className="stat-value text-lg font-bold text-base-content mt-0.5 flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+      {/* 2. Métricas Operativas Clave (Solo lo esencial) */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Métrica 1: Órdenes de Trabajo */}
+        <div
+          onClick={() => onNavigate?.('pending-orders')}
+          className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer flex flex-row items-center justify-between"
+        >
+          <div className="space-y-0.5">
+            <span className="text-[11px] font-semibold text-base-content/60 uppercase tracking-wider">
+              Órdenes de Trabajo
             </span>
-            En Línea
+            <div className="text-base font-bold text-base-content">
+              Flujo Diario
+            </div>
+            <p className="text-[11px] text-base-content/50">
+              Recepción, tomas y captura analítica
+            </p>
           </div>
-          <div className="stat-desc text-[11px] text-base-content/50">
-            Sincronización activa
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <IconClipboardList className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Métrica 2: Pacientes */}
+        <div
+          onClick={() => onNavigate?.('patients')}
+          className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs hover:border-sky-500/40 hover:shadow-sm transition-all cursor-pointer flex flex-row items-center justify-between"
+        >
+          <div className="space-y-0.5">
+            <span className="text-[11px] font-semibold text-base-content/60 uppercase tracking-wider">
+              Pacientes
+            </span>
+            <div className="text-base font-bold text-base-content">
+              Expedientes Clínicos
+            </div>
+            <p className="text-[11px] text-base-content/50">
+              Padrón y búsqueda de pacientes
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center shrink-0">
+            <IconUsers className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Métrica 3: Control de Calidad */}
+        <div
+          onClick={() => onNavigate?.('qc-controls')}
+          className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer flex flex-row items-center justify-between"
+        >
+          <div className="space-y-0.5">
+            <span className="text-[11px] font-semibold text-base-content/60 uppercase tracking-wider">
+              Control de Calidad
+            </span>
+            <div className="text-base font-bold text-base-content">
+              Calidad Analítica
+            </div>
+            <p className="text-[11px] text-base-content/50">
+              Lotes QC y gráficas Levey-Jennings
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+            <IconFlask className="w-5 h-5" />
           </div>
         </div>
       </section>
 
-      {/* 3. Distribución Organizada en Cuadrícula Armónica (2 Columnas) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
-        {/* Columna Izquierda (2/3 de ancho): Flujos Operativos y Módulos de Trabajo */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-base-content uppercase tracking-wider text-xs">
-              Flujos de Trabajo Diario
-            </h2>
-            <span className="text-xs text-base-content/50">Accesos directos a módulos</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            {/* Card: Pacientes y Expedientes */}
-            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                    <IconUsers className="w-4 h-4" />
-                  </div>
-                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
-                    Expedientes
-                  </span>
-                </div>
-                <h3 className="font-bold text-base text-base-content mb-1">
-                  Pacientes y Registro
-                </h3>
-                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                  Alta de nuevos pacientes, consulta del padrón y antecedentes clínicos.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
-                <button
-                  onClick={() => onNavigate?.('add-patient')}
-                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs"
-                >
-                  <IconUserPlus className="w-4 h-4" /> Registrar Paciente
-                </button>
-                <button
-                  onClick={() => onNavigate?.('patients')}
-                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
-                >
-                  <IconFolder className="w-4 h-4 text-primary" /> Directorio de Pacientes
-                </button>
-              </div>
-            </div>
-
-            {/* Card: Órdenes de Trabajo */}
-            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                    <IconClipboardList className="w-4 h-4" />
-                  </div>
-                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
-                    Procesamiento
-                  </span>
-                </div>
-                <h3 className="font-bold text-base text-base-content mb-1">
-                  Órdenes de Trabajo
-                </h3>
-                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                  Generación de solicitudes de análisis, impresión de fichas y seguimiento de muestras.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
-                <button
-                  onClick={() => onNavigate?.('create-order')}
-                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs"
-                >
-                  <IconPlus className="w-4 h-4" /> Crear Orden
-                </button>
-                <button
-                  onClick={() => onNavigate?.('pending-orders')}
-                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
-                >
-                  <IconClipboardList className="w-4 h-4 text-primary" /> Revisar Pendientes
-                </button>
-              </div>
-            </div>
-
-            {/* Card: Control de Calidad */}
-            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                    <IconFlask className="w-4 h-4" />
-                  </div>
-                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
-                    Analítica
-                  </span>
-                </div>
-                <h3 className="font-bold text-base text-base-content mb-1">
-                  Control de Calidad (QC)
-                </h3>
-                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                  Captura de resultados para lotes de control y gráficas de Levey-Jennings.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
-                <button
-                  onClick={() => onNavigate?.('qc-controls')}
-                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs"
-                >
-                  <IconFlask className="w-4 h-4" /> Lotes de Control
-                </button>
-                <button
-                  onClick={() => onNavigate?.('qc-levey-jennings')}
-                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
-                >
-                  <IconChartLine className="w-4 h-4 text-primary" /> Gráfica Levey-Jennings
-                </button>
-              </div>
-            </div>
-
-            {/* Card: Catálogo de Servicios y Estudios */}
-            <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center">
-                    <IconMicroscope className="w-4 h-4" />
-                  </div>
-                  <span className="badge badge-ghost badge-xs text-[10px] text-base-content/60 font-medium">
-                    Servicios
-                  </span>
-                </div>
-                <h3 className="font-bold text-base text-base-content mb-1">
-                  Catálogo de Servicios
-                </h3>
-                <p className="text-xs text-base-content/60 leading-relaxed mb-4">
-                  Alta de nuevos estudios clínicos, tarifas de precios, valores de referencia y metodologías analíticas.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 pt-2 border-t border-base-100">
-                <button
-                  onClick={() => onNavigate?.('add-analysis')}
-                  className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold justify-start text-xs shadow-xs"
-                >
-                  <IconPlus className="w-4 h-4" /> Dar de Alta Estudio / Servicio
-                </button>
-                <button
-                  onClick={() => onNavigate?.('analysis-catalog')}
-                  className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 text-base-content/80 rounded-xl gap-2 font-semibold justify-start text-xs"
-                >
-                  <IconArrowRight className="w-4 h-4 text-primary" /> Consultar Catálogo Completo
-                </button>
-                <button
-                  onClick={() => onNavigate?.('completed-orders')}
-                  className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-2 text-xs font-semibold text-base-content/80 justify-start"
-                >
-                  <IconClipboardList className="w-4 h-4 text-primary" /> Órdenes Completadas
-                </button>
-              </div>
-            </div>
-
-          </div>
+      {/* 3. Cuadrícula de Módulos Esenciales (2x2 Limpio, sin barra lateral) */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold text-base-content/70 uppercase tracking-wider">
+            Módulos de Trabajo Diario
+          </h2>
+          <span className="text-xs text-base-content/40">
+            Accesos directos
+          </span>
         </div>
 
-        {/* Columna Derecha (1/3 de ancho): Resumen Compacto de Sedes y Asistencia */}
-        <div className="space-y-4">
-          
-          {/* Card Resumen de Sedes Activas */}
-          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="font-bold text-sm text-base-content flex items-center gap-1.5">
-                  <IconBuilding className="w-4 h-4 text-primary" />
-                  Sedes Activas
-                </h3>
-                <span className="text-[11px] text-base-content/50">
-                  {myLabs.length} {myLabs.length === 1 ? 'disponible' : 'disponibles'}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card 1: Órdenes de Trabajo */}
+          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-primary/40 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <IconClipboardList className="w-5 h-5" />
+                </div>
+                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
+                  Recepción & Muestras
                 </span>
               </div>
-              <button
-                onClick={onOpenCreateLab}
-                className="btn btn-xs btn-outline btn-primary font-semibold gap-1 rounded-lg"
-                title="Dar de alta una nueva sede de laboratorio"
-              >
-                <IconPlus className="w-3 h-3" /> Nueva Sede
-              </button>
+              <h3 className="font-bold text-base text-base-content mb-1">
+                Órdenes de Trabajo
+              </h3>
+              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                Genera solicitudes de análisis, asigna estudios, imprime fichas de toma y captura los resultados analíticos.
+              </p>
             </div>
-
-            {isLoadingLabs ? (
-              <div className="space-y-2 py-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="skeleton h-10 w-full rounded-xl"></div>
-                ))}
-              </div>
-            ) : previewLabs.length === 0 ? (
-              <div className="text-center py-6 border border-dashed border-base-200 rounded-xl p-4">
-                <p className="text-xs text-base-content/60 mb-2">No hay sedes registradas</p>
-                <button
-                  onClick={onOpenCreateLab}
-                  className="btn btn-xs btn-primary font-semibold rounded-lg"
-                >
-                  Crear primera sede
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2 divide-y divide-base-100">
-                {previewLabs.map((lab) => (
-                  <div key={lab.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {lab.logo ? (
-                        <img
-                          src={lab.logo}
-                          alt={lab.name}
-                          className="w-7 h-7 rounded-lg object-cover border border-base-200 shrink-0"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                          {lab.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-base-content truncate">
-                          {lab.name}
-                        </p>
-                        {lab.city && (
-                          <p className="text-[10px] text-base-content/50 flex items-center gap-1 truncate">
-                            <IconMapPin className="w-3 h-3 shrink-0" />
-                            {lab.city}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <span className="w-2 h-2 rounded-full bg-success shrink-0" title="Sede Operativa"></span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-4 pt-3 border-t border-base-200">
+            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
               <button
-                onClick={onOpenCreateLab}
-                className="btn btn-sm btn-outline border-base-300 hover:bg-base-200 w-full rounded-xl gap-2 text-xs font-semibold text-base-content/80"
+                onClick={() => onNavigate?.('create-order')}
+                className="btn btn-sm btn-primary rounded-xl gap-2 font-semibold text-xs flex-1 shadow-xs"
               >
-                <IconPlus className="w-3.5 h-3.5" /> Agregar Nueva Sede
+                <IconPlus className="w-4 h-4" /> Crear Orden
+              </button>
+              <button
+                onClick={() => onNavigate?.('pending-orders')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl text-xs font-semibold text-base-content/80 flex-1"
+              >
+                Ver Pendientes
               </button>
             </div>
           </div>
 
-          {/* Card Soporte Técnico Live */}
-          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                  <IconHeadphones className="w-4 h-4" />
+          {/* Card 2: Pacientes y Expedientes */}
+          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-sky-500/40 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-600 flex items-center justify-center">
+                  <IconUsers className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-xs text-base-content">Soporte Técnico</h3>
-                  <span className="text-[10px] text-base-content/50">Asistencia técnica en vivo</span>
-                </div>
+                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
+                  Padrón Clínico
+                </span>
               </div>
-              <span className="badge badge-accent badge-xs font-bold font-mono">LIVE</span>
+              <h3 className="font-bold text-base text-base-content mb-1">
+                Pacientes y Registro
+              </h3>
+              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                Alta rápida de pacientes, consulta del padrón clínico, actualización de datos demográficos e historial.
+              </p>
             </div>
-
-            <p className="text-xs text-base-content/60 leading-relaxed mb-3">
-              ¿Inconvenientes con un equipo o resultado? Conéctate con soporte mediante chat o videollamada.
-            </p>
-
-            <button
-              onClick={() => onNavigate?.('support')}
-              className="btn btn-sm btn-primary w-full rounded-xl gap-2 text-xs font-semibold shadow-xs"
-            >
-              Abrir Canal de Soporte <IconArrowRight className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
+              <button
+                onClick={() => onNavigate?.('add-patient')}
+                className="btn btn-sm rounded-xl gap-2 font-semibold text-xs flex-1 text-white bg-sky-600 hover:bg-sky-700 border-none shadow-xs"
+              >
+                <IconUserPlus className="w-4 h-4" /> Registrar Paciente
+              </button>
+              <button
+                onClick={() => onNavigate?.('patients')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl text-xs font-semibold text-base-content/80 flex-1"
+              >
+                Directorio
+              </button>
+            </div>
           </div>
 
+          {/* Card 3: Control de Calidad (QC) */}
+          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-emerald-500/40 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                  <IconFlask className="w-5 h-5" />
+                </div>
+                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
+                  Garantía Analítica
+                </span>
+              </div>
+              <h3 className="font-bold text-base text-base-content mb-1">
+                Control de Calidad (QC)
+              </h3>
+              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                Captura de corridas analíticas para lotes de control, evaluación de reglas Westgard y gráficas Levey-Jennings.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
+              <button
+                onClick={() => onNavigate?.('qc-controls')}
+                className="btn btn-sm rounded-xl gap-2 font-semibold text-xs flex-1 text-white bg-emerald-600 hover:bg-emerald-700 border-none shadow-xs"
+              >
+                <IconFlask className="w-4 h-4" /> Lotes de Control
+              </button>
+              <button
+                onClick={() => onNavigate?.('qc-levey-jennings')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl gap-1.5 text-xs font-semibold text-base-content/80 flex-1"
+              >
+                <IconChartLine className="w-3.5 h-3.5 text-emerald-600" /> Levey-Jennings
+              </button>
+            </div>
+          </div>
+
+          {/* Card 4: Catálogo de Servicios */}
+          <div className="card bg-base-100 border border-base-200 p-5 rounded-2xl shadow-xs hover:border-teal-500/40 transition-all flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center">
+                  <IconMicroscope className="w-5 h-5" />
+                </div>
+                <span className="badge badge-ghost badge-sm text-[11px] text-base-content/60 font-medium">
+                  Estudios & Tarifas
+                </span>
+              </div>
+              <h3 className="font-bold text-base text-base-content mb-1">
+                Catálogo de Servicios
+              </h3>
+              <p className="text-xs text-base-content/60 leading-relaxed mb-4">
+                Consulta rápida de pruebas de laboratorio, valores de referencia, unidades de medida y metodologías.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 pt-3 border-t border-base-100">
+              <button
+                onClick={() => onNavigate?.('analysis-catalog')}
+                className="btn btn-sm rounded-xl gap-2 font-semibold text-xs flex-1 text-white bg-teal-600 hover:bg-teal-700 border-none shadow-xs"
+              >
+                <IconMicroscope className="w-4 h-4" /> Ver Catálogo
+              </button>
+              <button
+                onClick={() => onNavigate?.('add-analysis')}
+                className="btn btn-sm btn-ghost border border-base-200 hover:bg-base-200 rounded-xl text-xs font-semibold text-base-content/80 flex-1"
+              >
+                + Alta de Prueba
+              </button>
+            </div>
+          </div>
         </div>
+      </section>
 
-      </div>
+      {/* 4. Banner Minimalista de Soporte Técnico (Sutil y elegante) */}
+      <section className="card bg-base-100 border border-base-200 p-4 rounded-2xl shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <IconHeadphones className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-base-content">
+                ¿Necesitas soporte técnico o asistencia clínica?
+              </p>
+              <p className="text-[11px] text-base-content/60">
+                Resuelve fallas de analizadores, dudas del sistema o genera tickets con Synova en tiempo real.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate?.('support')}
+            className="btn btn-xs btn-outline btn-primary rounded-xl font-semibold gap-1.5 self-start sm:self-auto shrink-0"
+          >
+            Abrir Soporte <IconArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
